@@ -1,0 +1,11 @@
+services:
+  finance-app:
+    build: ../../apps/finance-app
+    container_name: finance-app
+    restart: unless-stopped
+    env_file:
+      - .env
+    ports:
+      - "8000:8000"
+    volumes:
+      - /srv/appdata/finance-app:/data
