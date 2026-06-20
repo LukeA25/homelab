@@ -1,0 +1,12 @@
+services:
+  homepage:
+    image: ghcr.io/gethomepage/homepage:latest
+    container_name: homepage
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      HOMEPAGE_ALLOWED_HOSTS: "192.168.1.156:3000,homepage.home.arpa,homepage.home.arpa:80,localhost:3000"
+    volumes:
+      - /srv/appdata/homepage:/app/config
+      - /var/run/docker.sock:/var/run/docker.sock:ro

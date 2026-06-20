@@ -1,0 +1,23 @@
+http://homepage.home.arpa {
+    reverse_proxy 192.168.1.156:3000
+}
+
+http://kuma.home.arpa {
+    reverse_proxy 192.168.1.156:3001
+}
+
+http://jellyfin.home.arpa {
+    reverse_proxy 192.168.1.156:8096
+}
+
+http://pihole.home.arpa {
+    reverse_proxy 192.168.1.156:8080
+}
+
+http://portainer.home.arpa {
+    reverse_proxy https://192.168.1.156:9443 {
+        transport http {
+            tls_insecure_skip_verify
+        }
+    }
+}
