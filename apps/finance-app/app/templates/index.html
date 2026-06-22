@@ -4,7 +4,7 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>PayTrack</title>
-  <link rel="stylesheet" href="/static/styles.css" />
+  <link rel="stylesheet" href="/static/styles.css?v={{ v }}" />
 </head>
 <body>
   <aside class="sidebar">
@@ -44,16 +44,16 @@
       <section id="view-overview" class="view active">
         <div class="stats">
           <div class="stat-card">
+            <div class="stat-label">Account Balance</div>
+            <div class="stat-value" id="ov-balance">—</div>
+          </div>
+          <div class="stat-card">
             <div class="stat-label">Total Income (Actual)</div>
             <div class="stat-value positive" id="ov-income">—</div>
           </div>
           <div class="stat-card">
             <div class="stat-label">Total Spent (Actual)</div>
             <div class="stat-value negative" id="ov-spent">—</div>
-          </div>
-          <div class="stat-card">
-            <div class="stat-label">Total Cash (Actual)</div>
-            <div class="stat-value" id="ov-net">—</div>
           </div>
           <div class="stat-card">
             <div class="stat-label">Budget Year</div>
@@ -146,7 +146,7 @@
         </div>
         <div class="table-wrap">
           <table>
-            <thead><tr><th>Match type</th><th>Match value</th><th>Maps to</th><th class="num">Priority</th><th></th></tr></thead>
+            <thead><tr><th style="width:2.5rem"></th><th>Match type</th><th>Match value</th><th>Maps to</th><th></th></tr></thead>
             <tbody id="rules-body"></tbody>
           </table>
         </div>
@@ -163,6 +163,6 @@
   <div id="modal-root"></div>
 
   <script src="https://cdn.plaid.com/link/v2/stable/link-initialize.js"></script>
-  <script src="/static/app.js"></script>
+  <script src="/static/app.js?v={{ v }}"></script>
 </body>
 </html>

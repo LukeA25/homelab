@@ -83,20 +83,29 @@ def month_label(ym: str) -> str:
 # ---------------------------------------------------------------------------
 
 class Resolver:
-    """Resolves a transaction to a subcategory id using overrides + rules."""
+    """Resolves a transaction to a subcategory id using overrides + rules.
+
+    Lower priority number = higher precedence (the top row of the rules list
+    wins). The frontend persists priority as the row order.
+    """
 
     def __init__(self, rules: list[MappingRule]):
         self.detailed: dict[str, int] = {}
         self.primary: dict[str, int] = {}
         self.name_rules: list[tuple[str, int]] = []
 
-        # Higher priority wins; process ascending so higher overwrites.
-        for rule in sorted(rules, key=lambda r: r.priority):
+        ordered = sorted(rules, key=lambda r: r.priority)
+
+        # For dict lookups, process bottom-up so the top (lowest priority) wins.
+        for rule in reversed(ordered):
             if rule.match_type == "pfc_detailed":
                 self.detailed[rule.match_value.upper()] = rule.subcategory_id
             elif rule.match_type == "pfc_primary":
                 self.primary[rule.match_value.upper()] = rule.subcategory_id
-            elif rule.match_type == "name_contains":
+
+        # For name matching, check top-first and take the first hit.
+        for rule in ordered:
+            if rule.match_type == "name_contains":
                 self.name_rules.append((rule.match_value.lower(), rule.subcategory_id))
 
     def resolve(self, txn: Transaction) -> Optional[int]:

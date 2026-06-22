@@ -8,7 +8,15 @@ const state = {
   months: [],
   labels: [],
   categories: [],
+  accounts: [],
   allTx: [],
+  rules: [],
+};
+
+const MATCH_TYPE_LABELS = {
+  pfc_primary: "Plaid category (primary)",
+  pfc_detailed: "Plaid category (detailed)",
+  name_contains: "Description contains",
 };
 
 const el = (id) => document.getElementById(id);
@@ -121,7 +129,8 @@ async function loadSnapshot() {
   const snap = await api("/data");
   setConnected(snap.connected);
   setLastRefreshed(snap.last_refreshed);
-  renderAccounts(snap.accounts || []);
+  state.accounts = snap.accounts || [];
+  renderAccounts(state.accounts);
 }
 
 async function refreshFromPlaid() {
@@ -132,7 +141,8 @@ async function refreshFromPlaid() {
     const snap = await jpost("/refresh");
     setConnected(snap.connected);
     setLastRefreshed(snap.last_refreshed);
-    renderAccounts(snap.accounts || []);
+    state.accounts = snap.accounts || [];
+    renderAccounts(state.accounts);
     await reloadCurrentView();
     toast("Data refreshed from Plaid");
   } catch (err) {
@@ -224,9 +234,9 @@ async function loadOverview() {
 
   el("ov-income").textContent = money(data.income.actual);
   el("ov-spent").textContent = money(data.expense.actual);
-  const net = el("ov-net");
-  net.textContent = money(data.net.actual);
-  net.className = "stat-value " + (data.net.actual >= 0 ? "positive" : "negative");
+  const totalBalance = state.accounts.reduce(
+    (sum, a) => sum + (a.current_balance ?? a.available_balance ?? 0), 0);
+  el("ov-balance").textContent = money(totalBalance);
 
   if (data.months.length) {
     const first = data.months[0], last = data.months[data.months.length - 1];
@@ -253,6 +263,22 @@ function renderMonthly() {
   const labels = monthlyData.month_labels;
   const head = `<thead><tr><th>Category</th><th>Subcategory</th>${labels.map((l) => `<th class="num">${esc(l)}</th>`).join("")}<th class="num">Total</th></tr></thead>`;
 
+  const sumByMonth = (groups) => {
+    const sums = new Array(labels.length).fill(0);
+    for (const cat of groups) {
+      for (const s of cat.subcategories) {
+        const vals = mode === "projected" ? s.projected : s.actual;
+        vals.forEach((v, i) => { sums[i] += v || 0; });
+      }
+    }
+    return sums;
+  };
+
+  const totalRow = (label, sums, cls) => {
+    const grand = sums.reduce((a, b) => a + b, 0);
+    return `<tr class="total-row ${cls || ""}"><td colspan="2">${esc(label)}</td>${sums.map((v) => `<td class="num">${money(v)}</td>`).join("")}<td class="num">${money(grand)}</td></tr>`;
+  };
+
   const body = [];
   const renderGroup = (sectionLabel, groups) => {
     body.push(`<tr class="cat-row"><td colspan="${labels.length + 3}">${esc(sectionLabel)}</td></tr>`);
@@ -266,6 +292,14 @@ function renderMonthly() {
   };
   renderGroup("Income", monthlyData.income);
   renderGroup("Expenses", monthlyData.expense);
+
+  const incSums = sumByMonth(monthlyData.income);
+  const expSums = sumByMonth(monthlyData.expense);
+  const netSums = incSums.map((v, i) => v - expSums[i]);
+
+  body.push(totalRow("Total Income", incSums, "pos"));
+  body.push(totalRow("Total Expenses", expSums, "neg"));
+  body.push(totalRow("Net", netSums));
 
   el("monthly-table").innerHTML = head + `<tbody>${body.join("")}</tbody>`;
 }
@@ -292,7 +326,7 @@ function renderTransactions(list) {
     const budgetCls = t.resolved_subcategory_id == null ? "unassigned" : (t.is_override ? "override" : "");
     const select = `<select class="assign-select" data-tx="${esc(t.id)}">${subcategoryOptions(t.resolved_subcategory_id, true)}</select>`;
     const del = t.source === "manual" ? `<button class="btn btn-danger btn-sm" data-del="${esc(t.id)}">Delete</button>` : "";
-    return `<tr>
+    return `<tr class="tx-row" data-row-tx="${esc(t.id)}" title="Click for details">
       <td>${esc(t.date)}</td>
       <td>${esc(t.merchant_name || t.name || "")}${pending}${manual}</td>
       <td><span class="category-tag ${budgetCls}" style="text-transform:capitalize">${plaidCat}</span></td>
@@ -326,6 +360,56 @@ async function assignTransaction(txId, subId) {
   toast("Transaction reassigned");
   const t = state.allTx.find((x) => x.id === txId);
   if (t) { t.resolved_subcategory_id = subId ? Number(subId) : null; t.is_override = !!subId; }
+}
+
+function openInfoModal(title, rowsHtml) {
+  const root = el("modal-root");
+  root.innerHTML = `
+    <div class="modal-overlay">
+      <div class="modal">
+        <h3>${esc(title)}</h3>
+        <dl class="detail-list">${rowsHtml}</dl>
+        <div class="modal-actions">
+          <button type="button" class="btn btn-primary" id="modal-close">Close</button>
+        </div>
+      </div>
+    </div>`;
+  const close = () => { root.innerHTML = ""; };
+  el("modal-close").onclick = close;
+  root.querySelector(".modal-overlay").onclick = (e) => {
+    if (e.target.classList.contains("modal-overlay")) close();
+  };
+}
+
+function detailRow(label, value) {
+  return `<div class="detail-row"><dt>${esc(label)}</dt><dd>${value}</dd></div>`;
+}
+
+function openTxDetail(id) {
+  const t = state.allTx.find((x) => x.id === id);
+  if (!t) return;
+
+  const budget = t.resolved_subcategory_id == null
+    ? "Unassigned"
+    : `${esc(t.resolved_category_name || "?")} / ${esc(t.resolved_name || "?")}${t.is_override ? " (manually set)" : ""}`;
+  const amount = t.amount > 0
+    ? `<span class="neg">-${money(t.amount)}</span> (spending)`
+    : `<span class="pos">+${money(Math.abs(t.amount))}</span> (income)`;
+
+  const rows = [
+    detailRow("Date", esc(t.date)),
+    detailRow("Name", esc(t.name || "—")),
+    detailRow("Merchant", esc(t.merchant_name || "—")),
+    detailRow("Amount", amount),
+    detailRow("Plaid category (primary)", `<code>${esc(t.pfc_primary || "—")}</code>`),
+    detailRow("Plaid category (detailed)", `<code>${esc(t.pfc_detailed || "—")}</code>`),
+    detailRow("Budget category", budget),
+    detailRow("Status", t.pending ? "Pending" : "Posted"),
+    detailRow("Source", t.source === "manual" ? "Manual entry" : "Plaid"),
+    detailRow("Transaction ID", `<code>${esc(t.id)}</code>`),
+  ].join("");
+
+  openInfoModal("Transaction details", rows);
 }
 
 function openManualModal() {
@@ -370,7 +454,7 @@ function renderCategoryEditor() {
       ).join("");
       return `<tr>
         <td><input class="input sub-name" data-sub="${s.id}" value="${esc(s.name)}" /></td>
-        <td><input class="input input-num annual-input" data-sub="${s.id}" type="number" step="0.01" value="${s.annual || 0}" title="Set annual total and spread evenly" /></td>
+        <td class="annual-cell"><input class="input input-num annual-input" data-sub="${s.id}" type="number" step="0.01" value="${s.annual || 0}" title="Set annual total and spread evenly" /></td>
         ${monthInputs}
         <td><button class="btn btn-danger btn-sm" data-del-sub="${s.id}">✕</button></td>
       </tr>`;
@@ -388,7 +472,7 @@ function renderCategoryEditor() {
       <div class="cat-editor-body">
         <div class="proj-grid-wrap">
           <table>
-            <thead><tr><th>Subcategory</th><th class="num">Annual</th>${monthHeads}<th></th></tr></thead>
+            <thead><tr><th>Subcategory</th><th class="num annual-col">Annual</th>${monthHeads}<th></th></tr></thead>
             <tbody>${rows || `<tr><td colspan="${state.months.length + 3}" style="color:var(--muted)">No subcategories yet.</td></tr>`}</tbody>
           </table>
         </div>
@@ -422,31 +506,85 @@ async function saveProjections() {
 
 async function loadRules() {
   const data = await api("/rules");
-  el("rules-body").innerHTML = data.rules.map((r) => `<tr>
-    <td>${esc(r.match_type)}</td>
+  state.rules = data.rules;
+  el("rules-body").innerHTML = data.rules.map((r) => `<tr draggable="true" data-id="${r.id}">
+    <td class="drag-handle" title="Drag to reorder">⠿</td>
+    <td>${esc(MATCH_TYPE_LABELS[r.match_type] || r.match_type)}</td>
     <td>${esc(r.match_value)}</td>
     <td>${esc(r.category_name || "?")} / ${esc(r.subcategory_name || "?")}</td>
-    <td class="num">${r.priority}</td>
     <td><button class="btn btn-danger btn-sm" data-del-rule="${r.id}">Delete</button></td>
-  </tr>`).join("") || `<tr><td colspan="5" style="color:var(--muted)">No rules yet.</td></tr>`;
+  </tr>`).join("") || `<tr><td colspan="5" style="color:var(--muted)">No rules yet. Higher rows take precedence.</td></tr>`;
+  ensureRuleDnd();
+  bindRuleRows();
+}
+
+// ---- Drag-to-reorder (top row = highest precedence) ----
+
+let draggingRule = null;
+
+function ruleAfterElement(container, y) {
+  const rows = [...container.querySelectorAll("tr[draggable]:not(.dragging)")];
+  let closest = { offset: -Infinity, element: null };
+  for (const row of rows) {
+    const box = row.getBoundingClientRect();
+    const offset = y - box.top - box.height / 2;
+    if (offset < 0 && offset > closest.offset) closest = { offset, element: row };
+  }
+  return closest.element;
+}
+
+function ensureRuleDnd() {
+  const tbody = el("rules-body");
+  if (tbody.dataset.dnd) return;
+  tbody.dataset.dnd = "1";
+  tbody.addEventListener("dragover", (e) => {
+    if (!draggingRule) return;
+    e.preventDefault();
+    const after = ruleAfterElement(tbody, e.clientY);
+    if (after == null) tbody.appendChild(draggingRule);
+    else tbody.insertBefore(draggingRule, after);
+  });
+}
+
+function bindRuleRows() {
+  el("rules-body").querySelectorAll("tr[draggable]").forEach((tr) => {
+    tr.addEventListener("dragstart", () => {
+      draggingRule = tr;
+      setTimeout(() => tr.classList.add("dragging"), 0);
+    });
+    tr.addEventListener("dragend", async () => {
+      tr.classList.remove("dragging");
+      draggingRule = null;
+      await persistRuleOrder();
+    });
+  });
+}
+
+async function persistRuleOrder() {
+  const rows = [...el("rules-body").querySelectorAll("tr[draggable]")];
+  try {
+    await Promise.all(rows.map((tr, i) => jpatch(`/rules/${tr.dataset.id}`, { priority: i })));
+    toast("Rule order saved");
+  } catch (err) {
+    toast(err.message, "error");
+  }
 }
 
 function openRuleModal() {
   openModal("Add mapping rule", [
     { name: "match_type", label: "Match type", type: "select", value: "pfc_primary", options: [
-      { value: "pfc_primary", label: "Plaid category (primary)" },
-      { value: "pfc_detailed", label: "Plaid category (detailed)" },
-      { value: "name_contains", label: "Description contains" }] },
+      { value: "pfc_primary", label: MATCH_TYPE_LABELS.pfc_primary },
+      { value: "pfc_detailed", label: MATCH_TYPE_LABELS.pfc_detailed },
+      { value: "name_contains", label: MATCH_TYPE_LABELS.name_contains }] },
     { name: "match_value", label: "Match value (e.g. FOOD_AND_DRINK or 'uber')", type: "text" },
     { name: "subcategory_id", label: "Maps to", type: "select",
       options: state.categories.flatMap((c) => c.subcategories.map((s) => ({ value: s.id, label: `${c.name} / ${s.name}` }))) },
-    { name: "priority", label: "Priority (higher wins)", type: "number", value: "0" },
   ], async (data) => {
     await jpost("/rules", {
       match_type: data.match_type,
       match_value: data.match_value,
       subcategory_id: Number(data.subcategory_id),
-      priority: parseInt(data.priority) || 0,
+      priority: state.rules.length,  // append to the bottom (lowest precedence)
     });
     toast("Rule added");
     await loadRules();
@@ -530,6 +668,14 @@ document.addEventListener("change", (e) => {
 
 document.addEventListener("click", (e) => {
   const t = e.target;
+
+  // Open transaction details when clicking a row (but not its dropdown/delete).
+  const txRow = t.closest && t.closest("tr.tx-row");
+  if (txRow && !t.closest(".assign-select") && !t.dataset.del) {
+    openTxDetail(txRow.dataset.rowTx);
+    return;
+  }
+
   if (t.dataset.del) {
     if (confirm("Delete this manual transaction?"))
       jdel(`/transactions/${encodeURIComponent(t.dataset.del)}`).then(() => { toast("Deleted"); loadTransactions(); }).catch((err) => toast(err.message, "error"));

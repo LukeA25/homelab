@@ -5,6 +5,7 @@ on demand (link/exchange and POST /refresh) because it bills per call; every
 page load reads cached data from SQLite for free.
 """
 
+import os
 import uuid
 from datetime import date, datetime, timezone
 from typing import Optional
@@ -135,9 +136,30 @@ class SettingsIn(BaseModel):
 # Pages
 # ---------------------------------------------------------------------------
 
+def _static_version() -> str:
+    """Cache-busting token: newest mtime of the static assets.
+
+    Changes whenever app.js/styles.css change (including on a rebuild, since the
+    files are re-copied), so browsers always fetch the latest instead of a
+    stale cached copy.
+    """
+    paths = ["app/static/app.js", "app/static/styles.css"]
+    latest = 0.0
+    for p in paths:
+        try:
+            latest = max(latest, os.path.getmtime(p))
+        except OSError:
+            pass
+    return str(int(latest))
+
+
 @app.get("/", response_class=HTMLResponse)
 def index(request: Request):
-    return templates.TemplateResponse(request=request, name="index.html", context={})
+    return templates.TemplateResponse(
+        request=request,
+        name="index.html",
+        context={"v": _static_version()},
+    )
 
 
 # ---------------------------------------------------------------------------
