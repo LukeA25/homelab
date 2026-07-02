@@ -18,7 +18,7 @@ Browser / LAN client
         └── finance.home.arpa    → Finance app (:8000)
 ```
 
-Persistent data lives under `/srv/appdata/<service>`. Jellyfin media is mounted from `/srv/media`.
+Service **config** (compose files, YAML, Caddyfile, DNS records) lives in this repo under `compose/<service>/`. **Runtime data** (databases, caches, TLS certs, blocklists cache) stays on the host at `/srv/appdata/<service>`. Jellyfin media is mounted from `/srv/media`.
 
 ## Repository layout
 
@@ -27,16 +27,30 @@ homelab/
 ├── apps/
 │   └── finance-app/       # Custom budgeting app (FastAPI + React)
 └── compose/
-    ├── caddy/             # Reverse proxy and Caddyfile
+    ├── caddy/             # Reverse proxy; Caddyfile in git, TLS state in /srv/appdata
     ├── finance-app/
     ├── homepage/
+    │   └── config/        # services.yaml, widgets.yaml, etc.
     ├── jellyfin/
     ├── pihole/
+    │   └── config/        # adlists.list, dnsmasq.d local DNS
     ├── portainer/
     └── uptime-kuma/
 ```
 
 Each service has its own Compose stack under `compose/<name>/`. Stacks are started independently from their directory.
+
+### Config vs. runtime data
+
+| Service | In git (edit here) | On host only (runtime) |
+|---------|-------------------|------------------------|
+| Caddy | `compose/caddy/Caddyfile` | `/srv/appdata/caddy/{data,config}` (TLS certs) |
+| Homepage | `compose/homepage/config/*.yaml` | — |
+| Pi-hole | `compose/pihole/config/` (adlists, local DNS) | `/srv/appdata/pihole/etc-pihole` (query log, blocklist cache) |
+| Jellyfin | — | `/srv/appdata/jellyfin/{config,cache}` (library DB, transcodes) |
+| Finance app | `apps/finance-app/` source | `/srv/appdata/finance-app` (SQLite) |
+| Uptime Kuma | — | `/srv/appdata/uptime-kuma` (monitor DB) |
+| Portainer | — | `/srv/appdata/portainer` (Portainer DB) |
 
 ## Services
 
@@ -50,7 +64,7 @@ Each service has its own Compose stack under `compose/<name>/`. Stacks are start
 | [Portainer](https://www.portainer.io/) | `compose/portainer` | http://portainer.home.arpa | 9443 | Container management UI |
 | Finance app | `compose/finance-app` | http://finance.home.arpa | 8000 | Custom app (see below) |
 
-Update the upstream IP in `compose/caddy/Caddyfile` if the host address changes.
+Update the upstream IP in `compose/caddy/Caddyfile` and local DNS in `compose/pihole/config/dnsmasq.d/99-homelab-dns.conf` if the host address changes.
 
 ## Getting started
 
@@ -61,6 +75,8 @@ Update the upstream IP in `compose/caddy/Caddyfile` if the host address changes.
 - Local DNS records for `*.home.arpa` pointing at the homelab host (Pi-hole custom DNS works well here)
 
 ### Start a service
+
+For Pi-hole and the finance app, copy the `.env.example` to `.env` in that stack's directory first (see [Configuration notes](#configuration-notes)).
 
 ```bash
 cd compose/<service>
@@ -148,8 +164,8 @@ The production Docker image is a multi-stage build: Node builds the frontend, th
 ## Configuration notes
 
 - **Secrets:** `.env` files and `*.db` / SQLite files are gitignored. Keep Plaid credentials and Pi-hole passwords out of version control.
-- **Pi-hole:** DNS listens on the LAN IP and Tailscale IP. Set the web admin password via environment variables in the compose file.
-- **Homepage:** `HOMEPAGE_ALLOWED_HOSTS` must include any hostname or IP you use to reach the dashboard.
+- **Pi-hole:** Copy `compose/pihole/.env.example` to `.env` and set `FTLCONF_webserver_api_password`. Local DNS records for `*.home.arpa` are in `compose/pihole/config/dnsmasq.d/99-homelab-dns.conf`; ad block lists are in `compose/pihole/config/adlists.list`. DNS listens on the LAN IP and Tailscale IP (configured in `docker-compose.yaml`).
+- **Homepage:** Edit `compose/homepage/config/services.yaml` (and related YAML) to change the dashboard. `HOMEPAGE_ALLOWED_HOSTS` in `docker-compose.yaml` must include any hostname or IP you use to reach the dashboard.
 - **Portainer:** Caddy proxies to Portainer's HTTPS port with `tls_insecure_skip_verify` because Portainer uses a self-signed cert.
 
 ## Network

@@ -1,0 +1,33 @@
+- Homelab:
+    - Uptime Kuma:
+        icon: uptime-kuma.png
+        href: http://kuma.home.arpa
+        description: Service monitoring
+    - Portainer:
+        icon: portainer.png
+        href: http://portainer.home.arpa
+        description: Docker management
+    - GitHub:
+        icon: github.png
+        href: https://github.com/LukeA25/homelab
+        description: Project Repo
+
+- Apps:
+    - Jellyfin:
+        icon: jellyfin.png
+        href: http://jellyfin.home.arpa
+        description: Media server
+    - Finance:
+        icon: cashapp.png
+        href: https://homelab.tail47f19f.ts.net
+        description: Spending Tracker
+
+- Network:
+    - Pi-hole:
+        icon: pi-hole.png
+        href: http://pihole.home.arpa/admin
+        description: DNS and ad blocking
+    - Tailscale:
+        icon: tailscale.png
+        href: https://login.tailscale.com/admin/machines
+        description: VPN Console

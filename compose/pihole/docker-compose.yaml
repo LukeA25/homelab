@@ -10,10 +10,13 @@ services:
       - "100.101.135.109:53:53/tcp"
       - "100.101.135.109:53:53/udp"
       - "8080:80/tcp"
+    env_file:
+      - .env
     environment:
       TZ: "America/New_York"
-      FTLCONF_webserver_api_password: "Andpih25!"
       FTLCONF_dns_listeningMode: "all"
+      FTLCONF_misc_etc_dnsmasq_d: "true"
     volumes:
       - /srv/appdata/pihole/etc-pihole:/etc/pihole
-      - /srv/appdata/pihole/etc-dnsmasq.d:/etc/dnsmasq.d
+      - ./config/adlists.list:/etc/pihole/adlists.list:ro
+      - ./config/dnsmasq.d:/etc/dnsmasq.d:ro
