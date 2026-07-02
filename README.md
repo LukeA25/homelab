@@ -161,6 +161,58 @@ Vite serves the SPA on port 5173 and proxies `/api` to the backend on port 8000.
 
 The production Docker image is a multi-stage build: Node builds the frontend, then Python serves both the API and static assets.
 
+## Automated deploy (GitHub Actions)
+
+Pushes to `main` trigger a self-hosted runner on the homelab to `git pull` and redeploy only the Compose stacks whose files changed.
+
+### One-time setup on GitHub
+
+1. Open [github.com/LukeA25/homelab/settings/actions](https://github.com/LukeA25/homelab/settings/actions)
+2. Under **Actions permissions**, choose **Allow all actions and reusable workflows** (or restrict to verified creators if you prefer)
+3. Go to **Settings → Actions → Runners → New self-hosted runner**
+4. Select **Linux** and **x64** — GitHub shows install commands; run them on the homelab (see below)
+
+### One-time setup on the homelab
+
+Run as your normal user (`landerson` — must be in the `docker` group):
+
+```bash
+# Example — use the exact commands GitHub shows on the runner setup page
+mkdir -p ~/actions-runner && cd ~/actions-runner
+curl -o actions-runner-linux-x64-2.XXX.X.tar.gz -L https://github.com/actions/runner/releases/download/v2.XXX.X/actions-runner-linux-x64-2.XXX.X.tar.gz
+tar xzf ./actions-runner-linux-x64-2.XXX.X.tar.gz
+./config.sh --url https://github.com/LukeA25/homelab --token <TOKEN_FROM_GITHUB>
+sudo ./svc.sh install landerson
+sudo ./svc.sh start
+```
+
+Notes:
+
+- The token is single-use and expires quickly — generate it from the GitHub runner page right before running `config.sh`
+- Install the service as `landerson` so it can run `docker compose` without sudo
+- The workflow deploys from `/home/landerson/homelab` (where your `.env` files already live), not a separate checkout directory
+- Ensure `compose/finance-app/.env` and `compose/pihole/.env` exist on the host before deploying those stacks
+
+### What gets deployed
+
+| Changed paths | Stack restarted |
+|---------------|-----------------|
+| `compose/caddy/` | caddy |
+| `compose/homepage/` | homepage |
+| `compose/pihole/` | pihole |
+| `compose/jellyfin/` | jellyfin |
+| `compose/portainer/` | portainer |
+| `compose/uptime-kuma/` | uptime-kuma |
+| `compose/finance-app/` or `apps/finance-app/` | finance-app (rebuilt) |
+
+README-only or unrelated changes skip deploy. The logic lives in `scripts/deploy.sh`.
+
+### Verify it works
+
+1. Commit and push `.github/workflows/deploy.yml` and `scripts/deploy.sh`
+2. Make a small change (e.g. edit `compose/homepage/config/services.yaml`) and push to `main`
+3. Check **Actions** tab on GitHub — the workflow should run on your self-hosted runner
+
 ## Configuration notes
 
 - **Secrets:** `.env` files and `*.db` / SQLite files are gitignored. Keep Plaid credentials and Pi-hole passwords out of version control.

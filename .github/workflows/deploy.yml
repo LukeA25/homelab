@@ -1,0 +1,25 @@
+name: Deploy homelab
+
+on:
+  push:
+    branches: [main]
+
+concurrency:
+  group: homelab-deploy
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: self-hosted
+    steps:
+      - name: Sync repo and deploy changed stacks
+        run: |
+          set -euo pipefail
+
+          REPO=/home/landerson/homelab
+          cd "$REPO"
+
+          git fetch origin main
+          git reset --hard "${{ github.sha }}"
+
+          ./scripts/deploy.sh "${{ github.event.before }}" "${{ github.sha }}"
