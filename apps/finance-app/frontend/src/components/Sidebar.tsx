@@ -1,35 +1,12 @@
 import { NavLink } from "react-router-dom";
-import {
-  LayoutDashboard,
-  ArrowLeftRight,
-  Wallet,
-  ReceiptText,
-  Landmark,
-  Settings,
-  type LucideIcon,
-} from "lucide-react";
+import { NAV } from "@/lib/nav";
 import { cn } from "@/lib/utils";
-
-interface NavItem {
-  to: string;
-  label: string;
-  icon: LucideIcon;
-}
-
-const NAV: NavItem[] = [
-  { to: "/", label: "Dashboard", icon: LayoutDashboard },
-  { to: "/cash-flow", label: "Cash Flow", icon: ArrowLeftRight },
-  { to: "/budget", label: "Budget", icon: Wallet },
-  { to: "/transactions", label: "Transactions", icon: ReceiptText },
-  { to: "/accounts", label: "Accounts", icon: Landmark },
-  { to: "/settings", label: "Settings", icon: Settings },
-];
 
 export function Sidebar() {
   return (
-    <aside className="flex h-full w-60 shrink-0 flex-col border-r border-hairline bg-card">
+    <aside className="hidden h-full w-60 shrink-0 flex-col border-r border-hairline bg-card lg:flex">
       <div className="px-6 py-6 text-xl font-bold tracking-tight">
-        Pay<span className="text-accent">Track</span>
+        Fin<span className="text-accent">ances</span>
       </div>
       <nav className="flex-1 px-3">
         <ul className="space-y-1">

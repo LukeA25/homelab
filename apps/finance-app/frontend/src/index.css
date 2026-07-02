@@ -12,6 +12,7 @@
   body {
     @apply bg-canvas text-ink antialiased;
     font-feature-settings: "cv11", "ss01";
+    -webkit-tap-highlight-color: transparent;
   }
 
   /* Align currency figures in tables and stat cards. */

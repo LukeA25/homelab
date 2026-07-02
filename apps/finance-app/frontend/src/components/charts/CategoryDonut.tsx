@@ -7,7 +7,15 @@ export interface DonutItem {
   color: string;
 }
 
-export function CategoryDonut({ items }: { items: DonutItem[] }) {
+export function CategoryDonut({
+  items,
+  showLegend = true,
+  height = 260,
+}: {
+  items: DonutItem[];
+  showLegend?: boolean;
+  height?: number;
+}) {
   const total = items.reduce((sum, i) => sum + i.value, 0);
 
   const option = {
@@ -15,18 +23,20 @@ export function CategoryDonut({ items }: { items: DonutItem[] }) {
       trigger: "item",
       valueFormatter: (v: number) => money(v),
     },
-    legend: {
-      type: "scroll",
-      orient: "vertical",
-      right: 0,
-      top: "center",
-      textStyle: { color: "#6B6B70" },
-    },
+    legend: showLegend
+      ? {
+          type: "scroll",
+          orient: "vertical",
+          right: 0,
+          top: "center",
+          textStyle: { color: "#6B6B70" },
+        }
+      : { show: false },
     series: [
       {
         type: "pie",
         radius: ["58%", "82%"],
-        center: ["34%", "50%"],
+        center: showLegend ? ["34%", "50%"] : ["50%", "50%"],
         avoidLabelOverlap: false,
         itemStyle: { borderColor: "#FFFFFF", borderWidth: 2 },
         label: {
@@ -48,5 +58,5 @@ export function CategoryDonut({ items }: { items: DonutItem[] }) {
     ],
   };
 
-  return <ReactECharts option={option} style={{ height: 260 }} notMerge />;
+  return <ReactECharts option={option} style={{ height }} notMerge />;
 }

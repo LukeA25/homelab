@@ -11,6 +11,71 @@ export interface AccountSnapshot {
   available_balance: number | null;
 }
 
+export function isInvestmentAccount(a: AccountSnapshot): boolean {
+  return (a.type || "").toLowerCase() === "investment";
+}
+
+export interface InvestmentAccount {
+  id: string;
+  name: string | null;
+  official_name: string | null;
+  mask: string | null;
+  subtype: string | null;
+  current_balance: number | null;
+  available_balance: number | null;
+}
+
+export interface HoldingRow {
+  id: number | null;
+  account_id: string;
+  account_name: string | null;
+  account_mask: string | null;
+  security_id: string;
+  ticker: string | null;
+  name: string;
+  security_type: string | null;
+  quantity: number;
+  price: number | null;
+  value: number;
+  cost_basis: number | null;
+  gain: number | null;
+}
+
+export interface AllocationRow {
+  ticker: string | null;
+  name: string;
+  value: number;
+  cost_basis: number;
+  has_cost: boolean;
+  gain: number | null;
+  weight: number;
+}
+
+export interface InvestmentActivity {
+  id: string;
+  date: string;
+  name: string | null;
+  amount: number;
+  quantity: number | null;
+  price: number | null;
+  type: string | null;
+  subtype: string | null;
+  ticker: string | null;
+  security_name: string | null;
+  account_name: string | null;
+}
+
+export interface InvestmentsResponse {
+  connected: boolean;
+  total_value: number;
+  total_cost_basis: number | null;
+  total_gain: number | null;
+  accounts: InvestmentAccount[];
+  holdings: HoldingRow[];
+  allocation: AllocationRow[];
+  activity: InvestmentActivity[];
+}
+
 export interface Snapshot {
   connected: boolean;
   last_refreshed: string | null;
@@ -112,4 +177,22 @@ export interface CategoriesResponse {
   months: string[];
   labels: string[];
   categories: Category[];
+}
+
+export interface Settings {
+  budget_year_start_month: number;
+}
+
+export interface MappingRule {
+  id: number;
+  match_type: "pfc_primary" | "pfc_detailed" | "name_contains";
+  match_value: string;
+  subcategory_id: number;
+  subcategory_name: string | null;
+  category_name: string | null;
+  priority: number;
+}
+
+export interface RulesResponse {
+  rules: MappingRule[];
 }

@@ -4,14 +4,18 @@ import { api } from "@/lib/api";
 import { useConnectBank } from "@/lib/queries";
 import { Button } from "./ui/Button";
 
+export type LinkMode = "all" | "bank" | "investments";
+
 // Fetches a Plaid link token, opens Plaid Link, then exchanges the public
 // token and triggers a refresh (see useConnectBank).
 export function ConnectBankButton({
   label = "Connect Bank",
   variant = "primary",
+  mode = "all",
 }: {
   label?: string;
   variant?: "primary" | "ghost";
+  mode?: LinkMode;
 }) {
   const [token, setToken] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -19,8 +23,9 @@ export function ConnectBankButton({
 
   useEffect(() => {
     let active = true;
+    setToken(null);
     api
-      .createLinkToken()
+      .createLinkToken(mode)
       .then((r) => {
         if (active) setToken(r.link_token);
       })
@@ -30,7 +35,7 @@ export function ConnectBankButton({
     return () => {
       active = false;
     };
-  }, []);
+  }, [mode]);
 
   const onSuccess = useCallback(
     (publicToken: string) => {

@@ -1,16 +1,57 @@
 import ReactECharts from "echarts-for-react";
 import { money } from "@/lib/utils";
 
-// Cumulative spending by day of month: current month vs previous month.
+// Cumulative spending by day of month for one month, optionally vs the prior month.
 export function SpendingLineChart({
   days,
   thisMonth,
-  lastMonth,
+  lastMonth = null,
+  thisMonthLabel = "This month",
+  lastMonthLabel = "Last month",
 }: {
   days: number[];
   thisMonth: (number | null)[];
-  lastMonth: (number | null)[];
+  lastMonth?: (number | null)[] | null;
+  thisMonthLabel?: string;
+  lastMonthLabel?: string;
 }) {
+  const showCompare = lastMonth != null;
+
+  const series: {
+    name: string;
+    type: "line";
+    smooth: boolean;
+    showSymbol: boolean;
+    data: (number | null)[];
+    lineStyle: { width: number; color: string; type?: "dashed" | "solid" };
+    itemStyle: { color: string };
+    areaStyle: { color: string };
+  }[] = [
+    {
+      name: thisMonthLabel,
+      type: "line" as const,
+      smooth: true,
+      showSymbol: false,
+      data: thisMonth,
+      lineStyle: { width: 3, color: "#F26B3A" },
+      itemStyle: { color: "#F26B3A" },
+      areaStyle: { color: "rgba(242,107,58,0.10)" },
+    },
+  ];
+
+  if (showCompare) {
+    series.push({
+      name: lastMonthLabel,
+      type: "line" as const,
+      smooth: true,
+      showSymbol: false,
+      data: lastMonth,
+      lineStyle: { width: 2, color: "#B8B8BE", type: "dashed" },
+      itemStyle: { color: "#B8B8BE" },
+      areaStyle: { color: "transparent" },
+    });
+  }
+
   const option = {
     grid: { left: 8, right: 16, top: 24, bottom: 8, containLabel: true },
     tooltip: {
@@ -18,7 +59,7 @@ export function SpendingLineChart({
       valueFormatter: (v: number) => money(v),
     },
     legend: {
-      data: ["This month", "Last month"],
+      data: showCompare ? [thisMonthLabel, lastMonthLabel] : [thisMonthLabel],
       right: 0,
       top: 0,
       icon: "roundRect",
@@ -39,25 +80,7 @@ export function SpendingLineChart({
       },
       splitLine: { lineStyle: { color: "#F1F0EC" } },
     },
-    series: [
-      {
-        name: "This month",
-        type: "line",
-        smooth: true,
-        showSymbol: false,
-        data: thisMonth,
-        lineStyle: { width: 3, color: "#F26B3A" },
-        areaStyle: { color: "rgba(242,107,58,0.10)" },
-      },
-      {
-        name: "Last month",
-        type: "line",
-        smooth: true,
-        showSymbol: false,
-        data: lastMonth,
-        lineStyle: { width: 2, color: "#B8B8BE", type: "dashed" },
-      },
-    ],
+    series,
   };
 
   return <ReactECharts option={option} style={{ height: 260 }} notMerge />;

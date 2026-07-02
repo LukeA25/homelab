@@ -1,13 +1,12 @@
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AppShell } from "./components/AppShell";
 import { Dashboard } from "./pages/Dashboard";
-import {
-  CashFlowPage,
-  BudgetPage,
-  TransactionsPage,
-  AccountsPage,
-  SettingsPage,
-} from "./pages/Placeholder";
+import { Transactions } from "./pages/Transactions";
+import { Budget } from "./pages/Budget";
+import { Spending } from "./pages/Spending";
+import { Investments } from "./pages/Investments";
+import { Accounts } from "./pages/Accounts";
+import { Settings } from "./pages/Settings";
 
 export default function App() {
   return (
@@ -15,11 +14,12 @@ export default function App() {
       <Routes>
         <Route element={<AppShell />}>
           <Route index element={<Dashboard />} />
-          <Route path="cash-flow" element={<CashFlowPage />} />
-          <Route path="budget" element={<BudgetPage />} />
-          <Route path="transactions" element={<TransactionsPage />} />
-          <Route path="accounts" element={<AccountsPage />} />
-          <Route path="settings" element={<SettingsPage />} />
+          <Route path="spending" element={<Spending />} />
+          <Route path="budget" element={<Budget />} />
+          <Route path="transactions" element={<Transactions />} />
+          <Route path="investments" element={<Investments />} />
+          <Route path="accounts" element={<Accounts />} />
+          <Route path="settings" element={<Settings />} />
         </Route>
       </Routes>
     </BrowserRouter>
