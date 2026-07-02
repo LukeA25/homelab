@@ -18,7 +18,7 @@
         href: http://jellyfin.home.arpa
         description: Media server
     - Finance:
-        icon: actual-budget.png
+        icon: mdi-cash-#22c55e
         href: https://homelab.tail47f19f.ts.net
         description: Spending Tracker
 
