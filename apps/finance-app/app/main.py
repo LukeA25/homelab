@@ -10,10 +10,9 @@ import uuid
 from datetime import date, datetime, timezone
 from typing import Optional
 
-from fastapi import Depends, FastAPI, HTTPException, Request
-from fastapi.responses import HTMLResponse
+from fastapi import APIRouter, Depends, FastAPI, HTTPException
+from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
-from fastapi.templating import Jinja2Templates
 from pydantic import BaseModel
 from sqlmodel import Session, select
 
@@ -33,8 +32,10 @@ from .models import (
 from .seed import seed_if_empty
 
 app = FastAPI()
-app.mount("/static", StaticFiles(directory="app/static"), name="static")
-templates = Jinja2Templates(directory="app/templates")
+
+# All JSON endpoints live under /api so they don't collide with the SPA's
+# client-side routes (e.g. /transactions is a page in the React app).
+api = APIRouter()
 
 
 @app.on_event("startup")
@@ -133,40 +134,10 @@ class SettingsIn(BaseModel):
 
 
 # ---------------------------------------------------------------------------
-# Pages
-# ---------------------------------------------------------------------------
-
-def _static_version() -> str:
-    """Cache-busting token: newest mtime of the static assets.
-
-    Changes whenever app.js/styles.css change (including on a rebuild, since the
-    files are re-copied), so browsers always fetch the latest instead of a
-    stale cached copy.
-    """
-    paths = ["app/static/app.js", "app/static/styles.css"]
-    latest = 0.0
-    for p in paths:
-        try:
-            latest = max(latest, os.path.getmtime(p))
-        except OSError:
-            pass
-    return str(int(latest))
-
-
-@app.get("/", response_class=HTMLResponse)
-def index(request: Request):
-    return templates.TemplateResponse(
-        request=request,
-        name="index.html",
-        context={"v": _static_version()},
-    )
-
-
-# ---------------------------------------------------------------------------
 # Plaid link / exchange / refresh
 # ---------------------------------------------------------------------------
 
-@app.post("/create_link_token")
+@api.post("/create_link_token")
 def create_link_token():
     try:
         return plaid_client.create_link_token()
@@ -174,7 +145,7 @@ def create_link_token():
         raise HTTPException(status_code=500, detail=str(e))
 
 
-@app.post("/exchange_public_token")
+@api.post("/exchange_public_token")
 def exchange_public_token(body: PublicTokenRequest, session: Session = Depends(get_db)):
     try:
         resp = plaid_client.exchange_public_token(body.public_token)
@@ -214,7 +185,21 @@ def _upsert_accounts(session: Session, item: Item, accounts: list[dict]):
 def _upsert_transactions(session: Session, txns: list[dict]):
     for t in txns:
         pfc = t.get("personal_finance_category") or {}
-        existing = session.get(Transaction, t["transaction_id"])
+        txn_id = t["transaction_id"]
+
+        # When a pending charge posts, Plaid issues a brand-new transaction with
+        # a new id and points back to the original via pending_transaction_id.
+        # Collapse that lifecycle into one row: drop the stale pending row (so it
+        # isn't double-counted) and carry over any manual override the user set.
+        carried_override = None
+        pending_pred_id = t.get("pending_transaction_id")
+        if pending_pred_id and pending_pred_id != txn_id:
+            pred = session.get(Transaction, pending_pred_id)
+            if pred is not None:
+                carried_override = pred.override_subcategory_id
+                session.delete(pred)
+
+        existing = session.get(Transaction, txn_id)
         if existing:
             # Preserve the user's manual override; refresh everything else.
             existing.account_id = t.get("account_id")
@@ -225,10 +210,12 @@ def _upsert_transactions(session: Session, txns: list[dict]):
             existing.pfc_primary = pfc.get("primary")
             existing.pfc_detailed = pfc.get("detailed")
             existing.pending = bool(t.get("pending"))
+            if existing.override_subcategory_id is None and carried_override is not None:
+                existing.override_subcategory_id = carried_override
             session.add(existing)
         else:
             session.add(Transaction(
-                id=t["transaction_id"],
+                id=txn_id,
                 account_id=t.get("account_id"),
                 date=str(t.get("date")),
                 name=t.get("name"),
@@ -238,11 +225,12 @@ def _upsert_transactions(session: Session, txns: list[dict]):
                 pfc_detailed=pfc.get("detailed"),
                 pending=bool(t.get("pending")),
                 source="plaid",
+                override_subcategory_id=carried_override,
             ))
     session.commit()
 
 
-@app.post("/refresh")
+@api.post("/refresh")
 def refresh(session: Session = Depends(get_db)):
     """Pull the full budget year from Plaid and upsert into SQLite."""
     item = active_item(session)
@@ -271,9 +259,45 @@ def refresh(session: Session = Depends(get_db)):
 # Snapshot (cached, no Plaid)
 # ---------------------------------------------------------------------------
 
-@app.get("/data")
+@api.get("/data")
 def data(session: Session = Depends(get_db)):
     return snapshot(session)
+
+
+@api.delete("/accounts/{account_id}")
+def delete_account(account_id: str, session: Session = Depends(get_db)):
+    """Remove an account, delete all its transactions, and disconnect the
+    Plaid Item if it has no remaining accounts."""
+    acct = session.get(Account, account_id)
+    if not acct:
+        raise HTTPException(status_code=404, detail="Account not found")
+
+    for t in session.exec(
+        select(Transaction).where(Transaction.account_id == account_id)
+    ).all():
+        session.delete(t)
+
+    item_db_id = acct.item_db_id
+    session.delete(acct)
+    session.commit()
+
+    # If this was the last account for its Plaid Item, remove the Item too.
+    if item_db_id is not None:
+        remaining = session.exec(
+            select(Account).where(Account.item_db_id == item_db_id)
+        ).first()
+        if remaining is None:
+            item = session.get(Item, item_db_id)
+            if item:
+                try:
+                    plaid_client.remove_item(item.access_token)
+                except Exception:
+                    # Stale/sandbox token may already be invalid; remove locally anyway.
+                    pass
+                session.delete(item)
+                session.commit()
+
+    return {"ok": True}
 
 
 def snapshot(session: Session) -> dict:
@@ -302,19 +326,19 @@ def snapshot(session: Session) -> dict:
 # Budget year metadata
 # ---------------------------------------------------------------------------
 
-@app.get("/months")
+@api.get("/months")
 def months(session: Session = Depends(get_db)):
     start_month = budget.get_start_month(session)
     ms = budget.budget_months(start_month)
     return {"months": ms, "labels": [budget.month_label(m) for m in ms]}
 
 
-@app.get("/settings")
+@api.get("/settings")
 def get_settings(session: Session = Depends(get_db)):
     return {"budget_year_start_month": budget.get_start_month(session)}
 
 
-@app.put("/settings")
+@api.put("/settings")
 def put_settings(body: SettingsIn, session: Session = Depends(get_db)):
     month = max(1, min(12, body.budget_year_start_month))
     budget.set_meta(session, "budget_year_start_month", str(month))
@@ -325,7 +349,7 @@ def put_settings(body: SettingsIn, session: Session = Depends(get_db)):
 # Categories + subcategories + projections
 # ---------------------------------------------------------------------------
 
-@app.get("/categories")
+@api.get("/categories")
 def list_categories(session: Session = Depends(get_db)):
     start_month = budget.get_start_month(session)
     ms = budget.budget_months(start_month)
@@ -365,7 +389,7 @@ def list_categories(session: Session = Depends(get_db)):
     return {"months": ms, "labels": [budget.month_label(m) for m in ms], "categories": result}
 
 
-@app.post("/categories")
+@api.post("/categories")
 def create_category(body: CategoryIn, session: Session = Depends(get_db)):
     if body.kind not in ("income", "expense"):
         raise HTTPException(status_code=400, detail="kind must be income or expense")
@@ -376,7 +400,7 @@ def create_category(body: CategoryIn, session: Session = Depends(get_db)):
     return {"id": cat.id}
 
 
-@app.patch("/categories/{category_id}")
+@api.patch("/categories/{category_id}")
 def update_category(category_id: int, body: CategoryUpdate, session: Session = Depends(get_db)):
     cat = session.get(Category, category_id)
     if not cat:
@@ -394,7 +418,7 @@ def update_category(category_id: int, body: CategoryUpdate, session: Session = D
     return {"ok": True}
 
 
-@app.delete("/categories/{category_id}")
+@api.delete("/categories/{category_id}")
 def delete_category(category_id: int, session: Session = Depends(get_db)):
     cat = session.get(Category, category_id)
     if not cat:
@@ -426,7 +450,7 @@ def _delete_subcategory(session: Session, sub: Subcategory):
     session.delete(sub)
 
 
-@app.post("/subcategories")
+@api.post("/subcategories")
 def create_subcategory(body: SubcategoryIn, session: Session = Depends(get_db)):
     if not session.get(Category, body.category_id):
         raise HTTPException(status_code=404, detail="Category not found")
@@ -437,7 +461,7 @@ def create_subcategory(body: SubcategoryIn, session: Session = Depends(get_db)):
     return {"id": sub.id}
 
 
-@app.patch("/subcategories/{subcategory_id}")
+@api.patch("/subcategories/{subcategory_id}")
 def update_subcategory(subcategory_id: int, body: SubcategoryUpdate, session: Session = Depends(get_db)):
     sub = session.get(Subcategory, subcategory_id)
     if not sub:
@@ -453,7 +477,7 @@ def update_subcategory(subcategory_id: int, body: SubcategoryUpdate, session: Se
     return {"ok": True}
 
 
-@app.delete("/subcategories/{subcategory_id}")
+@api.delete("/subcategories/{subcategory_id}")
 def delete_subcategory(subcategory_id: int, session: Session = Depends(get_db)):
     sub = session.get(Subcategory, subcategory_id)
     if not sub:
@@ -463,7 +487,7 @@ def delete_subcategory(subcategory_id: int, session: Session = Depends(get_db)):
     return {"ok": True}
 
 
-@app.put("/projections")
+@api.put("/projections")
 def put_projections(body: ProjectionsIn, session: Session = Depends(get_db)):
     for item in body.projections:
         existing = session.exec(
@@ -489,7 +513,7 @@ def put_projections(body: ProjectionsIn, session: Session = Depends(get_db)):
 # Budget compute
 # ---------------------------------------------------------------------------
 
-@app.get("/budget")
+@api.get("/budget")
 def get_budget(view: str = "overview", session: Session = Depends(get_db)):
     start_month = budget.get_start_month(session)
     ms = budget.budget_months(start_month)
@@ -516,7 +540,7 @@ def _subcategory_index(session: Session):
     return index
 
 
-@app.get("/transactions")
+@api.get("/transactions")
 def list_transactions(month: Optional[str] = None, session: Session = Depends(get_db)):
     resolver = budget.load_resolver(session)
     sub_index = _subcategory_index(session)
@@ -546,7 +570,7 @@ def list_transactions(month: Optional[str] = None, session: Session = Depends(ge
     return {"transactions": rows}
 
 
-@app.put("/transactions/{transaction_id}/assign")
+@api.put("/transactions/{transaction_id}/assign")
 def assign_transaction(transaction_id: str, body: AssignIn, session: Session = Depends(get_db)):
     txn = session.get(Transaction, transaction_id)
     if not txn:
@@ -559,7 +583,7 @@ def assign_transaction(transaction_id: str, body: AssignIn, session: Session = D
     return {"ok": True}
 
 
-@app.post("/transactions")
+@api.post("/transactions")
 def create_manual_transaction(body: ManualTxnIn, session: Session = Depends(get_db)):
     txn = Transaction(
         id=f"manual:{uuid.uuid4()}",
@@ -576,7 +600,7 @@ def create_manual_transaction(body: ManualTxnIn, session: Session = Depends(get_
     return {"id": txn.id}
 
 
-@app.delete("/transactions/{transaction_id}")
+@api.delete("/transactions/{transaction_id}")
 def delete_transaction(transaction_id: str, session: Session = Depends(get_db)):
     txn = session.get(Transaction, transaction_id)
     if not txn:
@@ -592,7 +616,7 @@ def delete_transaction(transaction_id: str, session: Session = Depends(get_db)):
 # Mapping rules
 # ---------------------------------------------------------------------------
 
-@app.get("/rules")
+@api.get("/rules")
 def list_rules(session: Session = Depends(get_db)):
     sub_index = _subcategory_index(session)
     rules = session.exec(select(MappingRule).order_by(MappingRule.priority)).all()
@@ -612,7 +636,7 @@ def list_rules(session: Session = Depends(get_db)):
     }
 
 
-@app.post("/rules")
+@api.post("/rules")
 def create_rule(body: RuleIn, session: Session = Depends(get_db)):
     if body.match_type not in ("pfc_primary", "pfc_detailed", "name_contains"):
         raise HTTPException(status_code=400, detail="Invalid match_type")
@@ -630,7 +654,7 @@ def create_rule(body: RuleIn, session: Session = Depends(get_db)):
     return {"id": rule.id}
 
 
-@app.patch("/rules/{rule_id}")
+@api.patch("/rules/{rule_id}")
 def update_rule(rule_id: int, body: RuleUpdate, session: Session = Depends(get_db)):
     rule = session.get(MappingRule, rule_id)
     if not rule:
@@ -648,7 +672,7 @@ def update_rule(rule_id: int, body: RuleUpdate, session: Session = Depends(get_d
     return {"ok": True}
 
 
-@app.delete("/rules/{rule_id}")
+@api.delete("/rules/{rule_id}")
 def delete_rule(rule_id: int, session: Session = Depends(get_db)):
     rule = session.get(MappingRule, rule_id)
     if not rule:
@@ -656,3 +680,31 @@ def delete_rule(rule_id: int, session: Session = Depends(get_db)):
     session.delete(rule)
     session.commit()
     return {"ok": True}
+
+
+# ---------------------------------------------------------------------------
+# Wire up the API and serve the built React SPA
+# ---------------------------------------------------------------------------
+
+app.include_router(api, prefix="/api")
+
+# The Vite build is copied here by the Docker image (see Dockerfile). __file__
+# is /app/app/main.py, so the dist lives at /app/frontend_dist.
+_DIST = os.path.join(os.path.dirname(os.path.dirname(__file__)), "frontend_dist")
+_ASSETS = os.path.join(_DIST, "assets")
+
+if os.path.isdir(_ASSETS):
+    app.mount("/assets", StaticFiles(directory=_ASSETS), name="assets")
+
+
+@app.get("/{full_path:path}")
+def spa(full_path: str):
+    """Serve the SPA shell for all non-API routes so client-side routing and
+    deep links work. Registered last, so /api and /assets take precedence."""
+    index = os.path.join(_DIST, "index.html")
+    if os.path.isfile(index):
+        return FileResponse(index)
+    raise HTTPException(
+        status_code=404,
+        detail="Frontend build not found. Run the Vite build (see Dockerfile).",
+    )

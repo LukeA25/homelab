@@ -3,5 +3,4 @@ uvicorn[standard]
 plaid-python
 python-dotenv
 requests
-jinja2
 sqlmodel

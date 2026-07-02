@@ -17,6 +17,7 @@ from plaid.model.country_code import CountryCode
 from plaid.model.item_public_token_exchange_request import (
     ItemPublicTokenExchangeRequest,
 )
+from plaid.model.item_remove_request import ItemRemoveRequest
 from plaid.model.link_token_create_request import LinkTokenCreateRequest
 from plaid.model.link_token_create_request_user import LinkTokenCreateRequestUser
 from plaid.model.products import Products
@@ -61,6 +62,12 @@ def create_link_token() -> dict:
 def exchange_public_token(public_token: str) -> dict:
     request = ItemPublicTokenExchangeRequest(public_token=public_token)
     return client.item_public_token_exchange(request).to_dict()
+
+
+def remove_item(access_token: str) -> dict:
+    """Tell Plaid to remove the Item (stops billing for that connection)."""
+    request = ItemRemoveRequest(access_token=access_token)
+    return client.item_remove(request).to_dict()
 
 
 def get_balances(access_token: str) -> list[dict]:
