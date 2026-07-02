@@ -10,7 +10,7 @@ import uuid
 from datetime import date, datetime, timezone
 from typing import Optional
 
-from fastapi import APIRouter, Depends, FastAPI, HTTPException
+from fastapi import APIRouter, Depends, FastAPI, HTTPException, Query
 from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
@@ -23,9 +23,12 @@ from .db import get_session, init_db
 from .models import (
     Account,
     Category,
+    Holding,
+    InvestmentTransaction,
     Item,
     MappingRule,
     Projection,
+    Security,
     Subcategory,
     Transaction,
 )
@@ -59,6 +62,115 @@ def require_token(session: Session) -> str:
     if not item:
         raise HTTPException(status_code=400, detail="No bank connected yet")
     return item.access_token
+
+
+def is_investment_type(type_str: Optional[str]) -> bool:
+    return (type_str or "").lower() == "investment"
+
+
+def _upsert_securities(session: Session, securities: list[dict]) -> None:
+    for s in securities:
+        sid = s.get("security_id")
+        if not sid:
+            continue
+        sec = session.get(Security, sid)
+        if not sec:
+            sec = Security(id=sid)
+        sec.ticker = s.get("ticker_symbol")
+        sec.name = s.get("name")
+        sec.security_type = str(s.get("type")) if s.get("type") is not None else None
+        sec.close_price = s.get("close_price")
+        sec.iso_currency_code = s.get("iso_currency_code")
+        session.add(sec)
+    session.commit()
+
+
+def _sync_investments(
+    session: Session,
+    item: Item,
+    access_token: str,
+    start_date: date,
+    end_date: date,
+) -> None:
+    """Pull holdings + investment transactions. No-op if Item lacks investments."""
+    try:
+        data = plaid_client.get_investments_holdings(access_token)
+    except ApiException:
+        return
+
+    accounts = data.get("accounts", [])
+    if accounts:
+        _upsert_accounts(session, item, accounts)
+
+    securities = data.get("securities", [])
+    if securities:
+        _upsert_securities(session, securities)
+
+    account_ids = [a["account_id"] for a in accounts if a.get("account_id")]
+    for acct_id in account_ids:
+        for h in session.exec(
+            select(Holding).where(Holding.account_id == acct_id)
+        ).all():
+            session.delete(h)
+    session.commit()
+
+    now = datetime.now(timezone.utc).isoformat()
+    for h in data.get("holdings", []):
+        session.add(Holding(
+            account_id=h["account_id"],
+            security_id=h["security_id"],
+            quantity=h.get("quantity") or 0.0,
+            institution_price=h.get("institution_price"),
+            institution_value=h.get("institution_value"),
+            cost_basis=h.get("cost_basis"),
+            iso_currency_code=h.get("iso_currency_code"),
+            updated_at=now,
+        ))
+    session.commit()
+
+    try:
+        inv_txns, txn_securities = plaid_client.get_investment_transactions(
+            access_token, start_date, end_date
+        )
+    except ApiException:
+        return
+
+    if txn_securities:
+        _upsert_securities(session, txn_securities)
+    _upsert_investment_transactions(session, inv_txns)
+
+
+def _upsert_investment_transactions(session: Session, txns: list[dict]) -> None:
+    for t in txns:
+        txn_id = t["investment_transaction_id"]
+        existing = session.get(InvestmentTransaction, txn_id)
+        if existing:
+            existing.account_id = t.get("account_id")
+            existing.security_id = t.get("security_id")
+            existing.date = str(t.get("date"))
+            existing.name = t.get("name")
+            existing.amount = t.get("amount") or 0.0
+            existing.quantity = t.get("quantity")
+            existing.price = t.get("price")
+            existing.txn_type = str(t.get("type")) if t.get("type") is not None else None
+            existing.subtype = str(t.get("subtype")) if t.get("subtype") is not None else None
+            existing.fees = t.get("fees")
+            session.add(existing)
+        else:
+            session.add(InvestmentTransaction(
+                id=txn_id,
+                account_id=t.get("account_id"),
+                security_id=t.get("security_id"),
+                date=str(t.get("date")),
+                name=t.get("name"),
+                amount=t.get("amount") or 0.0,
+                quantity=t.get("quantity"),
+                price=t.get("price"),
+                txn_type=str(t.get("type")) if t.get("type") is not None else None,
+                subtype=str(t.get("subtype")) if t.get("subtype") is not None else None,
+                fees=t.get("fees"),
+            ))
+    session.commit()
 
 
 # ---------------------------------------------------------------------------
@@ -138,9 +250,11 @@ class SettingsIn(BaseModel):
 # ---------------------------------------------------------------------------
 
 @api.post("/create_link_token")
-def create_link_token():
+def create_link_token(mode: str = Query(default="all")):
+    if mode not in ("all", "bank", "investments"):
+        raise HTTPException(status_code=400, detail="Invalid mode")
     try:
-        return plaid_client.create_link_token()
+        return plaid_client.create_link_token(mode)
     except ApiException as e:
         raise HTTPException(status_code=500, detail=str(e))
 
@@ -250,6 +364,7 @@ def refresh(session: Session = Depends(get_db)):
 
     _upsert_accounts(session, item, accounts)
     _upsert_transactions(session, txns)
+    _sync_investments(session, item, item.access_token, start_date, end_date)
     budget.set_meta(session, "last_refreshed", datetime.now(timezone.utc).isoformat())
 
     return snapshot(session)
@@ -274,6 +389,18 @@ def delete_account(account_id: str, session: Session = Depends(get_db)):
 
     for t in session.exec(
         select(Transaction).where(Transaction.account_id == account_id)
+    ).all():
+        session.delete(t)
+
+    for h in session.exec(
+        select(Holding).where(Holding.account_id == account_id)
+    ).all():
+        session.delete(h)
+
+    for t in session.exec(
+        select(InvestmentTransaction).where(
+            InvestmentTransaction.account_id == account_id
+        )
     ).all():
         session.delete(t)
 
@@ -319,6 +446,129 @@ def snapshot(session: Session) -> dict:
             }
             for a in accounts
         ],
+    }
+
+
+@api.get("/investments")
+def investments_data(session: Session = Depends(get_db)):
+    """Cached portfolio overview — no Plaid calls."""
+    accounts = [
+        a for a in session.exec(select(Account)).all()
+        if is_investment_type(a.type)
+    ]
+    account_ids = {a.id for a in accounts}
+    account_index = {a.id: a for a in accounts}
+
+    holdings = session.exec(select(Holding)).all()
+    holdings = [h for h in holdings if h.account_id in account_ids]
+
+    sec_ids = {h.security_id for h in holdings}
+    securities = {
+        s.id: s
+        for s in session.exec(select(Security)).all()
+        if s.id in sec_ids
+    }
+
+    total_value = sum(h.institution_value or 0 for h in holdings)
+    total_cost = sum(h.cost_basis or 0 for h in holdings if h.cost_basis)
+
+    holding_rows = []
+    by_ticker: dict[str, dict] = {}
+
+    for h in holdings:
+        sec = securities.get(h.security_id)
+        acct = account_index.get(h.account_id)
+        val = h.institution_value or 0
+        ticker = sec.ticker if sec and sec.ticker else None
+        label = (sec.name if sec and sec.name else None) or ticker or "Unknown"
+        group_key = ticker or label
+
+        holding_rows.append({
+            "id": h.id,
+            "account_id": h.account_id,
+            "account_name": acct.official_name or acct.name if acct else None,
+            "account_mask": acct.mask if acct else None,
+            "security_id": h.security_id,
+            "ticker": sec.ticker if sec else None,
+            "name": label,
+            "security_type": sec.security_type if sec else None,
+            "quantity": h.quantity,
+            "price": h.institution_price,
+            "value": val,
+            "cost_basis": h.cost_basis,
+            "gain": (val - h.cost_basis) if h.cost_basis is not None else None,
+        })
+
+        key = group_key
+        if key not in by_ticker:
+            by_ticker[key] = {
+                "ticker": ticker,
+                "name": label,
+                "value": 0.0,
+                "cost_basis": 0.0,
+                "has_cost": False,
+            }
+        by_ticker[key]["value"] += val
+        if h.cost_basis is not None:
+            by_ticker[key]["cost_basis"] += h.cost_basis
+            by_ticker[key]["has_cost"] = True
+
+    allocation = sorted(
+        [
+            {
+                **v,
+                "gain": (v["value"] - v["cost_basis"]) if v["has_cost"] else None,
+                "weight": (v["value"] / total_value) if total_value > 0 else 0,
+            }
+            for v in by_ticker.values()
+        ],
+        key=lambda x: x["value"],
+        reverse=True,
+    )
+
+    inv_txns = session.exec(
+        select(InvestmentTransaction).order_by(InvestmentTransaction.date.desc())
+    ).all()
+    inv_txns = [t for t in inv_txns if t.account_id in account_ids][:40]
+
+    activity = []
+    for t in inv_txns:
+        sec = session.get(Security, t.security_id) if t.security_id else None
+        acct = account_index.get(t.account_id)
+        activity.append({
+            "id": t.id,
+            "date": t.date,
+            "name": t.name,
+            "amount": t.amount,
+            "quantity": t.quantity,
+            "price": t.price,
+            "type": t.txn_type,
+            "subtype": t.subtype,
+            "ticker": sec.ticker if sec else None,
+            "security_name": sec.name if sec else None,
+            "account_name": acct.official_name or acct.name if acct else None,
+        })
+
+    return {
+        "connected": active_item(session) is not None,
+        "total_value": total_value,
+        "total_cost_basis": total_cost if total_cost > 0 else None,
+        "total_gain": (total_value - total_cost) if total_cost > 0 else None,
+        "accounts": [
+            {
+                "id": a.id,
+                "name": a.name,
+                "official_name": a.official_name,
+                "mask": a.mask,
+                "subtype": a.subtype,
+                "current_balance": a.current_balance,
+                "available_balance": a.available_balance,
+            }
+            for a in accounts
+        ],
+        "holdings": sorted(holding_rows, key=lambda r: r["value"] or 0, reverse=True),
+        "allocation": allocation,
+        "activity": activity,
     }
 
 

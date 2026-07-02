@@ -14,6 +14,15 @@ from plaid.api_client import ApiClient
 from plaid.configuration import Configuration
 from plaid.model.accounts_balance_get_request import AccountsBalanceGetRequest
 from plaid.model.country_code import CountryCode
+from plaid.model.investments_holdings_get_request import (
+    InvestmentsHoldingsGetRequest,
+)
+from plaid.model.investments_transactions_get_request import (
+    InvestmentsTransactionsGetRequest,
+)
+from plaid.model.investments_transactions_get_request_options import (
+    InvestmentsTransactionsGetRequestOptions,
+)
 from plaid.model.item_public_token_exchange_request import (
     ItemPublicTokenExchangeRequest,
 )
@@ -48,9 +57,18 @@ _configuration = Configuration(
 client = plaid_api.PlaidApi(ApiClient(_configuration))
 
 
-def create_link_token() -> dict:
+def create_link_token(mode: str = "all") -> dict:
+    """mode: 'all' | 'bank' | 'investments' — controls which Plaid products Link requests."""
+    products = []
+    if mode in ("all", "bank"):
+        products.append(Products("transactions"))
+    if mode in ("all", "investments"):
+        products.append(Products("investments"))
+    if not products:
+        products.append(Products("transactions"))
+
     request = LinkTokenCreateRequest(
-        products=[Products("transactions")],
+        products=products,
         client_name="Homelab Finance App",
         country_codes=[CountryCode("US")],
         language="en",
@@ -99,3 +117,39 @@ def get_transactions(
             break
 
     return all_txns
+
+
+def get_investments_holdings(access_token: str) -> dict:
+    request = InvestmentsHoldingsGetRequest(access_token=access_token)
+    return client.investments_holdings_get(request).to_dict()
+
+
+def get_investment_transactions(
+    access_token: str, start_date: date, end_date: date
+) -> tuple[list[dict], list[dict]]:
+    """Returns (investment_transactions, securities) paginated to completion."""
+    all_txns: list[dict] = []
+    securities: list[dict] = []
+    offset = 0
+
+    while True:
+        request = InvestmentsTransactionsGetRequest(
+            access_token=access_token,
+            start_date=start_date,
+            end_date=end_date,
+            options=InvestmentsTransactionsGetRequestOptions(
+                count=_PAGE_SIZE, offset=offset
+            ),
+        )
+        resp = client.investments_transactions_get(request).to_dict()
+        batch = resp.get("investment_transactions", [])
+        all_txns.extend(batch)
+        if not securities:
+            securities = resp.get("securities", [])
+
+        total = resp.get("total_investment_transactions", len(all_txns))
+        offset += len(batch)
+        if not batch or offset >= total:
+            break
+
+    return all_txns, securities

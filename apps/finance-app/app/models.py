@@ -97,3 +97,44 @@ class Meta(SQLModel, table=True):
 
     key: str = Field(primary_key=True)
     value: Optional[str] = None
+
+
+class Security(SQLModel, table=True):
+    """Cached security metadata from Plaid (ticker, name, type)."""
+
+    id: str = Field(primary_key=True)  # Plaid security_id
+    ticker: Optional[str] = None
+    name: Optional[str] = None
+    security_type: Optional[str] = None
+    close_price: Optional[float] = None
+    iso_currency_code: Optional[str] = None
+
+
+class Holding(SQLModel, table=True):
+    """A position in an investment account (refreshed from Plaid)."""
+
+    id: Optional[int] = Field(default=None, primary_key=True)
+    account_id: str = Field(foreign_key="account.id", index=True)
+    security_id: str = Field(foreign_key="security.id", index=True)
+    quantity: float = 0.0
+    institution_price: Optional[float] = None
+    institution_value: Optional[float] = None
+    cost_basis: Optional[float] = None
+    iso_currency_code: Optional[str] = None
+    updated_at: Optional[str] = None
+
+
+class InvestmentTransaction(SQLModel, table=True):
+    """Buy/sell/dividend/etc. from Plaid's investments product."""
+
+    id: str = Field(primary_key=True)  # Plaid investment_transaction_id
+    account_id: str = Field(foreign_key="account.id", index=True)
+    security_id: Optional[str] = Field(default=None, foreign_key="security.id")
+    date: str
+    name: Optional[str] = None
+    amount: float = 0.0
+    quantity: Optional[float] = None
+    price: Optional[float] = None
+    txn_type: Optional[str] = None
+    subtype: Optional[str] = None
+    fees: Optional[float] = None
