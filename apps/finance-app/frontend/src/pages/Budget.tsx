@@ -133,7 +133,7 @@ export function Budget() {
   const mutations = useCategoryMutations();
   const { show: toast } = useToast();
 
-  const [mode, setMode] = useState<"projected" | "actual">("projected");
+  const [tab, setTab] = useState<"targets" | "tracking">("tracking");
   const [edits, setEdits] = useState<EditMap>({});
   const [dirty, setDirty] = useState(false);
   const [showAddCat, setShowAddCat] = useState(false);
@@ -156,20 +156,8 @@ export function Budget() {
     setDirty(false);
   }, [cats]);
 
-  // Actuals lookup keyed by subcategory:month, from the monthly view.
-  const actuals = useMemo(() => {
-    const map: Record<string, number> = {};
-    if (!monthly) return map;
-    const groups = [...monthly.income, ...monthly.expense];
-    for (const c of groups) {
-      for (const s of c.subcategories) {
-        monthly.months.forEach((m, i) => {
-          map[key(s.id, m)] = s.actual[i] ?? 0;
-        });
-      }
-    }
-    return map;
-  }, [monthly]);
+  const annualOf = (subId: number) =>
+    months.reduce((sum, m) => sum + (edits[key(subId, m)] || 0), 0);
 
   const setMonth = (subId: number, month: string, value: number) => {
     setEdits((prev) => ({ ...prev, [key(subId, month)]: value }));
@@ -185,13 +173,6 @@ export function Budget() {
     });
     setDirty(true);
   };
-
-  const annualOf = (subId: number, source: "edit" | "actual") =>
-    months.reduce(
-      (sum, m) =>
-        sum + ((source === "edit" ? edits : actuals)[key(subId, m)] || 0),
-      0,
-    );
 
   const save = () => {
     const projections = Object.entries(edits).map(([k, amount]) => {
@@ -223,10 +204,18 @@ export function Budget() {
     if (window.confirm(`Delete "${label}"? This cannot be undone.`)) run();
   };
 
-  const cellValue = (subId: number, month: string) =>
-    mode === "actual"
-      ? actuals[key(subId, month)] || 0
-      : edits[key(subId, month)] || 0;
+  const switchTab = (next: "targets" | "tracking") => {
+    if (tab === "targets" && dirty && next === "tracking") {
+      if (
+        !window.confirm(
+          "You have unsaved projection changes. Switch tabs without saving?",
+        )
+      ) {
+        return;
+      }
+    }
+    setTab(next);
+  };
 
   const statusMonth = currentMonthKey();
   const statusIdx = monthly ? monthIndex(monthly, statusMonth) : 0;
@@ -235,157 +224,292 @@ export function Budget() {
     [monthly, statusIdx],
   );
 
+  const expenseByCategory = useMemo(() => {
+    if (!overview) return [];
+    return [...overview.expense.categories].sort((a, b) => b.actual - a.actual);
+  }, [overview]);
+
+  const monthExpenseByCategory = useMemo(() => {
+    if (!monthly) return [];
+    return monthly.expense
+      .map((cat) => {
+        const projected = cat.subcategories.reduce(
+          (sum, sub) => sum + (sub.projected[statusIdx] ?? 0),
+          0,
+        );
+        const actual = cat.subcategories.reduce(
+          (sum, sub) => sum + (sub.actual[statusIdx] ?? 0),
+          0,
+        );
+        return { id: cat.id, name: cat.name, projected, actual };
+      })
+      .filter((c) => c.projected > 0 || c.actual > 0)
+      .sort((a, b) => b.actual - a.actual);
+  }, [monthly, statusIdx]);
+
   return (
     <div className="space-y-6">
       <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center">
         <div className="inline-flex w-full rounded-lg border border-hairline p-0.5 sm:w-auto">
-          {(["projected", "actual"] as const).map((m) => (
+          {(
+            [
+              ["tracking", "Track budget"],
+              ["targets", "Set targets"],
+            ] as const
+          ).map(([v, label]) => (
             <button
-              key={m}
-              onClick={() => setMode(m)}
+              key={v}
+              onClick={() => switchTab(v)}
               className={cn(
-                "rounded-md px-3 py-1.5 text-sm font-medium capitalize transition-colors",
-                mode === m
+                "rounded-md px-3 py-1.5 text-sm font-medium transition-colors",
+                tab === v
                   ? "bg-accent-soft text-accent"
                   : "text-ink-muted hover:text-ink",
               )}
             >
-              {m}
+              {label}
             </button>
           ))}
         </div>
-        <div className="ml-auto flex items-center gap-2">
-          <Button variant="ghost" onClick={() => setShowAddCat(true)}>
-            <Plus className="h-4 w-4" /> Add category
-          </Button>
-          {mode === "projected" ? (
+        {tab === "targets" ? (
+          <div className="ml-auto flex items-center gap-2">
+            <Button variant="ghost" onClick={() => setShowAddCat(true)}>
+              <Plus className="h-4 w-4" /> Add category
+            </Button>
             <Button
               onClick={save}
               disabled={!dirty || putProjections.isPending}
             >
               {putProjections.isPending ? "Saving\u2026" : "Save projections"}
             </Button>
-          ) : null}
-        </div>
+          </div>
+        ) : null}
       </div>
 
-      {overview ? (
-        <Card>
-          <CardHeader title="Summary" subtitle="Projected vs. actual (full year)" />
+      {tab === "tracking" ? (
+        <div className="space-y-6">
+          {overview ? (
+            <Card>
+              <CardHeader
+                title="Summary"
+                subtitle="Projected vs. actual (full year)"
+              />
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="text-left text-xs uppercase tracking-wide text-ink-faint">
+                    <th className="py-2 font-medium">Section</th>
+                    <th className="py-2 text-right font-medium">Projected</th>
+                    <th className="py-2 text-right font-medium">Actual</th>
+                    <th className="py-2 text-right font-medium">Difference</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {[
+                    { label: "Income", d: overview.income },
+                    { label: "Expenses", d: overview.expense },
+                  ].map((row) => (
+                    <tr key={row.label} className="border-t border-hairline">
+                      <td className="py-2 font-medium">{row.label}</td>
+                      <td className="py-2 text-right tnum">
+                        {money(row.d.projected)}
+                      </td>
+                      <td className="py-2 text-right tnum">
+                        {money(row.d.actual)}
+                      </td>
+                      <td
+                        className={cn(
+                          "py-2 text-right tnum",
+                          row.d.difference < 0 ? "text-loss" : "text-gain",
+                        )}
+                      >
+                        {money(row.d.difference)}
+                      </td>
+                    </tr>
+                  ))}
+                  <tr className="border-t border-hairline font-semibold">
+                    <td className="py-2">Net</td>
+                    <td className="py-2 text-right tnum">
+                      {money(overview.net.projected)}
+                    </td>
+                    <td className="py-2 text-right tnum">
+                      {money(overview.net.actual)}
+                    </td>
+                    <td
+                      className={cn(
+                        "py-2 text-right tnum",
+                        overview.net.difference < 0 ? "text-loss" : "text-gain",
+                      )}
+                    >
+                      {money(overview.net.difference)}
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </Card>
+          ) : null}
+
+          {expenseByCategory.length > 0 ? (
+            <Card>
+          <CardHeader
+            title="Expenses by category"
+            subtitle="Full budget year — projected vs. actual"
+          />
           <table className="w-full text-sm">
             <thead>
               <tr className="text-left text-xs uppercase tracking-wide text-ink-faint">
-                <th className="py-2 font-medium">Section</th>
+                <th className="py-2 font-medium">Category</th>
                 <th className="py-2 text-right font-medium">Projected</th>
                 <th className="py-2 text-right font-medium">Actual</th>
                 <th className="py-2 text-right font-medium">Difference</th>
               </tr>
             </thead>
             <tbody>
-              {[
-                { label: "Income", d: overview.income },
-                { label: "Expenses", d: overview.expense },
-              ].map((row) => (
-                <tr key={row.label} className="border-t border-hairline">
-                  <td className="py-2 font-medium">{row.label}</td>
-                  <td className="py-2 text-right tnum">
-                    {money(row.d.projected)}
-                  </td>
-                  <td className="py-2 text-right tnum">{money(row.d.actual)}</td>
+              {expenseByCategory.map((cat) => (
+                <tr key={cat.id} className="border-t border-hairline">
+                  <td className="py-2 font-medium">{cat.name}</td>
+                  <td className="py-2 text-right tnum">{money(cat.projected)}</td>
+                  <td className="py-2 text-right tnum">{money(cat.actual)}</td>
                   <td
                     className={cn(
                       "py-2 text-right tnum",
-                      row.d.difference < 0 ? "text-loss" : "text-gain",
+                      cat.difference < 0 ? "text-loss" : "text-gain",
                     )}
                   >
-                    {money(row.d.difference)}
+                    {money(cat.difference)}
                   </td>
                 </tr>
               ))}
               <tr className="border-t border-hairline font-semibold">
-                <td className="py-2">Net</td>
+                <td className="py-2">Total</td>
                 <td className="py-2 text-right tnum">
-                  {money(overview.net.projected)}
+                  {money(overview!.expense.projected)}
                 </td>
                 <td className="py-2 text-right tnum">
-                  {money(overview.net.actual)}
+                  {money(overview!.expense.actual)}
                 </td>
                 <td
                   className={cn(
                     "py-2 text-right tnum",
-                    overview.net.difference < 0 ? "text-loss" : "text-gain",
+                    overview!.expense.difference < 0 ? "text-loss" : "text-gain",
                   )}
                 >
-                  {money(overview.net.difference)}
+                  {money(overview!.expense.difference)}
                 </td>
               </tr>
             </tbody>
           </table>
-        </Card>
-      ) : null}
+            </Card>
+          ) : null}
 
-      {statusRows.length > 0 ? (
-        <Card>
-          <CardHeader
-            title="This month at a glance"
-            subtitle={`Subcategory budget status · ${statusMonth}`}
-          />
-          <div className="overflow-x-auto">
-            <table className="w-full min-w-[640px] text-sm">
-              <thead>
-                <tr className="border-b border-hairline text-left text-xs text-ink-faint">
-                  <th className="pb-2 font-medium">Subcategory</th>
-                  <th className="pb-2 text-right font-medium">Budget</th>
-                  <th className="pb-2 text-right font-medium">Spent</th>
-                  <th className="pb-2 text-right font-medium">Left</th>
-                  <th className="pb-2 text-right font-medium">Used</th>
-                  <th className="pb-2 text-right font-medium">Status</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-hairline">
-                {statusRows.map((r) => (
-                  <tr key={r.id}>
-                    <td className="py-2.5">
-                      <span className="font-medium">{r.name}</span>
-                      <span className="ml-1 text-xs text-ink-faint">
-                        · {r.categoryName}
-                      </span>
-                    </td>
-                    <td className="py-2.5 text-right tnum">
-                      {r.projected > 0 ? money(r.projected) : "—"}
-                    </td>
-                    <td className="py-2.5 text-right tnum">{money(r.actual)}</td>
-                    <td
-                      className={cn(
-                        "py-2.5 text-right tnum",
-                        r.remaining < 0 ? "text-loss" : "",
-                      )}
-                    >
-                      {r.projected > 0
-                        ? money(r.remaining)
-                        : r.actual > 0
-                          ? "—"
-                          : "—"}
-                    </td>
-                    <td className="py-2.5 text-right tnum">
-                      {r.projected > 0
-                        ? `${Math.round(r.pctUsed * 100)}%`
-                        : "—"}
-                    </td>
-                    <td className="py-2.5 text-right">
-                      <Pill tone={statusTone(r.status)}>
-                        {statusLabel(r.status)}
-                      </Pill>
-                    </td>
+          {monthExpenseByCategory.length > 0 ? (
+            <Card>
+              <CardHeader
+                title="This month by category"
+                subtitle={`Major category totals · ${statusMonth}`}
+              />
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="text-left text-xs uppercase tracking-wide text-ink-faint">
+                    <th className="py-2 font-medium">Category</th>
+                    <th className="py-2 text-right font-medium">Budget</th>
+                    <th className="py-2 text-right font-medium">Spent</th>
+                    <th className="py-2 text-right font-medium">Left</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </Card>
-      ) : null}
+                </thead>
+                <tbody>
+                  {monthExpenseByCategory.map((cat) => {
+                    const left = cat.projected - cat.actual;
+                    return (
+                      <tr key={cat.id} className="border-t border-hairline">
+                        <td className="py-2 font-medium">{cat.name}</td>
+                        <td className="py-2 text-right tnum">
+                          {cat.projected > 0 ? money(cat.projected) : "—"}
+                        </td>
+                        <td className="py-2 text-right tnum">
+                          {money(cat.actual)}
+                        </td>
+                        <td
+                          className={cn(
+                            "py-2 text-right tnum",
+                            left < 0 ? "text-loss" : "",
+                          )}
+                        >
+                          {cat.projected > 0 ? money(left) : "—"}
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </Card>
+          ) : null}
 
-      {(cats?.categories ?? []).map((c: Category) => (
+          {statusRows.length > 0 ? (
+            <Card>
+              <CardHeader
+                title="This month at a glance"
+                subtitle={`Subcategory budget status · ${statusMonth}`}
+              />
+              <div className="overflow-x-auto">
+                <table className="w-full min-w-[640px] text-sm">
+                  <thead>
+                    <tr className="border-b border-hairline text-left text-xs text-ink-faint">
+                      <th className="pb-2 font-medium">Subcategory</th>
+                      <th className="pb-2 text-right font-medium">Budget</th>
+                      <th className="pb-2 text-right font-medium">Spent</th>
+                      <th className="pb-2 text-right font-medium">Left</th>
+                      <th className="pb-2 text-right font-medium">Used</th>
+                      <th className="pb-2 text-right font-medium">Status</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-hairline">
+                    {statusRows.map((r) => (
+                      <tr key={r.id}>
+                        <td className="py-2.5">
+                          <span className="font-medium">{r.name}</span>
+                          <span className="ml-1 text-xs text-ink-faint">
+                            · {r.categoryName}
+                          </span>
+                        </td>
+                        <td className="py-2.5 text-right tnum">
+                          {r.projected > 0 ? money(r.projected) : "—"}
+                        </td>
+                        <td className="py-2.5 text-right tnum">
+                          {money(r.actual)}
+                        </td>
+                        <td
+                          className={cn(
+                            "py-2.5 text-right tnum",
+                            r.remaining < 0 ? "text-loss" : "",
+                          )}
+                        >
+                          {r.projected > 0
+                            ? money(r.remaining)
+                            : r.actual > 0
+                              ? "—"
+                              : "—"}
+                        </td>
+                        <td className="py-2.5 text-right tnum">
+                          {r.projected > 0
+                            ? `${Math.round(r.pctUsed * 100)}%`
+                            : "—"}
+                        </td>
+                        <td className="py-2.5 text-right">
+                          <Pill tone={statusTone(r.status)}>
+                            {statusLabel(r.status)}
+                          </Pill>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </Card>
+          ) : null}
+        </div>
+      ) : (
+        <div className="space-y-6">
+          {(cats?.categories ?? []).map((c: Category) => (
         <Card key={c.id} className="p-0">
           <div className="flex flex-col gap-2 border-b border-hairline px-4 py-3 sm:flex-row sm:items-center">
             <EditableName
@@ -472,41 +596,27 @@ export function Budget() {
                         />
                       </td>
                       <td className="px-3 py-1.5 text-right">
-                        {mode === "projected" ? (
-                          <input
-                            type="number"
-                            step="0.01"
-                            className="w-24 rounded-md border border-hairline px-2 py-1 text-right text-sm tnum focus:border-accent focus:outline-none"
-                            value={Number(annualOf(s.id, "edit").toFixed(2))}
-                            onChange={(e) =>
-                              setAnnual(s.id, Number(e.target.value) || 0)
-                            }
-                          />
-                        ) : (
-                          <span className="tnum text-ink-muted">
-                            {money(annualOf(s.id, "actual"))}
-                          </span>
-                        )}
+                        <input
+                          type="number"
+                          step="0.01"
+                          className="w-24 rounded-md border border-hairline px-2 py-1 text-right text-sm tnum focus:border-accent focus:outline-none"
+                          value={Number(annualOf(s.id).toFixed(2))}
+                          onChange={(e) =>
+                            setAnnual(s.id, Number(e.target.value) || 0)
+                          }
+                        />
                       </td>
                       {months.map((m) => (
                         <td key={m} className="px-3 py-1.5 text-right">
-                          {mode === "projected" ? (
-                            <input
-                              type="number"
-                              step="0.01"
-                              className="w-20 rounded-md border border-hairline px-2 py-1 text-right text-sm tnum focus:border-accent focus:outline-none"
-                              value={Number(cellValue(s.id, m).toFixed(2))}
-                              onChange={(e) =>
-                                setMonth(s.id, m, Number(e.target.value) || 0)
-                              }
-                            />
-                          ) : (
-                            <span className="tnum text-ink-muted">
-                              {cellValue(s.id, m)
-                                ? money(cellValue(s.id, m))
-                                : "\u2014"}
-                            </span>
-                          )}
+                          <input
+                            type="number"
+                            step="0.01"
+                            className="w-20 rounded-md border border-hairline px-2 py-1 text-right text-sm tnum focus:border-accent focus:outline-none"
+                            value={Number((edits[key(s.id, m)] || 0).toFixed(2))}
+                            onChange={(e) =>
+                              setMonth(s.id, m, Number(e.target.value) || 0)
+                            }
+                          />
                         </td>
                       ))}
                       <td className="px-2 py-1.5 text-right">
@@ -533,7 +643,9 @@ export function Budget() {
             </table>
           </div>
         </Card>
-      ))}
+          ))}
+        </div>
+      )}
 
       {showAddCat ? (
         <AddCategoryModal onClose={() => setShowAddCat(false)} />
