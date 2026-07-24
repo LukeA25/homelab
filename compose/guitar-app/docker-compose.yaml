@@ -1,0 +1,11 @@
+services:
+  guitar-app:
+    build: ../../apps/guitar-app
+    container_name: guitar-app
+    restart: unless-stopped
+    env_file:
+      - .env
+    ports:
+      - "8001:8000"
+    volumes:
+      - /srv/appdata/guitar-app:/data
