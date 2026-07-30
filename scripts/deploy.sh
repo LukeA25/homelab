@@ -18,6 +18,7 @@ declare -A STACKS=(
   [portainer]=compose/portainer
   [uptime-kuma]=compose/uptime-kuma
   [finance-app]=compose/finance-app
+  [guitar-app]=compose/guitar-app
 )
 
 declare -A PATH_PREFIXES=(
@@ -28,9 +29,11 @@ declare -A PATH_PREFIXES=(
   [portainer]=compose/portainer/
   [uptime-kuma]=compose/uptime-kuma/
   [finance-app]=compose/finance-app/
+  [guitar-app]=compose/guitar-app/
 )
 
 FINANCE_APP_PREFIX=apps/finance-app/
+GUITAR_APP_PREFIX=apps/guitar-app/
 
 matches_stack() {
   local stack="$1"
@@ -45,6 +48,10 @@ matches_stack() {
     return 0
   fi
 
+  if [[ "$stack" == "guitar-app" && "$file" == "$GUITAR_APP_PREFIX"* ]]; then
+    return 0
+  fi
+
   return 1
 }
 
@@ -52,7 +59,7 @@ declare -a TO_DEPLOY=()
 
 if [[ "$BEFORE" == "0000000000000000000000000000000000000000" ]]; then
   echo "Initial push or unknown base commit — deploying all stacks."
-  TO_DEPLOY=(caddy homepage pihole jellyfin portainer uptime-kuma finance-app)
+  TO_DEPLOY=(caddy homepage pihole jellyfin portainer uptime-kuma finance-app guitar-app)
 else
   mapfile -t CHANGED < <(git diff --name-only "$BEFORE" "$AFTER")
 
@@ -85,14 +92,14 @@ deploy_stack() {
   cd "$REPO_ROOT/$dir"
 
   case "$stack" in
-    finance-app)
+    finance-app|guitar-app)
       docker compose up -d --build --remove-orphans
       ;;
     *)
       docker compose pull --quiet 2>/dev/null || true
       docker compose up -d --remove-orphans
       ;;
-  esac
+    esac
 }
 
 for stack in "${TO_DEPLOY[@]}"; do

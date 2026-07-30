@@ -17,10 +17,14 @@
         icon: jellyfin.png
         href: http://jellyfin.home.arpa
         description: Media server
-    - Finance:
+    - Finance App:
         icon: mdi-cash-#22c500
         href: https://homelab.tail47f19f.ts.net
         description: Spending Tracker
+    - Guitar App:
+        icon: guitar.png
+        href: http://guitar.home.arpa
+        description: Song Library
 
 - Network:
     - Pi-hole:
