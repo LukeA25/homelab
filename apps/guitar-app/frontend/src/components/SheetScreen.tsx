@@ -232,71 +232,48 @@ function ChordLyricBlock({
   hasChords,
   useUgLayout,
   textStyle,
+  maxCols,
 }: {
   chordRow: string;
   words: string;
   hasChords: boolean;
   useUgLayout: boolean;
   textStyle: TextStyle;
+  maxCols: number;
 }) {
-  const ref = useRef<HTMLDivElement>(null);
-  const [maxCols, setMaxCols] = useState(96);
-
-  useLayoutEffect(() => {
-    const el = ref.current;
-    if (!el) return;
-
-    const measure = () => {
-      if (el.clientWidth < 48) return;
-      const probe = document.createElement("span");
-      probe.className = useUgLayout ? "font-mono" : "font-body";
-      probe.style.cssText = `font-size:${textStyle.chord};position:absolute;visibility:hidden;white-space:pre;pointer-events:none`;
-      probe.textContent = "0".repeat(100);
-      el.appendChild(probe);
-      const charW = probe.getBoundingClientRect().width / 100;
-      probe.remove();
-      if (charW <= 0) return;
-      const next = Math.max(12, Math.floor(el.clientWidth / charW));
-      setMaxCols((prev) => (prev === next ? prev : next));
-    };
-
-    measure();
-    const ro = new ResizeObserver(measure);
-    ro.observe(el);
-    return () => ro.disconnect();
-  }, [textStyle.chord, useUgLayout]);
-
   const segments = useMemo(() => {
     if (!useUgLayout) return [{ chordLine: chordRow, words }];
     return wrapChordLyricPair(hasChords ? chordRow : "", words, maxCols);
   }, [chordRow, words, hasChords, useUgLayout, maxCols]);
 
   return (
-    <div ref={ref} className="min-w-0 space-y-1">
-      {segments.map((seg, i) => (
-        <div
-          key={i}
-          className={useUgLayout ? "font-mono" : "font-body"}
-          style={{
-            tabSize: 4,
-            fontSize: textStyle.chord,
-            lineHeight: textStyle.leading,
-          }}
-        >
-          {useUgLayout && (
-            <div
-              className="font-semibold text-accent"
-              style={{ whiteSpace: "pre", visibility: hasChords ? "visible" : "hidden" }}
-              aria-hidden={!hasChords}
-            >
-              {hasChords ? seg.chordLine || "\u00a0" : "\u00a0"}
+    <div className="min-w-0 max-w-full overflow-x-hidden">
+      <div className="space-y-1">
+        {segments.map((seg, i) => (
+          <div
+            key={i}
+            className={useUgLayout ? "font-mono" : "font-body"}
+            style={{
+              tabSize: 4,
+              fontSize: textStyle.chord,
+              lineHeight: textStyle.leading,
+            }}
+          >
+            {useUgLayout && (
+              <div
+                className={`font-semibold text-accent${hasChords ? "" : " opacity-0"}`}
+                style={{ whiteSpace: "pre" }}
+                aria-hidden={!hasChords}
+              >
+                {hasChords ? seg.chordLine || "\u00a0" : "\u00a0"}
+              </div>
+            )}
+            <div className="text-text" style={{ whiteSpace: useUgLayout ? "pre" : "pre-wrap" }}>
+              {seg.words}
             </div>
-          )}
-          <div className="text-text" style={{ whiteSpace: useUgLayout ? "pre" : "pre-wrap" }}>
-            {seg.words}
           </div>
-        </div>
-      ))}
+        ))}
+      </div>
     </div>
   );
 }
@@ -310,6 +287,33 @@ function SheetLines({
   semitones: number;
   textStyle: TextStyle;
 }) {
+  const containerRef = useRef<HTMLDivElement>(null);
+  const [maxCols, setMaxCols] = useState(40);
+
+  useLayoutEffect(() => {
+    const el = containerRef.current;
+    if (!el) return;
+
+    const measure = () => {
+      if (el.clientWidth < 48) return;
+      const probe = document.createElement("span");
+      probe.className = "font-mono";
+      probe.style.cssText = `font-size:${textStyle.chord};position:absolute;visibility:hidden;white-space:pre;pointer-events:none`;
+      probe.textContent = "0".repeat(100);
+      el.appendChild(probe);
+      const charW = probe.getBoundingClientRect().width / 100;
+      probe.remove();
+      if (charW <= 0) return;
+      const next = Math.max(12, Math.floor((el.clientWidth - 4) / charW));
+      setMaxCols((prev) => (prev === next ? prev : next));
+    };
+
+    measure();
+    const ro = new ResizeObserver(measure);
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, [textStyle.chord]);
+
   // UG sheets mix chorded and bare lyric lines — keep a chord-row slot on every
   // lyric so vertical rhythm stays even (and monospace matches chorded lines).
   const sheetHasChords = lines.some(
@@ -387,6 +391,7 @@ function SheetLines({
         hasChords={hasChords}
         useUgLayout={sheetHasChords}
         textStyle={textStyle}
+        maxCols={maxCols}
       />,
     );
     idx += 1;
@@ -394,7 +399,8 @@ function SheetLines({
 
   return (
     <div
-      className="mx-auto w-full min-w-0 max-w-2xl"
+      ref={containerRef}
+      className="mx-auto w-full min-w-0 max-w-full overflow-x-hidden"
       style={{ gap: textStyle.gap, display: "flex", flexDirection: "column" }}
     >
       {lines.length === 0 && (
@@ -608,8 +614,8 @@ function LyricsFocusPopup({
             <div
               ref={measureRef}
               aria-hidden
-              className="pointer-events-none absolute inset-x-0 top-0 -z-10 flex flex-col"
-              style={{ gap: textStyle.gap, visibility: "hidden" }}
+              className="pointer-events-none absolute inset-x-0 top-0 -z-10 flex w-full flex-col opacity-0"
+              style={{ gap: textStyle.gap }}
             >
               {sections.map((section, i) => (
                 <div key={`m-${i}-${section.label}`}>
