@@ -1,5 +1,6 @@
 import { Modal, Pressable, ScrollView, Text, View } from "react-native";
 import { colors } from "../theme/colors";
+import { Touchable } from "./ui/Touchable";
 
 type SheetProps = {
   open: boolean;
@@ -48,11 +49,15 @@ export function Sheet({ open, title, onClose, children }: SheetProps) {
               <Text style={{ color: colors.text, fontSize: 18, fontFamily: "Fraunces_600SemiBold" }}>
                 {title}
               </Text>
-              <Pressable onPress={onClose}>
+              <Touchable
+                variant="ghost"
+                onPress={onClose}
+                style={{ borderRadius: 999, paddingHorizontal: 12, paddingVertical: 6 }}
+              >
                 <Text style={{ color: colors.accent, fontSize: 14, fontFamily: "Figtree_500Medium" }}>
                   Done
                 </Text>
-              </Pressable>
+              </Touchable>
             </View>
           ) : null}
           <ScrollView contentContainerStyle={{ paddingHorizontal: 20, paddingTop: 8, paddingBottom: 16 }}>

@@ -5,7 +5,6 @@ import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import { StatusBar } from "expo-status-bar";
 import {
-  useFonts,
   Figtree_400Regular,
   Figtree_500Medium,
   Figtree_600SemiBold,
@@ -13,8 +12,10 @@ import {
 import { Fraunces_600SemiBold } from "@expo-google-fonts/fraunces";
 import {
   SourceSerif4_400Regular,
+  SourceSerif4_400Regular_Italic,
   SourceSerif4_500Medium,
 } from "@expo-google-fonts/source-serif-4";
+import { useFonts } from "expo-font";
 import * as SystemUI from "expo-system-ui";
 
 import { AskScreen } from "./src/components/AskScreen";
@@ -60,14 +61,19 @@ function defaultTitle(kind: TabKind): string {
 }
 
 export default function App() {
-  const [fontsLoaded] = useFonts({
+  const [fontsLoaded, fontError] = useFonts({
     Figtree_400Regular,
     Figtree_500Medium,
     Figtree_600SemiBold,
     Fraunces_600SemiBold,
     SourceSerif4_400Regular,
+    SourceSerif4_400Regular_Italic,
     SourceSerif4_500Medium,
   });
+
+  useEffect(() => {
+    if (fontError) console.warn("[fonts]", fontError);
+  }, [fontError]);
 
   const [ready, setReady] = useState(false);
   const [tabs, setTabs] = useState<WorkspaceTab[]>([]);

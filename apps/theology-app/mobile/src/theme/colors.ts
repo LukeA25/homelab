@@ -9,4 +9,14 @@ export const colors = {
   accentSoft: "rgba(126, 184, 162, 0.16)",
   border: "rgba(232, 237, 244, 0.12)",
   highlight: "rgba(212, 168, 75, 0.35)",
+
+  /* Pressed / interaction states. Each is a step brighter than its resting token
+     so touch feedback reads clearly against the dark background. */
+  surfacePressed: "#222b38",
+  elevatedPressed: "#1b212a",
+  accentPressed: "#6aa992",
+  accentSoftPressed: "rgba(126, 184, 162, 0.3)",
+  borderStrong: "rgba(232, 237, 244, 0.24)",
+  /** Faint markdown markers in the note editor (# , > , // ). */
+  syntax: "rgba(139, 151, 168, 0.45)",
 } as const;

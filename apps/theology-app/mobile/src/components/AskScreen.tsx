@@ -1,8 +1,9 @@
 import { useState } from "react";
-import { FlatList, Pressable, Text, TextInput, View } from "react-native";
+import { FlatList, Text, TextInput, View } from "react-native";
 import { mockAsk } from "../lib/mockData";
 import type { AskMessage } from "../lib/types";
 import { colors } from "../theme/colors";
+import { Touchable } from "./ui/Touchable";
 
 type AskScreenProps = {
   messages: AskMessage[];
@@ -76,8 +77,9 @@ export function AskScreen({ messages, seed, onSend, onOpenLocus }: AskScreenProp
               <View style={{ gap: 8 }}>
                 <Text style={{ color: colors.text }}>{m.response?.answer ?? m.content}</Text>
                 {m.response?.resources.map((r) => (
-                  <Pressable
+                  <Touchable
                     key={r.locus.locusId}
+                    variant="elevated"
                     onPress={() => onOpenLocus(r.locus.workId, r.locus.locusId)}
                     style={{
                       borderRadius: 12,
@@ -90,7 +92,7 @@ export function AskScreen({ messages, seed, onSend, onOpenLocus }: AskScreenProp
                       {r.locus.label}
                     </Text>
                     <Text style={{ color: colors.muted, fontSize: 12, marginTop: 2 }}>{r.reason}</Text>
-                  </Pressable>
+                  </Touchable>
                 ))}
                 {m.response?.bullets.map((b) => (
                   <Text key={b} style={{ color: colors.muted, paddingLeft: 8 }}>
@@ -98,8 +100,9 @@ export function AskScreen({ messages, seed, onSend, onOpenLocus }: AskScreenProp
                   </Text>
                 ))}
                 {m.response?.citations.map((c) => (
-                  <Pressable
+                  <Touchable
                     key={c.locus.locusId}
+                    variant="elevated"
                     onPress={() => onOpenLocus(c.locus.workId, c.locus.locusId)}
                     style={{
                       borderRadius: 12,
@@ -113,7 +116,7 @@ export function AskScreen({ messages, seed, onSend, onOpenLocus }: AskScreenProp
                       {c.locus.label}
                     </Text>
                     <Text style={{ color: colors.muted, fontSize: 12, marginTop: 2 }}>{c.snippet}</Text>
-                  </Pressable>
+                  </Touchable>
                 ))}
               </View>
             )}
@@ -149,18 +152,20 @@ export function AskScreen({ messages, seed, onSend, onOpenLocus }: AskScreenProp
             fontSize: 14,
           }}
         />
-        <Pressable
+        <Touchable
+          variant="primary"
           onPress={() => submit()}
+          disabled={!draft.trim()}
           style={{
             borderRadius: 999,
             backgroundColor: colors.accent,
-            paddingHorizontal: 16,
+            paddingHorizontal: 18,
             paddingVertical: 10,
             justifyContent: "center",
           }}
         >
           <Text style={{ color: colors.bg, fontFamily: "Figtree_600SemiBold", fontSize: 14 }}>Send</Text>
-        </Pressable>
+        </Touchable>
       </View>
     </View>
   );

@@ -1,7 +1,8 @@
 import { BookOpen, Library, MessageSquareText, NotebookPen } from "lucide-react-native";
-import { Pressable, Text, View } from "react-native";
+import { Text, View } from "react-native";
 import type { TabKind } from "../lib/types";
 import { colors } from "../theme/colors";
+import { Touchable } from "./ui/Touchable";
 
 type LaunchScreenProps = {
   onOpen: (kind: Exclude<TabKind, "reader">) => void;
@@ -16,14 +17,34 @@ const OPTIONS = [
 
 export function LaunchScreen({ onOpen }: LaunchScreenProps) {
   return (
-    <View className="flex-1 items-center justify-center bg-bg px-6">
-      <View className="w-full max-w-md flex-row flex-wrap gap-3">
+    <View
+      style={{
+        flex: 1,
+        alignItems: "center",
+        justifyContent: "center",
+        backgroundColor: colors.bg,
+        paddingHorizontal: 24,
+      }}
+    >
+      <View
+        style={{
+          width: "100%",
+          maxWidth: 448,
+          flexDirection: "row",
+          flexWrap: "wrap",
+          justifyContent: "space-between",
+        }}
+      >
         {OPTIONS.map(({ id, label, hint, Icon }) => (
-          <Pressable
+          <Touchable
             key={id}
+            variant="card"
             onPress={() => onOpen(id)}
             style={{
-              width: "48%",
+              // Percentage widths (rather than gap) keep two cards per row even
+              // on the narrowest phones.
+              width: "48.5%",
+              marginBottom: 12,
               aspectRatio: 1,
               borderRadius: 24,
               borderWidth: 1,
@@ -51,7 +72,7 @@ export function LaunchScreen({ onOpen }: LaunchScreenProps) {
               </Text>
               <Text style={{ color: colors.muted, fontSize: 14, marginTop: 4 }}>{hint}</Text>
             </View>
-          </Pressable>
+          </Touchable>
         ))}
       </View>
     </View>

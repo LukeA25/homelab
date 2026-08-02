@@ -1,8 +1,9 @@
 import { ChevronRight } from "lucide-react-native";
-import { FlatList, Pressable, Text, View } from "react-native";
+import { FlatList, Text, View } from "react-native";
 import { SECTIONS, WORKS } from "../lib/mockData";
 import type { Work, WorkKind } from "../lib/types";
 import { colors } from "../theme/colors";
+import { Touchable } from "./ui/Touchable";
 
 type LibraryScreenProps = {
   selectedWorkId: string | null;
@@ -64,9 +65,20 @@ export function LibraryScreen({
       keyExtractor={(r) => r.id}
       ListHeaderComponent={
         <View style={{ marginBottom: 16 }}>
-          <Pressable onPress={() => onOpenWork(null)}>
-            <Text style={{ color: colors.accent, fontSize: 14, marginBottom: 12 }}>← Library</Text>
-          </Pressable>
+          <Touchable
+            variant="ghost"
+            onPress={() => onOpenWork(null)}
+            style={{
+              alignSelf: "flex-start",
+              borderRadius: 999,
+              paddingHorizontal: 10,
+              paddingVertical: 6,
+              marginBottom: 8,
+              marginLeft: -10,
+            }}
+          >
+            <Text style={{ color: colors.accent, fontSize: 14 }}>← Library</Text>
+          </Touchable>
           <Text style={{ color: colors.text, fontSize: 24, fontFamily: "Fraunces_600SemiBold" }}>
             {work.title}
           </Text>
@@ -76,7 +88,8 @@ export function LibraryScreen({
         </View>
       }
       renderItem={({ item }) => (
-        <Pressable
+        <Touchable
+          variant="card"
           onPress={() => onOpenSection(work.id, item.id)}
           style={{
             flexDirection: "row",
@@ -98,7 +111,7 @@ export function LibraryScreen({
             <Text style={{ color: colors.text, fontSize: 15 }}>{item.title}</Text>
           </View>
           <ChevronRight color={colors.muted} size={18} />
-        </Pressable>
+        </Touchable>
       )}
     />
   );
@@ -106,7 +119,8 @@ export function LibraryScreen({
 
 function WorkRow({ work, onClick }: { work: Work; onClick: () => void }) {
   return (
-    <Pressable
+    <Touchable
+      variant="card"
       onPress={onClick}
       style={{
         flexDirection: "row",
@@ -131,6 +145,6 @@ function WorkRow({ work, onClick }: { work: Work; onClick: () => void }) {
         </Text>
       </View>
       <ChevronRight color={colors.muted} size={18} />
-    </Pressable>
+    </Touchable>
   );
 }

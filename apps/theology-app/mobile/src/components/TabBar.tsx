@@ -4,6 +4,7 @@ import { Modal, Pressable, ScrollView, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import type { TabKind, WorkspaceTab } from "../lib/types";
 import { colors } from "../theme/colors";
+import { Touchable } from "./ui/Touchable";
 
 const KIND_LABEL: Record<TabKind, string> = {
   bible: "Bible",
@@ -72,7 +73,11 @@ export function TabBar({
                   paddingVertical: 2,
                 }}
               >
-                <Pressable onPress={() => onFocus(tab.id)} style={{ paddingHorizontal: 8, paddingVertical: 6 }}>
+                <Touchable
+                  variant="chip"
+                  onPress={() => onFocus(tab.id)}
+                  style={{ borderRadius: 999, paddingHorizontal: 8, paddingVertical: 6 }}
+                >
                   <Text
                     style={{
                       color: colors.text,
@@ -84,18 +89,25 @@ export function TabBar({
                   >
                     {tab.title || KIND_LABEL[tab.kind]}
                   </Text>
-                </Pressable>
-                <Pressable
+                </Touchable>
+                <Touchable
+                  variant="chip"
                   onPress={() => setSplitPickerFor(tab.id)}
                   hitSlop={8}
-                  style={{ padding: 4 }}
+                  style={{ borderRadius: 999, padding: 4 }}
                   accessibilityLabel="Split"
                 >
                   <Columns2 color={colors.muted} size={14} />
-                </Pressable>
-                <Pressable onPress={() => onClose(tab.id)} hitSlop={8} style={{ padding: 4 }}>
+                </Touchable>
+                <Touchable
+                  variant="chip"
+                  onPress={() => onClose(tab.id)}
+                  hitSlop={8}
+                  style={{ borderRadius: 999, padding: 4 }}
+                  accessibilityLabel="Close tab"
+                >
                   <X color={colors.muted} size={14} />
-                </Pressable>
+                </Touchable>
               </View>
             );
           })}
@@ -103,18 +115,20 @@ export function TabBar({
       </ScrollView>
 
       <View style={{ position: "relative" }}>
-        <Pressable
+        <Touchable
+          variant="card"
           onPress={() => setMenuOpen((v) => !v)}
+          accessibilityLabel="New tab"
           style={{
             borderRadius: 999,
             borderWidth: 1,
-            borderColor: colors.border,
+            borderColor: menuOpen ? colors.accent : colors.border,
             backgroundColor: colors.surface,
             padding: 8,
           }}
         >
-          <Plus color={colors.text} size={16} />
-        </Pressable>
+          <Plus color={menuOpen ? colors.accent : colors.text} size={16} />
+        </Touchable>
         {menuOpen && (
           <View
             style={{
@@ -138,23 +152,25 @@ export function TabBar({
                 ["notes", "Notes"],
               ] as const
             ).map(([kind, label]) => (
-              <Pressable
+              <Touchable
                 key={kind}
+                variant="chip"
                 onPress={() => {
                   onAdd(kind);
                   setMenuOpen(false);
                 }}
-                style={{ paddingHorizontal: 12, paddingVertical: 10 }}
+                style={{ borderRadius: 8, paddingHorizontal: 12, paddingVertical: 10 }}
               >
                 <Text style={{ color: colors.text, fontSize: 14 }}>{label}</Text>
-              </Pressable>
+              </Touchable>
             ))}
           </View>
         )}
       </View>
 
       {splitRightId ? (
-        <Pressable
+        <Touchable
+          variant="chip"
           onPress={onClearSplit}
           style={{
             borderRadius: 999,
@@ -167,7 +183,7 @@ export function TabBar({
           <Text style={{ color: colors.muted, fontSize: 10, fontFamily: "Figtree_600SemiBold" }}>
             Unsplit
           </Text>
-        </Pressable>
+        </Touchable>
       ) : null}
 
       <Modal
@@ -213,8 +229,9 @@ export function TabBar({
                 {tabs
                   .filter((t) => t.id !== splitPickerFor)
                   .map((t) => (
-                    <Pressable
+                    <Touchable
                       key={t.id}
+                      variant="card"
                       onPress={() => {
                         if (splitPickerFor) {
                           onFocus(splitPickerFor);
@@ -235,7 +252,7 @@ export function TabBar({
                       <Text style={{ color: colors.text, fontSize: 14 }}>
                         {t.title || KIND_LABEL[t.kind]}
                       </Text>
-                    </Pressable>
+                    </Touchable>
                   ))}
               </View>
             )}
@@ -261,8 +278,9 @@ export function TabBar({
                     ["notes", "Notes"],
                   ] as const
                 ).map(([kind, label]) => (
-                  <Pressable
+                  <Touchable
                     key={kind}
+                    variant="card"
                     onPress={() => {
                       if (splitPickerFor) onSplitWithNew(splitPickerFor, kind);
                       setSplitPickerFor(null);
@@ -280,7 +298,7 @@ export function TabBar({
                     <Text style={{ color: colors.text, fontSize: 14, fontFamily: "Figtree_600SemiBold" }}>
                       {label}
                     </Text>
-                  </Pressable>
+                  </Touchable>
                 ))}
               </View>
             </View>

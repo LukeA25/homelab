@@ -1,8 +1,7 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { ChevronDown } from "lucide-react-native";
 import {
   FlatList,
-  Pressable,
   Text,
   View,
   type ListRenderItemInfo,
@@ -16,8 +15,11 @@ import {
   bibleChapters,
 } from "../lib/mockData";
 import type { Bookmark, Highlight, Paragraph } from "../lib/types";
+import { useEvent } from "../lib/useEvent";
 import { colors } from "../theme/colors";
 import { Sheet } from "./Sheet";
+import { HighlightBlock } from "./ui/HighlightBlock";
+import { Touchable } from "./ui/Touchable";
 
 type BibleScreenProps = {
   sectionId: string;
@@ -49,11 +51,38 @@ export function BibleScreen({
     0,
     chapters.findIndex((c) => c.sectionId === sectionId),
   );
+  const [activePage, setActivePage] = useState(initialPage);
 
   useEffect(() => {
     const idx = chapters.findIndex((c) => c.sectionId === sectionId);
-    if (idx >= 0) pagerRef.current?.setPageWithoutAnimation(idx);
+    if (idx >= 0) {
+      pagerRef.current?.setPageWithoutAnimation(idx);
+      setActivePage(idx);
+    }
   }, [sectionId, chapters]);
+
+  const hlSet = useMemo(
+    () =>
+      new Set(
+        highlights.filter((h) => h.workId === BIBLE_ID).map((h) => h.paragraphId),
+      ),
+    [highlights],
+  );
+  const bmSet = useMemo(
+    () =>
+      new Set(
+        bookmarks.filter((b) => b.workId === BIBLE_ID).map((b) => b.paragraphId),
+      ),
+    [bookmarks],
+  );
+
+  // The parent rebuilds these as inline closures every render; pinning them here
+  // is what lets ChapterPage and its rows stay memoized.
+  const openPicker = useCallback(() => setPickerOpen(true), []);
+  const toggleHighlight = useEvent(onToggleHighlight);
+  const bookmark = useEvent(onBookmark);
+  const askSplit = useEvent(onAskSplit);
+  const copyToNotes = useEvent(onCopyToNotes);
 
   return (
     <View style={{ flex: 1, backgroundColor: colors.bg }}>
@@ -62,25 +91,32 @@ export function BibleScreen({
         style={{ flex: 1 }}
         initialPage={initialPage}
         onPageSelected={(e) => {
-          const ch = chapters[e.nativeEvent.position];
+          const position = e.nativeEvent.position;
+          setActivePage(position);
+          const ch = chapters[position];
           if (ch && ch.sectionId !== sectionId) onSectionChange(ch.sectionId);
         }}
       >
-        {chapters.map((ch) => (
+        {chapters.map((ch, i) => (
           <View key={ch.sectionId} style={{ flex: 1 }}>
-            <ChapterPage
-              sectionId={ch.sectionId}
-              bookTitle={ch.bookTitle}
-              chapterTitle={ch.chapterTitle}
-              highlights={highlights}
-              bookmarks={bookmarks}
-              textSize={textSize}
-              onOpenPicker={() => setPickerOpen(true)}
-              onToggleHighlight={onToggleHighlight}
-              onBookmark={onBookmark}
-              onAskSplit={onAskSplit}
-              onCopyToNotes={onCopyToNotes}
-            />
+            {/* PagerView keeps every child mounted, so build only the current
+                chapter and its immediate neighbours. Neighbours stay real so a
+                swipe never lands on an empty page. */}
+            {Math.abs(i - activePage) <= 1 ? (
+              <ChapterPage
+                sectionId={ch.sectionId}
+                bookTitle={ch.bookTitle}
+                chapterTitle={ch.chapterTitle}
+                hlSet={hlSet}
+                bmSet={bmSet}
+                textSize={textSize}
+                onOpenPicker={openPicker}
+                onToggleHighlight={toggleHighlight}
+                onBookmark={bookmark}
+                onAskSplit={askSplit}
+                onCopyToNotes={copyToNotes}
+              />
+            ) : null}
           </View>
         ))}
       </PagerView>
@@ -98,12 +134,66 @@ export function BibleScreen({
   );
 }
 
-function ChapterPage({
+const keyExtractor = (p: Paragraph) => p.id;
+
+const VERSE_STYLE = {
+  marginBottom: 4,
+  paddingHorizontal: 8,
+  paddingVertical: 6,
+} as const;
+
+const BOOKMARK_STYLE = {
+  textDecorationLine: "underline",
+  textDecorationColor: colors.accent,
+} as const;
+
+/**
+ * Memoized so toggling one verse re-renders that verse alone rather than every
+ * row on the page.
+ */
+const VerseRow = memo(function VerseRow({
+  paragraph,
+  highlighted,
+  bookmarked,
+  textSize,
+  onToggle,
+}: {
+  paragraph: Paragraph;
+  highlighted: boolean;
+  bookmarked: boolean;
+  textSize: number;
+  onToggle: (paragraphId: string) => void;
+}) {
+  const handlePress = useCallback(
+    () => onToggle(paragraph.id),
+    [onToggle, paragraph.id],
+  );
+
+  return (
+    <HighlightBlock highlighted={highlighted} onPress={handlePress} radius={8} style={VERSE_STYLE}>
+      <Text
+        style={{
+          color: colors.text,
+          fontSize: 16 * textSize,
+          lineHeight: 28 * textSize,
+          fontFamily: "SourceSerif4_400Regular",
+        }}
+      >
+        <Text style={{ color: colors.muted, fontSize: 12 * textSize, fontFamily: "Figtree_600SemiBold" }}>
+          {paragraph.verse ?? paragraph.label}{" "}
+        </Text>
+        <Text style={bookmarked ? BOOKMARK_STYLE : undefined}>{paragraph.text}</Text>
+      </Text>
+    </HighlightBlock>
+  );
+});
+
+const ChapterPage = memo(function ChapterPage({
   sectionId,
   bookTitle,
   chapterTitle,
-  highlights,
-  bookmarks,
+  hlSet,
+  bmSet,
   textSize,
   onOpenPicker,
   onToggleHighlight,
@@ -114,8 +204,8 @@ function ChapterPage({
   sectionId: string;
   bookTitle: string;
   chapterTitle: string;
-  highlights: Highlight[];
-  bookmarks: Bookmark[];
+  hlSet: Set<string>;
+  bmSet: Set<string>;
   textSize: number;
   onOpenPicker: () => void;
   onToggleHighlight: (paragraphId: string) => void;
@@ -124,62 +214,28 @@ function ChapterPage({
   onCopyToNotes: (paragraphs: Paragraph[]) => void;
 }) {
   const paragraphs = PARAGRAPHS[sectionId] ?? [];
-  const hlSet = new Set(
-    highlights.filter((h) => h.workId === BIBLE_ID).map((h) => h.paragraphId),
-  );
-  const bmSet = new Set(
-    bookmarks.filter((b) => b.workId === BIBLE_ID).map((b) => b.paragraphId),
-  );
   const selectedParas = paragraphs.filter((p) => hlSet.has(p.id));
   const prev = adjacentChapter(sectionId, -1);
   const next = adjacentChapter(sectionId, 1);
 
-  function renderItem({ item: p }: ListRenderItemInfo<Paragraph>) {
-    const highlighted = hlSet.has(p.id);
-    const bookmarked = bmSet.has(p.id);
-    return (
-      <Pressable
-        onPress={() => onToggleHighlight(p.id)}
-        style={{
-          marginBottom: 4,
-          borderRadius: 8,
-          paddingHorizontal: 8,
-          paddingVertical: 6,
-          backgroundColor: highlighted ? colors.accentSoft : "transparent",
-        }}
-      >
-        <Text
-          style={{
-            color: colors.text,
-            fontSize: 16 * textSize,
-            lineHeight: 28 * textSize,
-            fontFamily: "SourceSerif4_400Regular",
-          }}
-        >
-          <Text style={{ color: colors.muted, fontSize: 12 * textSize, fontFamily: "Figtree_600SemiBold" }}>
-            {p.verse ?? p.label}{" "}
-          </Text>
-          <Text
-            style={
-              bookmarked
-                ? {
-                    textDecorationLine: "underline",
-                    textDecorationColor: colors.accent,
-                  }
-                : undefined
-            }
-          >
-            {p.text}
-          </Text>
-        </Text>
-      </Pressable>
-    );
-  }
+  const renderItem = useCallback(
+    ({ item: p }: ListRenderItemInfo<Paragraph>) => (
+      <VerseRow
+        paragraph={p}
+        highlighted={hlSet.has(p.id)}
+        bookmarked={bmSet.has(p.id)}
+        textSize={textSize}
+        onToggle={onToggleHighlight}
+      />
+    ),
+    [hlSet, bmSet, textSize, onToggleHighlight],
+  );
 
   return (
     <View style={{ flex: 1 }}>
       <View style={{ alignItems: "center", paddingVertical: 8, paddingHorizontal: 12 }}>
-        <Pressable
+        <Touchable
+          variant="card"
           onPress={onOpenPicker}
           style={{
             flexDirection: "row",
@@ -197,13 +253,14 @@ function ChapterPage({
             {chapterTitle}
           </Text>
           <ChevronDown color={colors.muted} size={16} />
-        </Pressable>
+        </Touchable>
       </View>
 
       <FlatList
         data={paragraphs}
-        keyExtractor={(p) => p.id}
+        keyExtractor={keyExtractor}
         renderItem={renderItem}
+        extraData={renderItem}
         style={{ flex: 1 }}
         contentContainerStyle={{ paddingHorizontal: 20, paddingBottom: 120, paddingTop: 8 }}
         ListHeaderComponent={
@@ -268,13 +325,17 @@ function ChapterPage({
       )}
     </View>
   );
-}
+});
 
 function Action({ label, onPress }: { label: string; onPress: () => void }) {
   return (
-    <Pressable onPress={onPress} style={{ paddingHorizontal: 12, paddingVertical: 8 }}>
+    <Touchable
+      variant="chip"
+      onPress={onPress}
+      style={{ borderRadius: 999, paddingHorizontal: 12, paddingVertical: 8 }}
+    >
       <Text style={{ color: colors.text, fontSize: 14 }}>{label}</Text>
-    </Pressable>
+    </Touchable>
   );
 }
 
@@ -305,12 +366,15 @@ function BookPicker({
       {!bookId ? (
         <View>
           {books.map((b) => (
-            <Pressable
+            <Touchable
               key={b.id}
+              variant="chip"
               onPress={() => setBookId(b.id)}
               style={{
                 flexDirection: "row",
                 justifyContent: "space-between",
+                borderRadius: 10,
+                paddingHorizontal: 8,
                 paddingVertical: 14,
                 borderBottomWidth: 1,
                 borderBottomColor: colors.border,
@@ -318,20 +382,32 @@ function BookPicker({
             >
               <Text style={{ color: colors.text, fontSize: 16 }}>{b.title}</Text>
               <Text style={{ color: colors.muted, fontSize: 14 }}>{b.children?.length ?? 0}</Text>
-            </Pressable>
+            </Touchable>
           ))}
         </View>
       ) : (
         <View>
-          <Pressable onPress={() => setBookId(null)} style={{ marginBottom: 8 }}>
+          <Touchable
+            variant="ghost"
+            onPress={() => setBookId(null)}
+            style={{
+              alignSelf: "flex-start",
+              borderRadius: 999,
+              paddingHorizontal: 10,
+              paddingVertical: 6,
+              marginBottom: 8,
+              marginLeft: -10,
+            }}
+          >
             <Text style={{ color: colors.accent, fontSize: 14 }}>← Books</Text>
-          </Pressable>
+          </Touchable>
           <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8 }}>
             {(books.find((b) => b.id === bookId)?.children ?? []).map((ch) => {
               const on = ch.id === currentSectionId;
               return (
-                <Pressable
+                <Touchable
                   key={ch.id}
+                  variant={on ? "primary" : "card"}
                   onPress={() => onPick(ch.id)}
                   style={{
                     width: "22%",
@@ -352,7 +428,7 @@ function BookPicker({
                   >
                     {shortChapterLabel(ch.title)}
                   </Text>
-                </Pressable>
+                </Touchable>
               );
             })}
           </View>
