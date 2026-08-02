@@ -1,0 +1,13 @@
+[Unit]
+Description=Study Desk theology API stub (:8002)
+After=network-online.target
+
+[Service]
+Type=simple
+WorkingDirectory=%h/homelab/apps/theology-app/backend-stub
+ExecStart=/usr/bin/python3 %h/homelab/apps/theology-app/backend-stub/server.py
+Restart=on-failure
+RestartSec=3
+
+[Install]
+WantedBy=default.target

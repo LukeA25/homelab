@@ -1,0 +1,202 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --bg: #0b0d10;
+  --bg-elevated: #12161c;
+  --surface: #181e27;
+  --text: #e8edf4;
+  --text-muted: #8b97a8;
+  --accent: #7eb8a2;
+  --accent-soft: rgba(126, 184, 162, 0.16);
+  --border: rgba(232, 237, 244, 0.08);
+  --highlight: rgba(212, 168, 75, 0.35);
+  --ink: #e8edf4;
+  --panel-shadow: 0 20px 50px rgba(0, 0, 0, 0.45);
+  --reader-size: 1.25rem;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+  height: 100dvh;
+  max-height: 100dvh;
+  overflow: hidden;
+}
+
+body {
+  margin: 0;
+  font-family: Figtree, system-ui, sans-serif;
+  color: var(--text);
+  background: var(--bg);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+  overscroll-behavior: none;
+}
+
+button,
+input,
+textarea {
+  font: inherit;
+  color: inherit;
+}
+
+::selection {
+  background: var(--accent-soft);
+}
+
+.panel {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  box-shadow: var(--panel-shadow);
+}
+
+.btn-accent {
+  background: var(--accent);
+  color: #0b0d10;
+}
+
+.reader-prose {
+  font-family: "Source Serif 4", Georgia, serif;
+  font-size: var(--reader-size);
+  line-height: 1.8;
+}
+
+.verse-underline {
+  text-decoration: underline;
+  text-decoration-color: var(--accent);
+  text-decoration-thickness: 2px;
+  text-underline-offset: 4px;
+}
+
+.hl-amber {
+  background: linear-gradient(transparent 55%, var(--highlight) 55%);
+}
+
+/* Screen transitions */
+@keyframes fade-rise {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fade-slide-x {
+  from {
+    opacity: 0.35;
+    transform: translateX(var(--slide-from, 24px));
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes sheet-up {
+  from {
+    opacity: 0;
+    transform: translateY(40%);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes backdrop-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.anim-screen {
+  animation: fade-rise 320ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.anim-chapter-next {
+  --slide-from: 28px;
+  animation: fade-slide-x 280ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.anim-chapter-prev {
+  --slide-from: -28px;
+  animation: fade-slide-x 280ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.anim-sheet {
+  animation: sheet-up 280ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.anim-backdrop {
+  animation: backdrop-in 200ms ease both;
+}
+
+.safe-top {
+  padding-top: max(0.75rem, env(safe-area-inset-top));
+}
+
+.safe-bottom {
+  padding-bottom: max(0.75rem, env(safe-area-inset-bottom));
+}
+
+.writing-vertical {
+  writing-mode: vertical-rl;
+  text-orientation: mixed;
+  letter-spacing: 0.06em;
+}
+
+/* App shell: fixed pixel height measured in JS.
+   Older iPad Safari ignores 100dvh, which collapses the whole layout. */
+.app-shell {
+  height: 100%;
+  height: var(--app-h, 100%);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+/* Region that owns the remaining height; children fill it absolutely */
+.pane-host {
+  position: relative;
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.pane-fill {
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+}
+
+/* iPad/Safari: independent pane scrolling */
+.pane-scroll {
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
+  touch-action: pan-y;
+  /* keep a scrollport even when content is short */
+  overflow-y: scroll;
+}
+
+.pane-scroll [role="button"] {
+  touch-action: pan-y;
+  -webkit-user-select: none;
+  user-select: none;
+}

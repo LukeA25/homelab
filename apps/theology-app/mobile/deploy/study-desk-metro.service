@@ -1,0 +1,17 @@
+[Unit]
+Description=Study Desk Expo Metro (LAN)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+WorkingDirectory=%h/homelab/apps/theology-app/mobile
+Environment=PATH=%h/.local/node/bin:/usr/local/bin:/usr/bin:/bin
+Environment=EXPO_NO_TELEMETRY=1
+Environment=REACT_NATIVE_PACKAGER_HOSTNAME=192.168.1.156
+ExecStart=%h/.local/node/bin/npx expo start --lan --port 8081
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=default.target
