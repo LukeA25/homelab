@@ -1,0 +1,11 @@
+services:
+  theology-app:
+    build: ../../apps/theology-app/backend
+    container_name: theology-app
+    restart: unless-stopped
+    env_file:
+      - .env
+    ports:
+      - "8002:8000"
+    volumes:
+      - /srv/appdata/theology-app:/data
