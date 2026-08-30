@@ -30,3 +30,7 @@ http://guitar.home.arpa {
     reverse_proxy 192.168.1.156:8001
 }
 
+http://theology.home.arpa {
+    reverse_proxy 192.168.1.156:8002
+}
+

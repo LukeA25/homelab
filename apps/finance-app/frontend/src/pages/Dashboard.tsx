@@ -13,6 +13,7 @@ import {
   currentMonthKey,
   monthIndex,
 } from "@/lib/budgetStatus";
+import { spendAmount } from "@/lib/repayments";
 import { Card, CardHeader } from "@/components/ui/Card";
 import { StatCard } from "@/components/ui/StatCard";
 import { Pill } from "@/components/ui/Pill";
@@ -41,10 +42,11 @@ function cumulativeByDay(
 ): (number | null)[] {
   const perDay = new Array(DAYS).fill(0);
   for (const t of txns) {
-    if (t.amount <= 0) continue;
+    const amount = spendAmount(t);
+    if (amount <= 0) continue;
     if (!(t.date || "").startsWith(ym)) continue;
     const day = dayOfMonth(t.date);
-    if (day >= 1 && day <= DAYS) perDay[day - 1] += t.amount;
+    if (day >= 1 && day <= DAYS) perDay[day - 1] += amount;
   }
   const lastDay = clampToday ? new Date().getDate() : DAYS;
   const out: (number | null)[] = [];
@@ -79,7 +81,10 @@ function ReviewList({
   colorMap: Map<number, string>;
 }) {
   const assign = useAssignTransaction();
-  const toReview = txns.filter((t) => t.resolved_subcategory_id == null);
+  // Repayments are deliberately uncategorized, so they're never "to review".
+  const toReview = txns.filter(
+    (t) => t.resolved_subcategory_id == null && !t.is_repayment,
+  );
 
   if (toReview.length === 0) {
     return (
@@ -122,6 +127,7 @@ function ReviewList({
                     ? colorMap.get(t.resolved_subcategory_id)
                     : undefined
                 }
+                kind={t.amount > 0 ? "expense" : "income"}
                 onChange={(subId) =>
                   assign.mutate({ id: t.id, subcategoryId: subId })
                 }

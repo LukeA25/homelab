@@ -14,6 +14,7 @@ export const keys = {
   categories: ["categories"] as const,
   settings: ["settings"] as const,
   rules: ["rules"] as const,
+  repayable: ["repayable"] as const,
   transactions: (month?: string) => ["transactions", month ?? "all"] as const,
 };
 
@@ -127,6 +128,7 @@ function invalidateTransactionViews(
   qc: ReturnType<typeof useQueryClient>,
 ) {
   qc.invalidateQueries({ queryKey: ["transactions"] });
+  qc.invalidateQueries({ queryKey: keys.repayable });
   qc.invalidateQueries({ queryKey: keys.overview });
   qc.invalidateQueries({ queryKey: keys.monthly });
 }
@@ -141,6 +143,25 @@ export function useAssignTransaction(_month?: string) {
       id: string;
       subcategoryId: number | null;
     }) => api.assignTransaction(id, subcategoryId),
+    onSuccess: () => invalidateTransactionViews(qc),
+  });
+}
+
+/** Expenses that still have something left to repay. */
+export function useRepayable() {
+  return useQuery({ queryKey: keys.repayable, queryFn: api.repayable });
+}
+
+export function useSetRepayment() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({
+      id,
+      allocations,
+    }: {
+      id: string;
+      allocations: { expense_id: string; amount: number }[];
+    }) => api.setRepayment(id, allocations),
     onSuccess: () => invalidateTransactionViews(qc),
   });
 }

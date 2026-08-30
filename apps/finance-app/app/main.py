@@ -23,16 +23,22 @@ from .db import get_session, init_db
 from .models import (
     Account,
     Category,
+    DeletedTransaction,
     Holding,
     InvestmentTransaction,
     Item,
     MappingRule,
     Projection,
+    RepaymentAllocation,
     Security,
     Subcategory,
     Transaction,
 )
-from .seed import seed_if_empty
+from .seed import (
+    backfill_repayment_allocations,
+    backfill_subcategories,
+    seed_if_empty,
+)
 
 app = FastAPI()
 
@@ -46,6 +52,8 @@ def on_startup():
     init_db()
     with get_session() as session:
         seed_if_empty(session)
+        backfill_subcategories(session)
+        backfill_repayment_allocations(session)
 
 
 def get_db():
@@ -219,12 +227,23 @@ class AssignIn(BaseModel):
     subcategory_id: Optional[int] = None
 
 
+class AllocationIn(BaseModel):
+    expense_id: str
+    amount: float
+
+
 class ManualTxnIn(BaseModel):
     date: str
     name: str
     amount: float  # positive = spending, negative = income (Plaid convention)
     merchant_name: Optional[str] = None
     subcategory_id: Optional[int] = None
+    allocations: Optional[list[AllocationIn]] = None
+
+
+class RepaymentIn(BaseModel):
+    """Replace the allocation set for a money-in transaction. Empty clears it."""
+    allocations: list[AllocationIn] = []
 
 
 class RuleIn(BaseModel):
@@ -296,21 +315,52 @@ def _upsert_accounts(session: Session, item: Item, accounts: list[dict]):
     session.commit()
 
 
+def _deleted_ids(session: Session) -> set[str]:
+    return {row.id for row in session.exec(select(DeletedTransaction)).all()}
+
+
 def _upsert_transactions(session: Session, txns: list[dict]):
+    skipped = _deleted_ids(session)
     for t in txns:
         pfc = t.get("personal_finance_category") or {}
         txn_id = t["transaction_id"]
+        incoming_pending = bool(t.get("pending"))
+
+        # A deleted pending charge shouldn't come back on refresh. If Plaid
+        # later posts that same id, drop the tombstone and keep the real one.
+        if txn_id in skipped:
+            if incoming_pending:
+                continue
+            tombstone = session.get(DeletedTransaction, txn_id)
+            if tombstone is not None:
+                session.delete(tombstone)
+            skipped.discard(txn_id)
 
         # When a pending charge posts, Plaid issues a brand-new transaction with
         # a new id and points back to the original via pending_transaction_id.
-        # Collapse that lifecycle into one row: drop the stale pending row (so it
-        # isn't double-counted) and carry over any manual override the user set.
+        # Collapse that lifecycle into one row: drop the stale pending row (so
+        # it isn't double-counted) and carry over anything the user set on it.
         carried_override = None
         pending_pred_id = t.get("pending_transaction_id")
         if pending_pred_id and pending_pred_id != txn_id:
             pred = session.get(Transaction, pending_pred_id)
             if pred is not None:
                 carried_override = pred.override_subcategory_id
+                # Allocations aimed at the pending row have to follow it forward.
+                for a in session.exec(
+                    select(RepaymentAllocation).where(
+                        RepaymentAllocation.expense_id == pending_pred_id
+                    )
+                ).all():
+                    a.expense_id = txn_id
+                    session.add(a)
+                for a in session.exec(
+                    select(RepaymentAllocation).where(
+                        RepaymentAllocation.repayment_id == pending_pred_id
+                    )
+                ).all():
+                    a.repayment_id = txn_id
+                    session.add(a)
                 session.delete(pred)
 
         existing = session.get(Transaction, txn_id)
@@ -387,9 +437,11 @@ def delete_account(account_id: str, session: Session = Depends(get_db)):
     if not acct:
         raise HTTPException(status_code=404, detail="Account not found")
 
-    for t in session.exec(
+    account_txns = session.exec(
         select(Transaction).where(Transaction.account_id == account_id)
-    ).all():
+    ).all()
+    _clear_allocations_for(session, [t.id for t in account_txns])
+    for t in account_txns:
         session.delete(t)
 
     for h in session.exec(
@@ -790,15 +842,223 @@ def _subcategory_index(session: Session):
     return index
 
 
+def _allocations_for(
+    session: Session, repayment_id: Optional[str] = None, expense_id: Optional[str] = None
+) -> list[RepaymentAllocation]:
+    q = select(RepaymentAllocation)
+    if repayment_id is not None:
+        q = q.where(RepaymentAllocation.repayment_id == repayment_id)
+    if expense_id is not None:
+        q = q.where(RepaymentAllocation.expense_id == expense_id)
+    return list(session.exec(q).all())
+
+
+def _repaid_total(
+    session: Session, expense_id: str, exclude_repayment: Optional[str] = None
+) -> float:
+    return sum(
+        abs(a.amount or 0.0)
+        for a in _allocations_for(session, expense_id=expense_id)
+        if a.repayment_id != exclude_repayment
+    )
+
+
+def _is_repayment_txn(session: Session, txn_id: str) -> bool:
+    return (
+        session.exec(
+            select(RepaymentAllocation).where(
+                RepaymentAllocation.repayment_id == txn_id
+            )
+        ).first()
+        is not None
+    )
+
+
+def _validate_allocations(
+    session: Session, txn: Transaction, allocations: list[AllocationIn]
+) -> list[tuple[Transaction, float]]:
+    """Validate and normalize an allocation set for a money-in transaction."""
+    if (txn.amount or 0.0) >= 0:
+        raise HTTPException(
+            status_code=400, detail="Only money coming in can be a repayment"
+        )
+
+    cleaned: list[tuple[Transaction, float]] = []
+    seen: set[str] = set()
+    total = 0.0
+
+    for item in allocations:
+        amount = round(float(item.amount or 0.0), 2)
+        if amount <= 0:
+            raise HTTPException(
+                status_code=400, detail="Allocation amounts must be positive"
+            )
+        if item.expense_id == txn.id:
+            raise HTTPException(
+                status_code=400, detail="A transaction can't repay itself"
+            )
+        if item.expense_id in seen:
+            raise HTTPException(
+                status_code=400,
+                detail="Each expense can only appear once in an allocation set",
+            )
+        seen.add(item.expense_id)
+
+        expense = session.get(Transaction, item.expense_id)
+        if not expense:
+            raise HTTPException(
+                status_code=404, detail=f"Expense {item.expense_id} not found"
+            )
+        if (expense.amount or 0.0) <= 0:
+            raise HTTPException(
+                status_code=400, detail="A repayment can only point at an expense"
+            )
+        if _is_repayment_txn(session, expense.id):
+            raise HTTPException(
+                status_code=400, detail="That transaction is itself a repayment"
+            )
+
+        already = _repaid_total(session, expense.id, exclude_repayment=txn.id)
+        if already + amount > (expense.amount or 0.0) + budget.CENT:
+            remaining = (expense.amount or 0.0) - already
+            raise HTTPException(
+                status_code=400,
+                detail=(
+                    f"Only ${remaining:,.2f} of that ${expense.amount:,.2f} expense "
+                    "is left to repay"
+                ),
+            )
+
+        cleaned.append((expense, amount))
+        total += amount
+
+    if total > abs(txn.amount or 0.0) + budget.CENT:
+        raise HTTPException(
+            status_code=400,
+            detail=(
+                f"Allocations total ${total:,.2f} but only "
+                f"${abs(txn.amount or 0.0):,.2f} came in"
+            ),
+        )
+    return cleaned
+
+
+def _replace_allocations(
+    session: Session, txn: Transaction, allocations: list[AllocationIn]
+) -> None:
+    cleaned = _validate_allocations(session, txn, allocations)
+    for row in _allocations_for(session, repayment_id=txn.id):
+        session.delete(row)
+    for expense, amount in cleaned:
+        session.add(RepaymentAllocation(
+            repayment_id=txn.id,
+            expense_id=expense.id,
+            amount=amount,
+        ))
+    # Keep the deprecated column in sync for the primary allocation only so a
+    # rolled-back image wouldn't leave orphaned FK state.
+    txn.repayment_for_id = cleaned[0][0].id if len(cleaned) == 1 else None
+    session.add(txn)
+
+
+def _clear_allocations_for(session: Session, txn_ids: list[str]) -> None:
+    """Drop allocations that mention any of the given transaction ids."""
+    id_set = set(txn_ids)
+    for row in session.exec(select(RepaymentAllocation)).all():
+        if row.repayment_id in id_set or row.expense_id in id_set:
+            session.delete(row)
+
+
 @api.get("/transactions")
 def list_transactions(month: Optional[str] = None, session: Session = Depends(get_db)):
     resolver = budget.load_resolver(session)
     sub_index = _subcategory_index(session)
 
-    query = select(Transaction).order_by(Transaction.date.desc())
+    txns = list(session.exec(select(Transaction).order_by(Transaction.date.desc())).all())
+    alloc_rows = budget.load_allocations(session)
+    repaid, allocated = budget.repayment_index(txns, alloc_rows)
+    by_id = {t.id: t for t in txns}
+
+    allocs_by_repayment: dict[str, list[RepaymentAllocation]] = {}
+    for a in alloc_rows:
+        allocs_by_repayment.setdefault(a.repayment_id, []).append(a)
+
     rows = []
-    for t in session.exec(query).all():
+    for t in txns:
         if month and not (t.date or "").startswith(month):
+            continue
+
+        allocated_amount = round(allocated.get(t.id, 0.0), 2)
+        repaid_amount = round(repaid.get(t.id, 0.0), 2)
+        is_repayment = allocated_amount > 0
+        unallocated = round(max(0.0, abs(t.amount or 0.0) - allocated_amount), 2)
+
+        # Fully allocated repayments carry no budget category of their own.
+        # A leftover still resolves so it can count as income.
+        fully_allocated = is_repayment and unallocated <= budget.CENT
+        resolved = None if fully_allocated else resolver.resolve(t)
+        info = sub_index.get(resolved) if resolved is not None else None
+
+        allocation_payload = []
+        for a in allocs_by_repayment.get(t.id, []):
+            expense = by_id.get(a.expense_id)
+            if expense is None:
+                continue
+            allocation_payload.append({
+                "expense_id": expense.id,
+                "amount": round(a.amount or 0.0, 2),
+                "expense_name": expense.merchant_name or expense.name,
+                "expense_date": expense.date,
+                "expense_amount": expense.amount,
+            })
+
+        rows.append({
+            "id": t.id,
+            "date": t.date,
+            "name": t.name,
+            "merchant_name": t.merchant_name,
+            "amount": t.amount,
+            "effective_amount": round(
+                budget.effective_amount(t, repaid, allocated), 2
+            ),
+            "pfc_primary": t.pfc_primary,
+            "pfc_detailed": t.pfc_detailed,
+            "pending": t.pending,
+            "source": t.source,
+            "resolved_subcategory_id": resolved,
+            "resolved_name": info["name"] if info else None,
+            "resolved_category_name": info["category_name"] if info else None,
+            "is_override": t.override_subcategory_id is not None,
+            "is_repayment": is_repayment,
+            "allocations": allocation_payload,
+            "allocated_amount": allocated_amount,
+            "unallocated_amount": unallocated if is_repayment else 0.0,
+            "repaid_amount": repaid_amount,
+            "repayment_status": budget.repayment_status(t.amount or 0.0, repaid_amount),
+        })
+    return {"transactions": rows}
+
+
+@api.get("/transactions/repayable")
+def list_repayable(session: Session = Depends(get_db)):
+    """Expenses that still have something left to repay, for the picker.
+
+    Spans the whole history rather than one month: a deposit made in one month
+    is often paid back in the next.
+    """
+    resolver = budget.load_resolver(session)
+    sub_index = _subcategory_index(session)
+
+    txns = list(session.exec(select(Transaction).order_by(Transaction.date.desc())).all())
+    repaid, allocated = budget.repayment_index(txns, budget.load_allocations(session))
+
+    rows = []
+    for t in txns:
+        if allocated.get(t.id, 0.0) > 0 or (t.amount or 0.0) <= 0:
+            continue
+        already = repaid.get(t.id, 0.0)
+        remaining = round((t.amount or 0.0) - already, 2)
+        if remaining <= 0:
             continue
         resolved = resolver.resolve(t)
         info = sub_index.get(resolved) if resolved is not None else None
@@ -808,16 +1068,24 @@ def list_transactions(month: Optional[str] = None, session: Session = Depends(ge
             "name": t.name,
             "merchant_name": t.merchant_name,
             "amount": t.amount,
-            "pfc_primary": t.pfc_primary,
-            "pfc_detailed": t.pfc_detailed,
-            "pending": t.pending,
-            "source": t.source,
-            "resolved_subcategory_id": resolved,
+            "repaid_amount": round(already, 2),
+            "remaining_amount": remaining,
             "resolved_name": info["name"] if info else None,
             "resolved_category_name": info["category_name"] if info else None,
-            "is_override": t.override_subcategory_id is not None,
         })
     return {"transactions": rows}
+
+
+@api.put("/transactions/{transaction_id}/repayment")
+def set_repayment(
+    transaction_id: str, body: RepaymentIn, session: Session = Depends(get_db)
+):
+    txn = session.get(Transaction, transaction_id)
+    if not txn:
+        raise HTTPException(status_code=404, detail="Transaction not found")
+    _replace_allocations(session, txn, body.allocations)
+    session.commit()
+    return {"ok": True}
 
 
 @api.put("/transactions/{transaction_id}/assign")
@@ -847,6 +1115,10 @@ def create_manual_transaction(body: ManualTxnIn, session: Session = Depends(get_
     )
     session.add(txn)
     session.commit()
+    session.refresh(txn)
+    if body.allocations:
+        _replace_allocations(session, txn, body.allocations)
+        session.commit()
     return {"id": txn.id}
 
 
@@ -855,8 +1127,14 @@ def delete_transaction(transaction_id: str, session: Session = Depends(get_db)):
     txn = session.get(Transaction, transaction_id)
     if not txn:
         raise HTTPException(status_code=404, detail="Transaction not found")
-    if txn.source != "manual":
-        raise HTTPException(status_code=400, detail="Only manual transactions can be deleted")
+    if txn.source != "manual" and not txn.pending:
+        raise HTTPException(
+            status_code=400,
+            detail="Only manual or pending transactions can be deleted",
+        )
+    _clear_allocations_for(session, [txn.id])
+    if txn.source != "manual" and session.get(DeletedTransaction, txn.id) is None:
+        session.add(DeletedTransaction(id=txn.id))
     session.delete(txn)
     session.commit()
     return {"ok": True}

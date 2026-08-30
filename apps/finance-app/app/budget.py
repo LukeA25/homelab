@@ -12,6 +12,7 @@ from .models import (
     MappingRule,
     Meta,
     Projection,
+    RepaymentAllocation,
     Subcategory,
     Transaction,
 )
@@ -127,6 +128,75 @@ def load_resolver(session: Session) -> Resolver:
 
 
 # ---------------------------------------------------------------------------
+# Repayments
+# ---------------------------------------------------------------------------
+
+# Amounts are floats, so compare to the nearest half cent.
+CENT = 0.005
+
+
+def repayment_index(
+    txns: list[Transaction],
+    allocations: list[RepaymentAllocation],
+) -> tuple[dict[str, float], dict[str, float]]:
+    """Returns (repaid per expense id, allocated per repayment id).
+
+    Allocated dollars shrink the expense and are excluded from the repayment's
+    income contribution. A dangling allocation (missing either side) is ignored.
+    """
+    by_id = {t.id: t for t in txns}
+    repaid: dict[str, float] = {}
+    allocated: dict[str, float] = {}
+
+    for row in allocations:
+        repayment = by_id.get(row.repayment_id)
+        expense = by_id.get(row.expense_id)
+        if repayment is None or expense is None:
+            continue
+        if (repayment.amount or 0.0) >= 0 or (expense.amount or 0.0) <= 0:
+            continue
+        amount = abs(row.amount or 0.0)
+        if amount <= 0:
+            continue
+        repaid[row.expense_id] = repaid.get(row.expense_id, 0.0) + amount
+        allocated[row.repayment_id] = allocated.get(row.repayment_id, 0.0) + amount
+
+    return repaid, allocated
+
+
+def load_allocations(session: Session) -> list[RepaymentAllocation]:
+    return list(session.exec(select(RepaymentAllocation)).all())
+
+
+def effective_amount(
+    txn: Transaction,
+    repaid: dict[str, float],
+    allocated: dict[str, float],
+) -> float:
+    """A transaction's signed amount after allocations.
+
+    Expenses shrink toward zero as they are repaid. Money-in shrinks toward
+    zero as it is allocated (leftover still counts as income).
+    """
+    amount = txn.amount or 0.0
+    if amount > 0:
+        offset = repaid.get(txn.id, 0.0)
+        return max(0.0, amount - offset) if offset > 0 else amount
+    if amount < 0:
+        offset = allocated.get(txn.id, 0.0)
+        # amount is negative; adding the allocated dollars moves it toward zero.
+        return min(0.0, amount + offset) if offset > 0 else amount
+    return 0.0
+
+
+def repayment_status(amount: float, repaid_amount: float) -> str:
+    """How much of an expense has been paid back: 'none' | 'partial' | 'full'."""
+    if amount <= 0 or repaid_amount <= 0:
+        return "none"
+    return "full" if repaid_amount >= amount - CENT else "partial"
+
+
+# ---------------------------------------------------------------------------
 # Compute
 # ---------------------------------------------------------------------------
 
@@ -166,20 +236,27 @@ def _actuals(session: Session, months: set[str], resolver: Resolver, kind_by_sub
     by_sub_month: dict[tuple[int, str], float] = {}
     unassigned = {"income_actual": 0.0, "expense_actual": 0.0, "count": 0}
 
-    for txn in session.exec(select(Transaction)).all():
+    txns = list(session.exec(select(Transaction)).all())
+    repaid, allocated = repayment_index(txns, load_allocations(session))
+
+    for txn in txns:
         ym = (txn.date or "")[:7]
         if ym not in months:
+            continue
+        amount = effective_amount(txn, repaid, allocated)
+        # Fully allocated repayments contribute nothing; leftovers flow as income.
+        if abs(amount) <= CENT:
             continue
         sub_id = resolver.resolve(txn)
         if sub_id is None:
             unassigned["count"] += 1
-            if (txn.amount or 0.0) < 0:
-                unassigned["income_actual"] += -txn.amount
+            if amount < 0:
+                unassigned["income_actual"] += -amount
             else:
-                unassigned["expense_actual"] += txn.amount
+                unassigned["expense_actual"] += amount
             continue
         kind = kind_by_sub.get(sub_id)
-        contribution = (-txn.amount) if kind == "income" else (txn.amount or 0.0)
+        contribution = (-amount) if kind == "income" else amount
         by_sub[sub_id] = by_sub.get(sub_id, 0.0) + contribution
         key = (sub_id, ym)
         by_sub_month[key] = by_sub_month.get(key, 0.0) + contribution

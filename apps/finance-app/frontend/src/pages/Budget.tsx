@@ -1,25 +1,34 @@
 import { useEffect, useMemo, useState } from "react";
-import { Plus, Trash2 } from "lucide-react";
+import { ChevronDown, ChevronRight, Plus, Trash2 } from "lucide-react";
 import {
   useCategories,
   useMonthly,
-  useOverview,
   usePutProjections,
   useCategoryMutations,
 } from "@/lib/queries";
 import {
-  buildSubBudgetRows,
   currentMonthKey,
   monthIndex,
   statusLabel,
   statusTone,
 } from "@/lib/budgetStatus";
+import {
+  buildTrackingTree,
+  findTrackingNode,
+  scopedAmounts,
+  trackingRead,
+  type TrackingNode,
+  type TrackingScope,
+} from "@/lib/budgetTracking";
 import type { Category } from "@/lib/types";
 import { Card, CardHeader } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { Pill } from "@/components/ui/Pill";
+import { ProgressBar } from "@/components/ui/ProgressBar";
+import { StatCard } from "@/components/ui/StatCard";
 import { Modal } from "@/components/ui/Modal";
 import { Input, Select, Label } from "@/components/ui/Field";
+import { BudgetTrackChart } from "@/components/charts/BudgetTrackChart";
 import { useToast } from "@/components/ui/Toast";
 import { cn, money } from "@/lib/utils";
 
@@ -125,10 +134,309 @@ function AddCategoryModal({ onClose }: { onClose: () => void }) {
   );
 }
 
+function TrackingRow({
+  node,
+  scope,
+  monthIdx,
+  depth,
+  selected,
+  expanded,
+  onSelect,
+  onToggle,
+}: {
+  node: TrackingNode;
+  scope: TrackingScope;
+  monthIdx: number;
+  depth: number;
+  selected: boolean;
+  expanded: boolean;
+  onSelect: () => void;
+  onToggle?: () => void;
+}) {
+  const amounts = scopedAmounts(node, scope, monthIdx);
+  const hasChildren = node.children.length > 0;
+  const pct =
+    amounts.projected > 0
+      ? Math.min(amounts.actual / amounts.projected, 1.5)
+      : amounts.actual > 0
+        ? 1
+        : 0;
+
+  return (
+    <div
+      className={cn(
+        "border-b border-hairline last:border-0",
+        selected && "bg-accent-soft/40",
+      )}
+    >
+      <button
+        type="button"
+        onClick={onSelect}
+        className="flex w-full items-center gap-2 px-3 py-2.5 text-left transition-colors hover:bg-black/[0.03]"
+        style={{ paddingLeft: 12 + depth * 16 }}
+      >
+        {hasChildren && onToggle ? (
+          <span
+            role="button"
+            tabIndex={0}
+            className="shrink-0 text-ink-faint"
+            onClick={(e) => {
+              e.stopPropagation();
+              onToggle();
+            }}
+            onKeyDown={(e) => {
+              if (e.key === "Enter" || e.key === " ") {
+                e.preventDefault();
+                e.stopPropagation();
+                onToggle();
+              }
+            }}
+          >
+            {expanded ? (
+              <ChevronDown className="h-3.5 w-3.5" />
+            ) : (
+              <ChevronRight className="h-3.5 w-3.5" />
+            )}
+          </span>
+        ) : (
+          <span className="w-3.5 shrink-0" />
+        )}
+        <span className="min-w-0 flex-1">
+          <span className="block truncate text-sm font-medium">{node.name}</span>
+          {node.categoryName ? (
+            <span className="text-xs text-ink-faint">{node.categoryName}</span>
+          ) : null}
+        </span>
+        <span className="hidden w-20 shrink-0 text-right tnum text-sm text-ink-muted sm:block">
+          {amounts.projected > 0 ? money(amounts.projected) : "—"}
+        </span>
+        <span className="w-20 shrink-0 text-right tnum text-sm">
+          {money(amounts.actual)}
+        </span>
+        <span
+          className={cn(
+            "hidden w-20 shrink-0 text-right tnum text-sm sm:block",
+            amounts.variance < 0 ? "text-loss" : "text-gain",
+          )}
+        >
+          {money(amounts.variance)}
+        </span>
+        <span className="hidden w-24 shrink-0 sm:block">
+          <ProgressBar
+            value={amounts.actual}
+            max={Math.max(amounts.projected, amounts.actual, 1)}
+            color={amounts.variance < 0 ? "#D64545" : undefined}
+          />
+          <span className="mt-0.5 block text-right text-[10px] text-ink-faint">
+            {amounts.projected > 0 ? `${Math.round(pct * 100)}%` : "—"}
+          </span>
+        </span>
+        <span className="w-24 shrink-0 text-right">
+          <Pill tone={statusTone(node.status)}>{statusLabel(node.status)}</Pill>
+        </span>
+      </button>
+    </div>
+  );
+}
+
+function TrackingPanel({
+  tree,
+  selected,
+  selectedId,
+  onSelect,
+  scope,
+  setScope,
+  expanded,
+  toggleExpand,
+  incomeYtd,
+  expenseYtd,
+}: {
+  tree: NonNullable<ReturnType<typeof buildTrackingTree>>;
+  selected: TrackingNode;
+  selectedId: string;
+  onSelect: (id: string) => void;
+  scope: TrackingScope;
+  setScope: (s: TrackingScope) => void;
+  expanded: Set<string>;
+  toggleExpand: (id: string) => void;
+  incomeYtd: { projected: number; actual: number; variance: number };
+  expenseYtd: { projected: number; actual: number; variance: number };
+}) {
+  const netYtd = {
+    actual: Math.round((incomeYtd.actual - expenseYtd.actual) * 100) / 100,
+    projected:
+      Math.round((incomeYtd.projected - expenseYtd.projected) * 100) / 100,
+  };
+  const netVar = Math.round((netYtd.actual - netYtd.projected) * 100) / 100;
+
+  const renderSection = (title: string, nodes: TrackingNode[]) => (
+    <Card className="overflow-hidden p-0" key={title}>
+      <div className="border-b border-hairline px-4 py-3">
+        <h3 className="text-sm font-semibold">{title}</h3>
+      </div>
+      <div className="hidden border-b border-hairline px-3 py-2 text-[10px] font-semibold uppercase tracking-wide text-ink-faint sm:flex sm:items-center sm:gap-2">
+        <span className="w-3.5" />
+        <span className="min-w-0 flex-1">Category</span>
+        <span className="w-20 text-right">Projected</span>
+        <span className="w-20 text-right">Actual</span>
+        <span className="w-20 text-right">Diff</span>
+        <span className="w-24 text-right">Used</span>
+        <span className="w-24 text-right">Status</span>
+      </div>
+      {nodes.map((cat) => (
+        <div key={cat.id}>
+          <TrackingRow
+            node={cat}
+            scope={scope}
+            monthIdx={tree.currentMonthIdx}
+            depth={0}
+            selected={selectedId === cat.id}
+            expanded={expanded.has(cat.id)}
+            onSelect={() => onSelect(cat.id)}
+            onToggle={() => toggleExpand(cat.id)}
+          />
+          {expanded.has(cat.id)
+            ? cat.children.map((sub) => (
+                <TrackingRow
+                  key={sub.id}
+                  node={sub}
+                  scope={scope}
+                  monthIdx={tree.currentMonthIdx}
+                  depth={1}
+                  selected={selectedId === sub.id}
+                  expanded={false}
+                  onSelect={() => onSelect(sub.id)}
+                />
+              ))
+            : null}
+        </div>
+      ))}
+    </Card>
+  );
+
+  return (
+    <div className="space-y-6">
+      <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
+        <StatCard
+          label="Income YTD"
+          value={money(incomeYtd.actual)}
+          tone="gain"
+          hint={`${money(incomeYtd.variance)} vs plan`}
+        />
+        <StatCard
+          label="Expenses YTD"
+          value={money(expenseYtd.actual)}
+          tone="loss"
+          hint={`${money(expenseYtd.variance)} vs plan`}
+        />
+        <StatCard
+          label="Net YTD"
+          value={money(netYtd.actual)}
+          tone={netYtd.actual >= 0 ? "gain" : "loss"}
+          hint={`${money(netVar)} vs plan`}
+        />
+        <StatCard
+          label="Adherence"
+          value={netVar >= 0 ? "On track" : "Behind"}
+          tone={netVar >= 0 ? "gain" : "loss"}
+          hint="Year to date vs projected"
+        />
+      </div>
+
+      <Card>
+        <CardHeader
+          title={
+            selected.categoryName
+              ? `${selected.categoryName} / ${selected.name}`
+              : selected.name
+          }
+          subtitle={trackingRead(selected)}
+          action={
+            <button
+              type="button"
+              className="text-xs font-medium text-accent hover:underline"
+              onClick={() => onSelect("overall")}
+            >
+              Overall
+            </button>
+          }
+        />
+        <div className="mb-4 grid grid-cols-2 gap-3 sm:grid-cols-4">
+          <div>
+            <div className="text-xs text-ink-faint">Projected YTD</div>
+            <div className="tnum text-sm font-semibold">
+              {money(selected.ytdProjected)}
+            </div>
+          </div>
+          <div>
+            <div className="text-xs text-ink-faint">Actual YTD</div>
+            <div className="tnum text-sm font-semibold">
+              {money(selected.ytdActual)}
+            </div>
+          </div>
+          <div>
+            <div className="text-xs text-ink-faint">Variance</div>
+            <div
+              className={cn(
+                "tnum text-sm font-semibold",
+                selected.ytdVariance < 0 ? "text-loss" : "text-gain",
+              )}
+            >
+              {money(selected.ytdVariance)}
+            </div>
+          </div>
+          <div>
+            <div className="text-xs text-ink-faint">Full-year plan</div>
+            <div className="tnum text-sm font-semibold">
+              {money(selected.yearProjected)}
+            </div>
+          </div>
+        </div>
+        <BudgetTrackChart
+          node={selected}
+          labels={tree.monthLabels}
+          currentMonthIdx={tree.currentMonthIdx}
+        />
+      </Card>
+
+      <div className="flex flex-wrap items-center gap-3">
+        <div className="inline-flex rounded-lg border border-hairline p-0.5">
+          {(
+            [
+              ["month", "This month"],
+              ["ytd", "Year to date"],
+              ["year", "Full year"],
+            ] as const
+          ).map(([v, label]) => (
+            <button
+              key={v}
+              type="button"
+              onClick={() => setScope(v)}
+              className={cn(
+                "rounded-md px-3 py-1.5 text-sm font-medium transition-colors",
+                scope === v
+                  ? "bg-accent-soft text-accent"
+                  : "text-ink-muted hover:text-ink",
+              )}
+            >
+              {label}
+            </button>
+          ))}
+        </div>
+        <p className="text-xs text-ink-faint">
+          Click a row to chart it. Expand categories for subcategories.
+        </p>
+      </div>
+
+      {renderSection("Income", tree.income)}
+      {renderSection("Expenses", tree.expense)}
+    </div>
+  );
+}
+
 export function Budget() {
   const { data: cats } = useCategories();
   const { data: monthly } = useMonthly();
-  const { data: overview } = useOverview();
   const putProjections = usePutProjections();
   const mutations = useCategoryMutations();
   const { show: toast } = useToast();
@@ -137,6 +445,9 @@ export function Budget() {
   const [edits, setEdits] = useState<EditMap>({});
   const [dirty, setDirty] = useState(false);
   const [showAddCat, setShowAddCat] = useState(false);
+  const [selectedId, setSelectedId] = useState("overall");
+  const [scope, setScope] = useState<TrackingScope>("ytd");
+  const [expanded, setExpanded] = useState<Set<string>>(new Set());
 
   const months = cats?.months ?? [];
   const labels = cats?.labels ?? [];
@@ -219,33 +530,46 @@ export function Budget() {
 
   const statusMonth = currentMonthKey();
   const statusIdx = monthly ? monthIndex(monthly, statusMonth) : 0;
-  const statusRows = useMemo(
-    () => (monthly ? buildSubBudgetRows(monthly, statusIdx) : []),
+
+  const tree = useMemo(
+    () => (monthly ? buildTrackingTree(monthly, statusIdx) : null),
     [monthly, statusIdx],
   );
 
-  const expenseByCategory = useMemo(() => {
-    if (!overview) return [];
-    return [...overview.expense.categories].sort((a, b) => b.actual - a.actual);
-  }, [overview]);
+  const selected = tree
+    ? findTrackingNode(tree, selectedId) ?? tree.overall
+    : null;
 
-  const monthExpenseByCategory = useMemo(() => {
-    if (!monthly) return [];
-    return monthly.expense
-      .map((cat) => {
-        const projected = cat.subcategories.reduce(
-          (sum, sub) => sum + (sub.projected[statusIdx] ?? 0),
-          0,
-        );
-        const actual = cat.subcategories.reduce(
-          (sum, sub) => sum + (sub.actual[statusIdx] ?? 0),
-          0,
-        );
-        return { id: cat.id, name: cat.name, projected, actual };
-      })
-      .filter((c) => c.projected > 0 || c.actual > 0)
-      .sort((a, b) => b.actual - a.actual);
-  }, [monthly, statusIdx]);
+  const incomeYtd = useMemo(() => {
+    if (!tree) return { projected: 0, actual: 0, variance: 0 };
+    const projected = tree.income.reduce((s, n) => s + n.ytdProjected, 0);
+    const actual = tree.income.reduce((s, n) => s + n.ytdActual, 0);
+    return {
+      projected: Math.round(projected * 100) / 100,
+      actual: Math.round(actual * 100) / 100,
+      variance: Math.round((actual - projected) * 100) / 100,
+    };
+  }, [tree]);
+
+  const expenseYtd = useMemo(() => {
+    if (!tree) return { projected: 0, actual: 0, variance: 0 };
+    const projected = tree.expense.reduce((s, n) => s + n.ytdProjected, 0);
+    const actual = tree.expense.reduce((s, n) => s + n.ytdActual, 0);
+    return {
+      projected: Math.round(projected * 100) / 100,
+      actual: Math.round(actual * 100) / 100,
+      variance: Math.round((projected - actual) * 100) / 100,
+    };
+  }, [tree]);
+
+  const toggleExpand = (id: string) => {
+    setExpanded((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  };
 
   return (
     <div className="space-y-6">
@@ -287,226 +611,24 @@ export function Budget() {
       </div>
 
       {tab === "tracking" ? (
-        <div className="space-y-6">
-          {overview ? (
-            <Card>
-              <CardHeader
-                title="Summary"
-                subtitle="Projected vs. actual (full year)"
-              />
-              <table className="w-full text-sm">
-                <thead>
-                  <tr className="text-left text-xs uppercase tracking-wide text-ink-faint">
-                    <th className="py-2 font-medium">Section</th>
-                    <th className="py-2 text-right font-medium">Projected</th>
-                    <th className="py-2 text-right font-medium">Actual</th>
-                    <th className="py-2 text-right font-medium">Difference</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {[
-                    { label: "Income", d: overview.income },
-                    { label: "Expenses", d: overview.expense },
-                  ].map((row) => (
-                    <tr key={row.label} className="border-t border-hairline">
-                      <td className="py-2 font-medium">{row.label}</td>
-                      <td className="py-2 text-right tnum">
-                        {money(row.d.projected)}
-                      </td>
-                      <td className="py-2 text-right tnum">
-                        {money(row.d.actual)}
-                      </td>
-                      <td
-                        className={cn(
-                          "py-2 text-right tnum",
-                          row.d.difference < 0 ? "text-loss" : "text-gain",
-                        )}
-                      >
-                        {money(row.d.difference)}
-                      </td>
-                    </tr>
-                  ))}
-                  <tr className="border-t border-hairline font-semibold">
-                    <td className="py-2">Net</td>
-                    <td className="py-2 text-right tnum">
-                      {money(overview.net.projected)}
-                    </td>
-                    <td className="py-2 text-right tnum">
-                      {money(overview.net.actual)}
-                    </td>
-                    <td
-                      className={cn(
-                        "py-2 text-right tnum",
-                        overview.net.difference < 0 ? "text-loss" : "text-gain",
-                      )}
-                    >
-                      {money(overview.net.difference)}
-                    </td>
-                  </tr>
-                </tbody>
-              </table>
-            </Card>
-          ) : null}
-
-          {expenseByCategory.length > 0 ? (
-            <Card>
-          <CardHeader
-            title="Expenses by category"
-            subtitle="Full budget year — projected vs. actual"
+        tree && selected ? (
+          <TrackingPanel
+            tree={tree}
+            selected={selected}
+            selectedId={selectedId}
+            onSelect={setSelectedId}
+            scope={scope}
+            setScope={setScope}
+            expanded={expanded}
+            toggleExpand={toggleExpand}
+            incomeYtd={incomeYtd}
+            expenseYtd={expenseYtd}
           />
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="text-left text-xs uppercase tracking-wide text-ink-faint">
-                <th className="py-2 font-medium">Category</th>
-                <th className="py-2 text-right font-medium">Projected</th>
-                <th className="py-2 text-right font-medium">Actual</th>
-                <th className="py-2 text-right font-medium">Difference</th>
-              </tr>
-            </thead>
-            <tbody>
-              {expenseByCategory.map((cat) => (
-                <tr key={cat.id} className="border-t border-hairline">
-                  <td className="py-2 font-medium">{cat.name}</td>
-                  <td className="py-2 text-right tnum">{money(cat.projected)}</td>
-                  <td className="py-2 text-right tnum">{money(cat.actual)}</td>
-                  <td
-                    className={cn(
-                      "py-2 text-right tnum",
-                      cat.difference < 0 ? "text-loss" : "text-gain",
-                    )}
-                  >
-                    {money(cat.difference)}
-                  </td>
-                </tr>
-              ))}
-              <tr className="border-t border-hairline font-semibold">
-                <td className="py-2">Total</td>
-                <td className="py-2 text-right tnum">
-                  {money(overview!.expense.projected)}
-                </td>
-                <td className="py-2 text-right tnum">
-                  {money(overview!.expense.actual)}
-                </td>
-                <td
-                  className={cn(
-                    "py-2 text-right tnum",
-                    overview!.expense.difference < 0 ? "text-loss" : "text-gain",
-                  )}
-                >
-                  {money(overview!.expense.difference)}
-                </td>
-              </tr>
-            </tbody>
-          </table>
-            </Card>
-          ) : null}
-
-          {monthExpenseByCategory.length > 0 ? (
-            <Card>
-              <CardHeader
-                title="This month by category"
-                subtitle={`Major category totals · ${statusMonth}`}
-              />
-              <table className="w-full text-sm">
-                <thead>
-                  <tr className="text-left text-xs uppercase tracking-wide text-ink-faint">
-                    <th className="py-2 font-medium">Category</th>
-                    <th className="py-2 text-right font-medium">Budget</th>
-                    <th className="py-2 text-right font-medium">Spent</th>
-                    <th className="py-2 text-right font-medium">Left</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {monthExpenseByCategory.map((cat) => {
-                    const left = cat.projected - cat.actual;
-                    return (
-                      <tr key={cat.id} className="border-t border-hairline">
-                        <td className="py-2 font-medium">{cat.name}</td>
-                        <td className="py-2 text-right tnum">
-                          {cat.projected > 0 ? money(cat.projected) : "—"}
-                        </td>
-                        <td className="py-2 text-right tnum">
-                          {money(cat.actual)}
-                        </td>
-                        <td
-                          className={cn(
-                            "py-2 text-right tnum",
-                            left < 0 ? "text-loss" : "",
-                          )}
-                        >
-                          {cat.projected > 0 ? money(left) : "—"}
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-            </Card>
-          ) : null}
-
-          {statusRows.length > 0 ? (
-            <Card>
-              <CardHeader
-                title="This month at a glance"
-                subtitle={`Subcategory budget status · ${statusMonth}`}
-              />
-              <div className="overflow-x-auto">
-                <table className="w-full min-w-[640px] text-sm">
-                  <thead>
-                    <tr className="border-b border-hairline text-left text-xs text-ink-faint">
-                      <th className="pb-2 font-medium">Subcategory</th>
-                      <th className="pb-2 text-right font-medium">Budget</th>
-                      <th className="pb-2 text-right font-medium">Spent</th>
-                      <th className="pb-2 text-right font-medium">Left</th>
-                      <th className="pb-2 text-right font-medium">Used</th>
-                      <th className="pb-2 text-right font-medium">Status</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-hairline">
-                    {statusRows.map((r) => (
-                      <tr key={r.id}>
-                        <td className="py-2.5">
-                          <span className="font-medium">{r.name}</span>
-                          <span className="ml-1 text-xs text-ink-faint">
-                            · {r.categoryName}
-                          </span>
-                        </td>
-                        <td className="py-2.5 text-right tnum">
-                          {r.projected > 0 ? money(r.projected) : "—"}
-                        </td>
-                        <td className="py-2.5 text-right tnum">
-                          {money(r.actual)}
-                        </td>
-                        <td
-                          className={cn(
-                            "py-2.5 text-right tnum",
-                            r.remaining < 0 ? "text-loss" : "",
-                          )}
-                        >
-                          {r.projected > 0
-                            ? money(r.remaining)
-                            : r.actual > 0
-                              ? "—"
-                              : "—"}
-                        </td>
-                        <td className="py-2.5 text-right tnum">
-                          {r.projected > 0
-                            ? `${Math.round(r.pctUsed * 100)}%`
-                            : "—"}
-                        </td>
-                        <td className="py-2.5 text-right">
-                          <Pill tone={statusTone(r.status)}>
-                            {statusLabel(r.status)}
-                          </Pill>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            </Card>
-          ) : null}
-        </div>
+        ) : (
+          <Card>
+            <p className="text-sm text-ink-muted">Loading budget…</p>
+          </Card>
+        )
       ) : (
         <div className="space-y-6">
           {(cats?.categories ?? []).map((c: Category) => (

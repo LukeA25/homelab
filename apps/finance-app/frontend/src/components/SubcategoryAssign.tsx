@@ -7,6 +7,7 @@ export function SubcategoryAssign({
   categoryName,
   color,
   onChange,
+  kind,
   className,
 }: {
   subcategoryId: number | null;
@@ -14,6 +15,7 @@ export function SubcategoryAssign({
   categoryName?: string | null;
   color?: string;
   onChange: (subcategoryId: number | null) => void;
+  kind?: "income" | "expense";
   className?: string;
 }) {
   return (
@@ -23,6 +25,7 @@ export function SubcategoryAssign({
         subcategoryName={subcategoryName}
         color={color}
         onChange={onChange}
+        kind={kind}
       />
       {categoryName && subcategoryName ? (
         <p className="mt-1 text-xs text-ink-faint">{categoryName}</p>

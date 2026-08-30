@@ -3,3 +3,6 @@
 *.sqlite
 *.sqlite3
 compose/homepage/config/logs/
+
+# Copyrighted source texts never belong in the repo; they live in /srv/appdata/theology-app/library
+*.epub

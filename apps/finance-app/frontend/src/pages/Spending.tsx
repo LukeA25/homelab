@@ -1,8 +1,13 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { ChevronDown, ChevronRight } from "lucide-react";
 import { useMonths, useMonthly, useTransactions } from "@/lib/queries";
 import type { Transaction } from "@/lib/types";
-import { buildSubBudgetLookup, budgetLegendText } from "@/lib/budgetStatus";
+import {
+  buildSubBudgetLookup,
+  budgetLegendText,
+  currentMonthKey,
+} from "@/lib/budgetStatus";
+import { isSpending, spendAmount } from "@/lib/repayments";
 import { Card, CardHeader } from "@/components/ui/Card";
 import { Select } from "@/components/ui/Field";
 import {
@@ -34,9 +39,10 @@ interface CatAgg {
 function categoryColorMap(txns: Transaction[]): Map<string, string> {
   const totals = new Map<string, number>();
   for (const t of txns) {
-    if (t.amount <= 0) continue;
+    const amount = spendAmount(t);
+    if (amount <= 0) continue;
     const c = t.resolved_category_name || UNASSIGNED;
-    totals.set(c, (totals.get(c) || 0) + t.amount);
+    totals.set(c, (totals.get(c) || 0) + amount);
   }
   const map = new Map<string, string>();
   [...totals.entries()]
@@ -56,8 +62,9 @@ function aggregateHierarchical(
   let total = 0;
 
   for (const t of txns) {
-    if (t.amount <= 0) continue;
-    total += t.amount;
+    const amount = spendAmount(t);
+    if (amount <= 0) continue;
+    total += amount;
     const catName = t.resolved_category_name || UNASSIGNED;
     const subName = t.resolved_name || UNCATEGORIZED;
 
@@ -65,7 +72,7 @@ function aggregateHierarchical(
       byCat.set(catName, { amount: 0, txns: [], subs: new Map() });
     }
     const cat = byCat.get(catName)!;
-    cat.amount += t.amount;
+    cat.amount += amount;
     cat.txns.push(t);
 
     if (!cat.subs.has(subName)) {
@@ -78,7 +85,7 @@ function aggregateHierarchical(
       });
     }
     const sub = cat.subs.get(subName)!;
-    sub.amount += t.amount;
+    sub.amount += amount;
     sub.txns.push(t);
   }
 
@@ -126,13 +133,26 @@ export function Spending() {
   const { data: monthsData } = useMonths();
   const { data: monthly } = useMonthly();
   const { data: txResp, isLoading } = useTransactions("all");
-  const [period, setPeriod] = useState("all");
+  const [period, setPeriod] = useState<string | null>(null);
   const [view, setView] = useState<"category" | "time">("category");
   const [selection, setSelection] = useState<DonutSelection>(null);
   const [expanded, setExpanded] = useState<Set<string>>(new Set());
 
   const allTxns = txResp?.transactions ?? [];
   const colorMap = useMemo(() => categoryColorMap(allTxns), [allTxns]);
+
+  const budgetMonths = monthsData?.months ?? [];
+  const ym = currentMonthKey();
+  const defaultPeriod = useMemo(() => {
+    if (budgetMonths.includes(ym)) return ym;
+    return budgetMonths[budgetMonths.length - 1] ?? "all";
+  }, [budgetMonths, ym]);
+
+  useEffect(() => {
+    if (period == null && monthsData) setPeriod(defaultPeriod);
+  }, [period, monthsData, defaultPeriod]);
+
+  const selectedPeriod = period ?? defaultPeriod;
 
   const monthOptions = useMemo(() => {
     const ms = monthsData?.months ?? [];
@@ -142,10 +162,10 @@ export function Spending() {
 
   const periodTxns = useMemo(
     () =>
-      period === "all"
+      selectedPeriod === "all"
         ? allTxns
-        : allTxns.filter((t) => (t.date || "").startsWith(period)),
-    [allTxns, period],
+        : allTxns.filter((t) => (t.date || "").startsWith(selectedPeriod)),
+    [allTxns, selectedPeriod],
   );
 
   const { cats, total } = useMemo(
@@ -154,17 +174,17 @@ export function Spending() {
   );
 
   const budgetLookup = useMemo(
-    () => (monthly ? buildSubBudgetLookup(monthly, period) : new Map()),
-    [monthly, period],
+    () =>
+      monthly ? buildSubBudgetLookup(monthly, selectedPeriod) : new Map(),
+    [monthly, selectedPeriod],
   );
 
   const stats = useMemo(() => {
-    const spend = periodTxns.filter((t) => t.amount > 0);
-    const amounts = spend.map((t) => t.amount);
+    const amounts = periodTxns.map(spendAmount).filter((a) => a > 0);
     const sum = amounts.reduce((a, b) => a + b, 0);
     return {
       total: sum,
-      count: spend.length,
+      count: amounts.length,
       largest: amounts.length ? Math.max(...amounts) : 0,
       average: amounts.length ? sum / amounts.length : 0,
     };
@@ -179,13 +199,14 @@ export function Spending() {
       names.map((n) => [n, new Array(ms.length).fill(0)]),
     );
     for (const t of allTxns) {
-      if (t.amount <= 0) continue;
+      const amount = spendAmount(t);
+      if (amount <= 0) continue;
       const m = (t.date || "").slice(0, 7);
       const i = idx.get(m);
       if (i === undefined) continue;
       const name = t.resolved_category_name || UNASSIGNED;
       const arr = data.get(name);
-      if (arr) arr[i] += t.amount;
+      if (arr) arr[i] += amount;
     }
     return {
       labels,
@@ -272,7 +293,7 @@ export function Spending() {
         {view === "category" ? (
           <Select
             className="w-44"
-            value={period}
+            value={selectedPeriod}
             onChange={(e) => {
               setPeriod(e.target.value);
               setSelection(null);
@@ -433,10 +454,7 @@ export function Spending() {
               }
             />
             <ul className="divide-y divide-hairline">
-              {(selection
-                ? selectedTxns
-                : periodTxns.filter((t) => t.amount > 0)
-              )
+              {(selection ? selectedTxns : periodTxns.filter(isSpending))
                 .slice()
                 .sort((a, b) => (b.date || "").localeCompare(a.date || ""))
                 .slice(0, selection ? undefined : 12)
@@ -450,7 +468,7 @@ export function Spending() {
                       {t.merchant_name || t.name || "—"}
                     </span>
                     <span className="tnum shrink-0 text-loss">
-                      -{money(t.amount)}
+                      -{money(spendAmount(t))}
                     </span>
                   </li>
                 ))}

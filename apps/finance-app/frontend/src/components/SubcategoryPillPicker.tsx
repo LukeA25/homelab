@@ -9,12 +9,19 @@ export function SubcategoryPillPicker({
   subcategoryName,
   color,
   onChange,
+  kind,
+  isRepayment = false,
+  onRepayment,
   className,
 }: {
   subcategoryId: number | null;
   subcategoryName: string | null;
   color?: string;
   onChange: (subcategoryId: number | null) => void;
+  kind?: "income" | "expense";
+  isRepayment?: boolean;
+  /** When set, the menu offers "Repayment" as an alternative to a category. */
+  onRepayment?: () => void;
   className?: string;
 }) {
   const [open, setOpen] = useState(false);
@@ -48,7 +55,11 @@ export function SubcategoryPillPicker({
         aria-expanded={open}
         aria-haspopup="listbox"
       >
-        {subcategoryId != null && subcategoryName ? (
+        {isRepayment ? (
+          <span className="inline-flex rounded-full bg-accent-soft px-2.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-accent">
+            Repayment
+          </span>
+        ) : subcategoryId != null && subcategoryName ? (
           <SubcategoryPill name={subcategoryName} color={color} />
         ) : (
           <span className="inline-flex rounded-full border border-dashed border-ink-faint/50 px-2.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-ink-muted">
@@ -73,6 +84,16 @@ export function SubcategoryPillPicker({
               onChange(id);
               setOpen(false);
             }}
+            kind={kind}
+            isRepayment={isRepayment}
+            onRepayment={
+              onRepayment
+                ? () => {
+                    onRepayment();
+                    setOpen(false);
+                  }
+                : undefined
+            }
           />
         </div>
       ) : null}

@@ -21,10 +21,32 @@ engine = create_engine(
 )
 
 
+# Columns added to existing tables after their first release, as
+# (table, column, type). create_all() creates missing tables but never alters
+# existing ones, so these are applied by hand on startup.
+ADDED_COLUMNS = [
+    ("transaction", "repayment_for_id", "VARCHAR"),
+]
+
+
 def init_db():
     from . import models
 
     SQLModel.metadata.create_all(engine)
+    _add_missing_columns()
+
+
+def _add_missing_columns():
+    with engine.begin() as conn:
+        for table, column, column_type in ADDED_COLUMNS:
+            info = conn.exec_driver_sql(f'PRAGMA table_info("{table}")').fetchall()
+            if not info:
+                continue  # create_all just made it, so the column is already there
+            if column in {row[1] for row in info}:
+                continue
+            conn.exec_driver_sql(
+                f'ALTER TABLE "{table}" ADD COLUMN {column} {column_type}'
+            )
 
 
 def get_session() -> Session:

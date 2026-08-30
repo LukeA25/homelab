@@ -4,6 +4,7 @@ import type {
   Monthly,
   MonthsResponse,
   Overview,
+  RepayableResponse,
   RulesResponse,
   Settings,
   Snapshot,
@@ -46,6 +47,7 @@ export interface ManualTransactionInput {
   amount: number; // positive = spending, negative = income (Plaid convention)
   merchant_name?: string | null;
   subcategory_id?: number | null;
+  allocations?: { expense_id: string; amount: number }[] | null;
 }
 
 export interface ProjectionItem {
@@ -77,6 +79,15 @@ export const api = {
   assignTransaction: (id: string, subcategoryId: number | null) =>
     put<{ ok: boolean }>(`/transactions/${encodeURIComponent(id)}/assign`, {
       subcategory_id: subcategoryId,
+    }),
+
+  repayable: () => request<RepayableResponse>("/transactions/repayable"),
+  setRepayment: (
+    id: string,
+    allocations: { expense_id: string; amount: number }[],
+  ) =>
+    put<{ ok: boolean }>(`/transactions/${encodeURIComponent(id)}/repayment`, {
+      allocations,
     }),
 
   createManualTransaction: (body: ManualTransactionInput) =>

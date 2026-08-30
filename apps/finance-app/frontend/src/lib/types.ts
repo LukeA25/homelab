@@ -82,12 +82,24 @@ export interface Snapshot {
   accounts: AccountSnapshot[];
 }
 
+/** How much of an expense has been paid back. */
+export type RepaymentStatus = "none" | "partial" | "full";
+
+export interface RepaymentAllocation {
+  expense_id: string;
+  amount: number;
+  expense_name: string | null;
+  expense_date: string | null;
+  expense_amount: number | null;
+}
+
 export interface Transaction {
   id: string;
   date: string;
   name: string | null;
   merchant_name: string | null;
   amount: number; // positive = spending, negative = income
+  effective_amount: number; // signed amount after allocations
   pfc_primary: string | null;
   pfc_detailed: string | null;
   pending: boolean;
@@ -96,10 +108,35 @@ export interface Transaction {
   resolved_name: string | null;
   resolved_category_name: string | null;
   is_override: boolean;
+  // Set when this money-in transaction has one or more allocations.
+  is_repayment: boolean;
+  allocations: RepaymentAllocation[];
+  allocated_amount: number;
+  unallocated_amount: number;
+  // Set on the expense being paid back.
+  repaid_amount: number;
+  repayment_status: RepaymentStatus;
 }
 
 export interface TransactionsResponse {
   transactions: Transaction[];
+}
+
+/** An expense that still has something left to repay. */
+export interface RepayableTransaction {
+  id: string;
+  date: string;
+  name: string | null;
+  merchant_name: string | null;
+  amount: number;
+  repaid_amount: number;
+  remaining_amount: number;
+  resolved_name: string | null;
+  resolved_category_name: string | null;
+}
+
+export interface RepayableResponse {
+  transactions: RepayableTransaction[];
 }
 
 export interface OverviewRow {

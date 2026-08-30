@@ -76,6 +76,33 @@ class Transaction(SQLModel, table=True):
     override_subcategory_id: Optional[int] = Field(
         default=None, foreign_key="subcategory.id"
     )
+    repayment_for_id: Optional[str] = Field(
+        default=None, foreign_key="transaction.id", index=True
+    )
+
+
+class RepaymentAllocation(SQLModel, table=True):
+    """How much of a money-in transaction pays back a specific expense.
+
+    One repayment can split across several expenses (e.g. a Venmo covering two
+    dinners). Allocated dollars shrink the expense and are excluded from income;
+    any leftover on the repayment still counts as income.
+    """
+
+    id: Optional[int] = Field(default=None, primary_key=True)
+    repayment_id: str = Field(foreign_key="transaction.id", index=True)
+    expense_id: str = Field(foreign_key="transaction.id", index=True)
+    amount: float = 0.0
+
+
+class DeletedTransaction(SQLModel, table=True):
+    """A Plaid transaction_id the user removed.
+
+    Refresh skips it while Plaid still reports it as pending. If that same
+    id later posts, the tombstone is dropped so the real charge can appear.
+    """
+
+    id: str = Field(primary_key=True)
 
 
 class MappingRule(SQLModel, table=True):
