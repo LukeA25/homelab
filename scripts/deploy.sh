@@ -20,6 +20,7 @@ declare -A STACKS=(
   [finance-app]=compose/finance-app
   [guitar-app]=compose/guitar-app
   [theology-app]=compose/theology-app
+  [homeassistant]=compose/homeassistant
 )
 
 declare -A PATH_PREFIXES=(
@@ -32,6 +33,7 @@ declare -A PATH_PREFIXES=(
   [finance-app]=compose/finance-app/
   [guitar-app]=compose/guitar-app/
   [theology-app]=compose/theology-app/
+  [homeassistant]=compose/homeassistant/
 )
 
 FINANCE_APP_PREFIX=apps/finance-app/
@@ -66,7 +68,7 @@ declare -a TO_DEPLOY=()
 
 if [[ "$BEFORE" == "0000000000000000000000000000000000000000" ]]; then
   echo "Initial push or unknown base commit — deploying all stacks."
-  TO_DEPLOY=(caddy homepage pihole jellyfin portainer uptime-kuma finance-app guitar-app theology-app)
+  TO_DEPLOY=(caddy homepage pihole jellyfin portainer uptime-kuma finance-app guitar-app theology-app homeassistant)
 else
   mapfile -t CHANGED < <(git diff --name-only "$BEFORE" "$AFTER")
 

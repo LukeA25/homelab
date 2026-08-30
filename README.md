@@ -5,7 +5,7 @@ Personal homelab infrastructure and custom apps, managed with Docker Compose. Se
 ## Architecture
 
 ```
-Browser / LAN client
+Browser / Tailscale client
         │
         ▼
    Caddy (:80)          ← compose/caddy
@@ -14,8 +14,9 @@ Browser / LAN client
         ├── kuma.home.arpa       → Uptime Kuma (:3001)
         ├── jellyfin.home.arpa   → Jellyfin (:8096)
         ├── pihole.home.arpa     → Pi-hole admin (:8080)
-        ├── portainer.home.arpa  → Portainer (:9443)
-        └── finance.home.arpa    → Finance app (:8000)
+        ├── portainer.home.arpa      → Portainer (:9443)
+        ├── finance.home.arpa        → Finance app (:8000)
+        └── homeassistant.home.arpa  → Home Assistant (:8123)
 ```
 
 Service **config** (compose files, YAML, Caddyfile, DNS records) lives in this repo under `compose/<service>/`. **Runtime data** (databases, caches, TLS certs, blocklists cache) stays on the host at `/srv/appdata/<service>`. Jellyfin media is mounted from `/srv/media`.
@@ -29,6 +30,7 @@ homelab/
 └── compose/
     ├── caddy/             # Reverse proxy; Caddyfile in git, TLS state in /srv/appdata
     ├── finance-app/
+    ├── homeassistant/     # Home automation (host networking on :8123)
     ├── homepage/
     │   └── config/        # services.yaml, widgets.yaml, etc.
     ├── jellyfin/
@@ -51,6 +53,7 @@ Each service has its own Compose stack under `compose/<name>/`. Stacks are start
 | Finance app | `apps/finance-app/` source | `/srv/appdata/finance-app` (SQLite) |
 | Uptime Kuma | — | `/srv/appdata/uptime-kuma` (monitor DB) |
 | Portainer | — | `/srv/appdata/portainer` (Portainer DB) |
+| Home Assistant | — | `/srv/appdata/homeassistant` (config + DB) |
 
 ## Services
 
@@ -60,11 +63,12 @@ Each service has its own Compose stack under `compose/<name>/`. Stacks are start
 | [Homepage](https://gethomepage.dev/) | `compose/homepage` | http://homepage.home.arpa | 3000 | Service dashboard; reads Docker socket |
 | [Uptime Kuma](https://github.com/louislam/uptime-kuma) | `compose/uptime-kuma` | http://kuma.home.arpa | 3001 | Uptime monitoring |
 | [Jellyfin](https://jellyfin.org/) | `compose/jellyfin` | http://jellyfin.home.arpa | 8096 | Media server |
-| [Pi-hole](https://pi-hole.net/) | `compose/pihole` | http://pihole.home.arpa | 8080 (admin), 53 (DNS) | DNS ad-blocking; also bound on Tailscale |
+| [Pi-hole](https://pi-hole.net/) | `compose/pihole` | http://pihole.home.arpa | 8080 (admin), 53 (DNS) | DNS ad-blocking; bound on Tailscale |
 | [Portainer](https://www.portainer.io/) | `compose/portainer` | http://portainer.home.arpa | 9443 | Container management UI |
+| [Home Assistant](https://www.home-assistant.io/) | `compose/homeassistant` | http://homeassistant.home.arpa | 8123 | Home automation; host networking |
 | Finance app | `compose/finance-app` | http://finance.home.arpa | 8000 | Custom app (see below) |
 
-Update the upstream IP in `compose/caddy/Caddyfile` and local DNS in `compose/pihole/config/dnsmasq.d/99-homelab-dns.conf` if the host address changes.
+Update the Tailscale upstream IP in `compose/caddy/Caddyfile` and local DNS in `compose/pihole/config/dnsmasq.d/99-homelab-dns.conf` if the host address changes.
 
 ## Getting started
 
@@ -203,6 +207,7 @@ Notes:
 | `compose/jellyfin/` | jellyfin |
 | `compose/portainer/` | portainer |
 | `compose/uptime-kuma/` | uptime-kuma |
+| `compose/homeassistant/` | homeassistant |
 | `compose/finance-app/` or `apps/finance-app/` | finance-app (rebuilt) |
 
 README-only or unrelated changes skip deploy. The logic lives in `scripts/deploy.sh`.
@@ -219,7 +224,8 @@ README-only or unrelated changes skip deploy. The logic lives in `scripts/deploy
 - **Pi-hole:** Copy `compose/pihole/.env.example` to `.env` and set `FTLCONF_webserver_api_password`. Local DNS records for `*.home.arpa` are in `compose/pihole/config/dnsmasq.d/99-homelab-dns.conf`; ad block lists are in `compose/pihole/config/adlists.list`. DNS listens on the LAN IP and Tailscale IP (configured in `docker-compose.yaml`).
 - **Homepage:** Edit `compose/homepage/config/services.yaml` (and related YAML) to change the dashboard. `HOMEPAGE_ALLOWED_HOSTS` in `docker-compose.yaml` must include any hostname or IP you use to reach the dashboard.
 - **Portainer:** Caddy proxies to Portainer's HTTPS port with `tls_insecure_skip_verify` because Portainer uses a self-signed cert.
+- **Home Assistant:** Uses host networking on port 8123 (official container layout). Config lives in `/srv/appdata/homeassistant`. Reverse-proxy trust for Caddy is already set in HA's HTTP settings storage; onboarding is done in the UI at `http://homeassistant.home.arpa` (or `http://100.101.135.109:8123`).
 
 ## Network
 
-Services use the `home.arpa` special-use domain for local hostnames. Pi-hole (or another local DNS resolver) should map each subdomain to the homelab host. Tailscale is used for remote access to select services (DNS and Homepage).
+Services use the `home.arpa` special-use domain. Pi-hole maps each subdomain to the Tailscale IP (`100.101.135.109`). Access is via Tailscale; Caddy reverse-proxy upstreams also target that Tailscale IP.

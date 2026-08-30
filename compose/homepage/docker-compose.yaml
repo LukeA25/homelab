@@ -6,7 +6,7 @@ services:
     ports:
       - "3000:3000"
     environment:
-      HOMEPAGE_ALLOWED_HOSTS: "192.168.1.156:3000,100.101.135.109:3000,100.101.135.109,homepage.home.arpa,homepage.home.arpa:80,localhost:3000"
+      HOMEPAGE_ALLOWED_HOSTS: "100.101.135.109:3000,100.101.135.109,homepage.home.arpa,homepage.home.arpa:80,localhost:3000"
     volumes:
       - ./config:/app/config
       - /var/run/docker.sock:/var/run/docker.sock:ro

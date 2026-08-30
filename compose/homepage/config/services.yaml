@@ -17,6 +17,10 @@
         icon: jellyfin.png
         href: http://jellyfin.home.arpa
         description: Media server
+    - Home Assistant:
+        icon: home-assistant.png
+        href: http://homeassistant.home.arpa
+        description: Home automation
     - Finance App:
         icon: mdi-cash-#22c500
         href: https://homelab.tail47f19f.ts.net
