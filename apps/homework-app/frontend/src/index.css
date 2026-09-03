@@ -1,0 +1,59 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html,
+  body,
+  #root {
+    height: 100%;
+  }
+
+  body {
+    @apply bg-canvas text-ink antialiased;
+    font-feature-settings: "ss01", "cv11";
+    -webkit-tap-highlight-color: transparent;
+    background-image:
+      radial-gradient(ellipse 80% 50% at 10% -10%, rgba(91, 140, 255, 0.14), transparent 55%),
+      radial-gradient(ellipse 60% 40% at 90% 0%, rgba(240, 180, 41, 0.08), transparent 50%),
+      linear-gradient(180deg, #0e1116 0%, #0b0e13 100%);
+    background-attachment: fixed;
+  }
+
+  .tnum {
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* Dark-mode native pickers for the datetime input */
+  input[type="datetime-local"] {
+    color-scheme: dark;
+  }
+}
+
+@layer components {
+  .card {
+    @apply rounded-card border border-hairline bg-card/90 shadow-card backdrop-blur-sm;
+  }
+
+  .field {
+    @apply w-full rounded-xl border border-hairline bg-panel px-3 py-2.5 text-sm text-ink
+      outline-none transition-colors placeholder:text-ink-faint focus:border-accent;
+  }
+
+  .btn {
+    @apply inline-flex items-center justify-center gap-1.5 rounded-xl px-3.5 py-2 text-sm
+      font-semibold transition-colors disabled:cursor-not-allowed disabled:opacity-50;
+  }
+
+  .btn-accent {
+    @apply btn bg-accent text-canvas hover:bg-accent/85;
+  }
+
+  .btn-ghost {
+    @apply btn border border-hairline bg-panel text-ink-muted hover:border-accent/50 hover:text-ink;
+  }
+
+  .btn-danger {
+    @apply btn border border-loss/40 bg-loss/10 text-loss hover:bg-loss/20;
+  }
+}
