@@ -1,0 +1,16 @@
+services:
+  dashboard:
+    build: ../../apps/dashboard
+    container_name: dashboard
+    restart: unless-stopped
+    env_file:
+      - .env
+    environment:
+      DISPLAY_TZ: ${DISPLAY_TZ:-America/Chicago}
+      TZ: ${DISPLAY_TZ:-America/Chicago}
+      HOMEWORK_DB: /homework/homework.db
+      DISK_PATH: /homework
+    ports:
+      - "8004:8000"
+    volumes:
+      - /home/landerson/homework-test/data:/homework:ro

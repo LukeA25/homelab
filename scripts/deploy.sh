@@ -12,7 +12,7 @@ cd "$REPO_ROOT"
 
 declare -A STACKS=(
   [caddy]=compose/caddy
-  [homepage]=compose/homepage
+  [dashboard]=compose/dashboard
   [pihole]=compose/pihole
   [jellyfin]=compose/jellyfin
   [portainer]=compose/portainer
@@ -25,7 +25,7 @@ declare -A STACKS=(
 
 declare -A PATH_PREFIXES=(
   [caddy]=compose/caddy/
-  [homepage]=compose/homepage/
+  [dashboard]=compose/dashboard/
   [pihole]=compose/pihole/
   [jellyfin]=compose/jellyfin/
   [portainer]=compose/portainer/
@@ -36,6 +36,7 @@ declare -A PATH_PREFIXES=(
   [homeassistant]=compose/homeassistant/
 )
 
+DASHBOARD_PREFIX=apps/dashboard/
 FINANCE_APP_PREFIX=apps/finance-app/
 GUITAR_APP_PREFIX=apps/guitar-app/
 THEOLOGY_APP_PREFIX=apps/theology-app/
@@ -46,6 +47,10 @@ matches_stack() {
   local prefix="${PATH_PREFIXES[$stack]}"
 
   if [[ "$file" == "$prefix"* ]]; then
+    return 0
+  fi
+
+  if [[ "$stack" == "dashboard" && "$file" == "$DASHBOARD_PREFIX"* ]]; then
     return 0
   fi
 
@@ -68,7 +73,7 @@ declare -a TO_DEPLOY=()
 
 if [[ "$BEFORE" == "0000000000000000000000000000000000000000" ]]; then
   echo "Initial push or unknown base commit — deploying all stacks."
-  TO_DEPLOY=(caddy homepage pihole jellyfin portainer uptime-kuma finance-app guitar-app theology-app homeassistant)
+  TO_DEPLOY=(caddy dashboard pihole jellyfin portainer uptime-kuma finance-app guitar-app theology-app homeassistant)
 else
   mapfile -t CHANGED < <(git diff --name-only "$BEFORE" "$AFTER")
 
@@ -101,7 +106,7 @@ deploy_stack() {
   cd "$REPO_ROOT/$dir"
 
   case "$stack" in
-    finance-app|guitar-app|theology-app)
+    dashboard|finance-app|guitar-app|theology-app)
       docker compose up -d --build --remove-orphans
       ;;
     *)

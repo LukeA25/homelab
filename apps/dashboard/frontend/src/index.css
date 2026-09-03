@@ -1,0 +1,523 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html,
+  body,
+  #root {
+    height: 100%;
+  }
+
+  body {
+    @apply bg-canvas text-ink antialiased;
+    font-feature-settings: "ss01", "cv11";
+    -webkit-tap-highlight-color: transparent;
+    background-image:
+      radial-gradient(ellipse 80% 50% at 10% -10%, rgba(91, 140, 255, 0.14), transparent 55%),
+      radial-gradient(ellipse 60% 40% at 90% 0%, rgba(240, 180, 41, 0.08), transparent 50%),
+      linear-gradient(180deg, #0e1116 0%, #0b0e13 100%);
+    background-attachment: fixed;
+  }
+
+  .tnum {
+    font-variant-numeric: tabular-nums;
+  }
+}
+
+@layer components {
+  .card {
+    @apply rounded-card border border-hairline bg-card/90 shadow-card backdrop-blur-sm;
+  }
+
+  .dash-scroll {
+    scrollbar-width: thin;
+    scrollbar-color: rgba(106, 119, 138, 0.45) transparent;
+  }
+}
+
+/* Bands are absolutely positioned with fixed heights so the page can never
+   grow past the 1280x720 screen — anything too tall is clipped, not scrolled. */
+.tv-page {
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  overflow: hidden;
+  box-sizing: border-box;
+  background: #0e1116;
+}
+
+.tv-band {
+  position: absolute;
+  overflow: hidden;
+}
+
+.tv-band-header {
+  top: 12px;
+  left: 16px;
+  right: 16px;
+  height: 76px;
+  overflow: visible;
+}
+
+.tv-band-content {
+  top: 96px;
+  left: 16px;
+  right: 16px;
+  bottom: 12px;
+}
+
+.tv-weather-pill {
+  float: right;
+  margin-right: 18px;
+  margin-top: 2px;
+  padding: 8px 14px;
+  border: 1px solid #2a3344;
+  border-radius: 16px;
+  background: #151a22;
+}
+
+.tv-weather-icon {
+  display: inline-block;
+  vertical-align: middle;
+}
+
+.tv-weather-text {
+  display: inline-block;
+  vertical-align: middle;
+  margin-left: 12px;
+}
+
+.tv-weather-temp {
+  line-height: 1.05;
+}
+
+.tv-weather-state {
+  line-height: 1.2;
+  margin-top: 1px;
+}
+
+/* Homework column — width from tv-layout.ts via --tv-hw-width */
+.tv-col-left {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  width: var(--tv-hw-width, 40%);
+  overflow: hidden;
+}
+
+.tv-col-right {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: var(--tv-right-left, 42%);
+  width: var(--tv-right-width, 58%);
+  overflow: hidden;
+}
+
+.tv-r-finance {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: var(--tv-finance-top, 0%);
+  height: var(--tv-finance-height, 55%);
+  overflow: hidden;
+}
+
+.tv-r-lights {
+  position: absolute;
+  left: var(--tv-lights-left, 0%);
+  width: var(--tv-lights-width, 48%);
+  top: var(--tv-bottom-top, 56%);
+  height: var(--tv-bottom-height, 44%);
+  overflow: hidden;
+}
+
+.tv-r-homelab {
+  position: absolute;
+  left: var(--tv-homelab-left, 50%);
+  width: var(--tv-homelab-width, 48%);
+  top: var(--tv-bottom-top, 56%);
+  height: var(--tv-bottom-height, 44%);
+  overflow: hidden;
+}
+
+.tv-card {
+  height: 100%;
+  overflow: hidden;
+  box-sizing: border-box;
+  padding: 10px 12px;
+  border: 1px solid #2a3344;
+  border-radius: 16px;
+  background: #1b2230;
+}
+
+.tv-card-compact {
+  padding: 10px 12px;
+  border-radius: 14px;
+}
+
+.tv-card-finance {
+  padding: 10px 12px;
+  border-radius: 14px;
+}
+
+.tv-card-hw {
+  padding-top: 14px;
+}
+
+.tv-hw-header {
+  overflow: visible;
+  margin-bottom: 4px;
+}
+
+.tv-hw-list {
+  padding-top: 10px;
+}
+
+.tv-hw-badges {
+  padding-top: 4px;
+}
+
+.tv-finance-body {
+  overflow: hidden;
+}
+
+.tv-finance-details {
+  float: left;
+  width: 58%;
+  box-sizing: border-box;
+  padding-right: 8px;
+}
+
+.tv-finance-chart {
+  float: right;
+  width: 40%;
+  box-sizing: border-box;
+  text-align: center;
+  overflow: visible;
+  padding: 6px 4px 8px;
+}
+
+.tv-pie-wrap {
+  margin: 0 auto;
+  overflow: visible;
+}
+
+.tv-finance-focus {
+  display: table;
+  width: 100%;
+  table-layout: fixed;
+  border-collapse: separate;
+  border-spacing: 0;
+}
+
+.tv-finance-focus-col {
+  display: table-cell;
+  width: 50%;
+  vertical-align: top;
+}
+
+.tv-finance-focus-col:first-child {
+  padding-right: 4px;
+}
+
+.tv-finance-focus-col:last-child {
+  padding-left: 4px;
+}
+
+.tv-finance-focus-chip {
+  width: 100%;
+  height: 100%;
+  box-sizing: border-box;
+}
+
+.tv-finance-subs {
+  min-height: 36px;
+}
+
+.tv-finance-sub-pad {
+  margin-top: 4px;
+  height: 14px;
+  visibility: hidden;
+}
+
+.tv-pie-legend {
+  margin-top: 4px;
+  text-align: left;
+}
+
+.tv-pie-legend-row {
+  overflow: hidden;
+  margin-bottom: 3px;
+  font-size: 11px;
+  line-height: 1.2;
+  color: #9aa6b8;
+}
+
+.tv-pie-dot {
+  float: left;
+  width: 8px;
+  height: 8px;
+  margin-top: 3px;
+  margin-right: 6px;
+  border-radius: 8px;
+}
+
+.tv-cols {
+  display: table;
+  width: 100%;
+  table-layout: fixed;
+  border-collapse: separate;
+  border-spacing: 8px 0;
+}
+
+.tv-col {
+  display: table-cell;
+  vertical-align: top;
+}
+
+.tv-chip {
+  display: block;
+  overflow: hidden;
+  box-sizing: border-box;
+  padding: 8px 10px;
+  border: 1px solid #2a3344;
+  border-radius: 10px;
+  background: #151a22;
+}
+
+.tv-bar {
+  height: 7px;
+  overflow: hidden;
+  border-radius: 7px;
+  background: #0e1116;
+}
+
+.tv-bar > span {
+  display: block;
+  height: 7px;
+  border-radius: 7px;
+}
+
+.tv-metrics {
+  display: table;
+  width: 100%;
+  table-layout: fixed;
+  border-collapse: separate;
+  border-spacing: 8px;
+}
+
+.tv-metrics-row {
+  display: table-row;
+}
+
+.tv-metrics-cell {
+  display: table-cell;
+  width: 33.33%;
+  vertical-align: top;
+}
+
+/* Compact stat tiles — the homelab card only gets 30% of the column. */
+.tv-metrics-compact {
+  border-spacing: 6px;
+}
+
+.tv-mini {
+  height: 100%;
+  overflow: hidden;
+  box-sizing: border-box;
+  padding: 6px 8px;
+  border: 1px solid #2a3344;
+  border-radius: 8px;
+  background: #151a22;
+}
+
+.tv-mini-label {
+  font-size: 10px;
+  line-height: 1.1;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: #6b778a;
+}
+
+.tv-mini-value {
+  font-size: 17px;
+  line-height: 1.15;
+  font-weight: 600;
+  color: #e8edf5;
+}
+
+.tv-mini-sub {
+  font-size: 10px;
+  line-height: 1.1;
+  color: #6b778a;
+}
+
+.tv-card-title {
+  font-size: 17px;
+  line-height: 1.15;
+  font-weight: 600;
+}
+
+.tv-hw-row {
+  margin-bottom: 9px;
+  padding: 10px 12px;
+}
+
+.tv-light-room {
+  overflow: hidden;
+  box-sizing: border-box;
+  padding: 8px 10px;
+  border: 1px solid #2a3344;
+  border-radius: 12px;
+  background: #151a22;
+}
+
+.tv-light-bar-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+ margin-top: 6px;
+}
+
+.tv-light-bar-track {
+  flex: 1;
+  min-width: 0;
+  height: 6px;
+  border-radius: 6px;
+  background: #0e1116;
+  overflow: hidden;
+}
+
+.tv-light-bar-fill {
+  height: 6px;
+  min-width: 0;
+}
+
+.tv-light-pct {
+  flex-shrink: 0;
+  width: 36px;
+  font-size: 11px;
+  line-height: 1;
+  text-align: right;
+  color: #9aa6b8;
+  white-space: nowrap;
+}
+
+.tv-light-slider {
+  width: 100%;
+  height: 6px;
+  margin-top: 8px;
+  pointer-events: none;
+  appearance: none;
+  -webkit-appearance: none;
+  background: #0e1116;
+  border-radius: 6px;
+  outline: none;
+}
+
+.tv-light-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 0;
+  height: 0;
+}
+
+.tv-light-slider::-moz-range-thumb {
+  width: 0;
+  height: 0;
+  border: none;
+}
+
+.tv-light-slider-fill {
+  height: 6px;
+  border-radius: 6px;
+  margin-top: -6px;
+  pointer-events: none;
+}
+
+.tv-color-swatch {
+  display: inline-block;
+  width: 12px;
+  height: 12px;
+  margin-right: 6px;
+  border-radius: 12px;
+  vertical-align: middle;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.tv-homelab-inline {
+  float: right;
+  margin-top: 4px;
+  font-size: 11px;
+  color: #6b778a;
+}
+
+.tv-stack {
+  display: block;
+}
+
+.tv-stack-item {
+  margin-bottom: 5px;
+}
+
+.tv-stack-item:last-child {
+  margin-bottom: 0;
+}
+
+.tv-card-title-sm {
+  font-size: 15px;
+  line-height: 1.15;
+  font-weight: 600;
+}
+
+.tv-finance-overall {
+  font-size: 22px;
+  line-height: 1.1;
+  font-weight: 600;
+}
+
+.tv-finance-track-amt {
+  font-size: 15px;
+  line-height: 1.15;
+  font-weight: 600;
+}
+
+.tv-metrics-2col .tv-metrics-cell {
+  width: 50%;
+}
+
+.tv-metrics-tight {
+  border-spacing: 4px;
+}
+
+.tv-mini-tight {
+  padding: 6px 8px;
+  border-radius: 8px;
+}
+
+.tv-mini-tight .tv-mini-value {
+  font-size: 15px;
+}
+
+.tv-mini-tight .tv-mini-label {
+  font-size: 10px;
+}
+
+.tv-mini-tight .tv-mini-sub {
+  font-size: 10px;
+}
+
+/* Scale Tailwind's rem-based type down for the fixed 720p canvas. */
+.tv-page .text-5xl { font-size: 38px; line-height: 1; }
+.tv-page .text-4xl { font-size: 28px; line-height: 1.05; }
+.tv-page .text-3xl { font-size: 24px; line-height: 1.1; }
+.tv-page .text-2xl { font-size: 18px; line-height: 1.15; }
+.tv-page .text-xl { font-size: 16px; line-height: 1.2; }
+.tv-page .text-lg { font-size: 14px; line-height: 1.25; }
+.tv-page .text-base { font-size: 13px; line-height: 1.25; }
+.tv-page .text-sm { font-size: 12px; line-height: 1.25; }
+.tv-page .text-xs { font-size: 10px; line-height: 1.2; }

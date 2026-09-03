@@ -1,0 +1,58 @@
+- group: Apps
+  services:
+    - name: Jellyfin
+      href: http://jellyfin.home.arpa
+      icon: play
+      health: http://100.101.135.109:8096
+      description: Media server
+    - name: Home Assistant
+      href: http://homeassistant.home.arpa
+      icon: home
+      health: http://100.101.135.109:8123
+      description: Home automation
+    - name: Finance
+      href: http://finance.home.arpa
+      icon: wallet
+      health: http://100.101.135.109:8000/api/data
+      description: Spending tracker
+    - name: Guitar
+      href: http://guitar.home.arpa
+      icon: music
+      health: http://100.101.135.109:8001
+      description: Song library
+    - name: Theology
+      href: http://theology.home.arpa
+      icon: book
+      health: http://100.101.135.109:8002
+      description: Study notes
+
+- group: Homelab
+  services:
+    - name: Uptime Kuma
+      href: http://kuma.home.arpa
+      icon: activity
+      health: http://100.101.135.109:3001
+      description: Service monitoring
+    - name: Portainer
+      href: http://portainer.home.arpa
+      icon: container
+      health: https://100.101.135.109:9443
+      description: Docker management
+    - name: GitHub
+      href: https://github.com/LukeA25/homelab
+      icon: github
+      health: null
+      description: Project repo
+
+- group: Network
+  services:
+    - name: Pi-hole
+      href: http://pihole.home.arpa/admin
+      icon: shield
+      health: http://100.101.135.109:8080/admin
+      description: DNS and ad blocking
+    - name: Tailscale
+      href: https://login.tailscale.com/admin/machines
+      icon: network
+      health: null
+      description: VPN console

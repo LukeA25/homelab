@@ -1,5 +1,7 @@
-http://homepage.home.arpa {
-    reverse_proxy 100.101.135.109:3000
+http://homepage.home.arpa,
+http://homelab.tail47f19f.ts.net,
+http://100.101.135.109 {
+    reverse_proxy 100.101.135.109:8004
 }
 
 http://kuma.home.arpa {
