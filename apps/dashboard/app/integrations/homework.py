@@ -14,8 +14,8 @@ from datetime import datetime
 from typing import Any, Optional
 
 DB_PATH = os.getenv("HOMEWORK_DB", "/homework/homework.db")
+HOMEWORK_HREF = os.getenv("HOMEWORK_BASE_URL", "http://homework.home.arpa")
 
-# Stable color per course code so the TV list is easy to scan.
 _COURSE_COLORS = [
     "#5B8CFF",
     "#F0B429",
@@ -80,18 +80,28 @@ def _labels(due_dt: Optional[datetime], now: datetime) -> dict[str, Any]:
     }
 
 
+def _has_done_column(conn: sqlite3.Connection) -> bool:
+    try:
+        cols = conn.execute("PRAGMA table_info(assignments)").fetchall()
+    except sqlite3.Error:
+        return False
+    return any(c["name"] == "done" for c in cols)
+
+
 def get_assignments(limit: int = 10) -> dict[str, Any]:
     conn = _connect()
     if conn is None:
         return {"connected": False, "assignments": [], "overdue_count": 0, "upcoming_count": 0}
 
     try:
+        where = "WHERE COALESCE(a.done, 0) = 0" if _has_done_column(conn) else ""
         rows = conn.execute(
-            """
+            f"""
             SELECT a.id, a.title, a.due, a.due_raw, a.source,
                    c.code AS course_code, c.name AS course_name
             FROM assignments a
             JOIN courses c ON c.code = a.course_code
+            {where}
             ORDER BY a.due ASC
             """
         ).fetchall()
@@ -110,7 +120,6 @@ def get_assignments(limit: int = 10) -> dict[str, Any]:
     for r in rows:
         due_dt = _parse_due(r["due"])
         labels = _labels(due_dt, now)
-        # Drop assignments that are long past due (>2 days) to keep the board fresh.
         if labels["overdue"] and labels["days_until"] is not None and labels["days_until"] < -2:
             continue
         if labels["overdue"]:
@@ -128,7 +137,6 @@ def get_assignments(limit: int = 10) -> dict[str, Any]:
             }
         )
 
-    # Overdue first (earliest due), then upcoming in due order — already sorted by due.
     upcoming_count = len(items) - overdue_count
     return {
         "connected": True,
@@ -136,4 +144,5 @@ def get_assignments(limit: int = 10) -> dict[str, Any]:
         "overdue_count": overdue_count,
         "upcoming_count": upcoming_count,
         "total": len(items),
+        "href": HOMEWORK_HREF,
     }

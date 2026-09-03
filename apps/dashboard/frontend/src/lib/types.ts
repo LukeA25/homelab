@@ -87,6 +87,7 @@ export interface HomeworkResponse {
   overdue_count: number;
   upcoming_count: number;
   total?: number;
+  href?: string;
 }
 
 export interface SystemStats {

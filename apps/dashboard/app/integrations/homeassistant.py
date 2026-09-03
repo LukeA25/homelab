@@ -10,7 +10,6 @@ import httpx
 HA_BASE_URL = os.getenv("HA_BASE_URL", "http://100.101.135.109:8123").rstrip("/")
 HA_TOKEN = os.getenv("HA_TOKEN", "")
 
-# Room groups — control rooms as units rather than individual bulbs.
 ROOMS: dict[str, dict[str, Any]] = {
     "bedroom": {
         "id": "bedroom",

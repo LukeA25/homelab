@@ -36,7 +36,6 @@ function SubList({ track }: { track: FinanceTrack }) {
   );
 }
 
-/** One column of the horizontal strip: heading, amount, bar, subcategories. */
 function TrackColumn({ track, accent }: { track: FinanceTrack; accent: string }) {
   const over = track.remaining < 0;
   return (
@@ -63,7 +62,6 @@ function TrackColumn({ track, accent }: { track: FinanceTrack; accent: string })
   );
 }
 
-/** Stacked variant used on phones. */
 function TrackRow({ track, accent }: { track: FinanceTrack; accent: string }) {
   const over = track.remaining < 0;
   return (

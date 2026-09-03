@@ -15,8 +15,6 @@ import time
 from collections import deque
 from typing import Any
 
-# Prefer a bind-mounted host path so disk usage reflects the real volume, not
-# the container overlay. Falls back to "/" if the mount is missing.
 DISK_PATH = os.getenv("DISK_PATH", "/homework")
 if not os.path.isdir(DISK_PATH):
     DISK_PATH = "/"
@@ -36,7 +34,6 @@ def _read_cpu_times() -> tuple[int, int]:
     with open("/proc/stat", "r", encoding="utf-8") as fh:
         line = fh.readline()
     fields = [int(x) for x in line.split()[1:]]
-    # user nice system idle iowait irq softirq steal ...
     idle = fields[3] + (fields[4] if len(fields) > 4 else 0)
     return sum(fields), idle
 
@@ -96,7 +93,6 @@ def _snapshot(cpu_pct: float) -> dict[str, Any]:
 
 
 async def _sample_loop() -> None:
-    # Prime the CPU counters, then wait a beat before the first real reading.
     _prev_cpu["total"], _prev_cpu["idle"] = _read_cpu_times()
     await asyncio.sleep(1.0)
     while True:
@@ -115,8 +111,6 @@ async def _sample_loop() -> None:
 
 
 def start_sampler() -> None:
-    """Kick off the background sampler. Call from an async context (FastAPI
-    startup) so a running event loop is available."""
     global _sampler_task
     if _sampler_task is None or _sampler_task.done():
         _sampler_task = asyncio.ensure_future(_sample_loop())
@@ -125,7 +119,6 @@ def start_sampler() -> None:
 def get_stats() -> dict[str, Any]:
     if _latest:
         return _latest
-    # Sampler hasn't produced a reading yet — return a best-effort snapshot.
     try:
         _prev_cpu["total"], _prev_cpu["idle"] = _read_cpu_times()
     except Exception:

@@ -36,8 +36,7 @@
   }
 }
 
-/* Bands are absolutely positioned with fixed heights so the page can never
-   grow past the 1280x720 screen — anything too tall is clipped, not scrolled. */
+/* Fixed 1280x720 canvas — overflow is clipped, not scrolled. */
 .tv-page {
   position: absolute;
   top: 0;
@@ -99,7 +98,6 @@
   margin-top: 1px;
 }
 
-/* Homework column — width from tv-layout.ts via --tv-hw-width */
 .tv-col-left {
   position: absolute;
   top: 0;
@@ -267,19 +265,6 @@
   border-radius: 8px;
 }
 
-.tv-cols {
-  display: table;
-  width: 100%;
-  table-layout: fixed;
-  border-collapse: separate;
-  border-spacing: 8px 0;
-}
-
-.tv-col {
-  display: table-cell;
-  vertical-align: top;
-}
-
 .tv-chip {
   display: block;
   overflow: hidden;
@@ -321,7 +306,6 @@
   vertical-align: top;
 }
 
-/* Compact stat tiles — the homelab card only gets 30% of the column. */
 .tv-metrics-compact {
   border-spacing: 6px;
 }
@@ -511,7 +495,6 @@
   font-size: 10px;
 }
 
-/* Scale Tailwind's rem-based type down for the fixed 720p canvas. */
 .tv-page .text-5xl { font-size: 38px; line-height: 1; }
 .tv-page .text-4xl { font-size: 28px; line-height: 1.05; }
 .tv-page .text-3xl { font-size: 24px; line-height: 1.1; }

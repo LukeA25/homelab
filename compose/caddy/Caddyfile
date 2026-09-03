@@ -36,6 +36,10 @@ http://theology.home.arpa {
     reverse_proxy 100.101.135.109:8002
 }
 
+http://homework.home.arpa {
+    reverse_proxy 100.101.135.109:8005
+}
+
 http://homeassistant.home.arpa {
     reverse_proxy 100.101.135.109:8123
 }

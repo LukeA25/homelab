@@ -15,10 +15,9 @@ import httpx
 
 FINANCE_BASE_URL = os.getenv("FINANCE_BASE_URL", "http://100.101.135.109:8000").rstrip("/")
 
-# Category names to surface on the dashboard (case-insensitive match).
 FOCUS_CATEGORIES = ("Day to Day", "Charity")
 
-_CACHE: dict[str, Any] = {"ts": 0.0, "data": None, "key": ""}
+_CACHE: dict[str, Any] = {"ts": 0.0, "data": None}
 _CACHE_TTL = 60.0
 
 
@@ -112,7 +111,6 @@ def _summarize(
                 "subcategories": subs,
             }
 
-    # Preserve declared order even if a category is missing this month.
     for name in FOCUS_CATEGORIES:
         focus.append(
             found.get(
@@ -158,12 +156,10 @@ def _summarize(
     }
 
 
-async def get_summary(force: bool = False, month: Optional[str] = None) -> dict[str, Any]:
-    cache_key = month or ""
+async def get_summary(force: bool = False) -> dict[str, Any]:
     now = time.monotonic()
     if (
         not force
-        and _CACHE.get("key") == cache_key
         and _CACHE["data"] is not None
         and (now - _CACHE["ts"]) < _CACHE_TTL
     ):
@@ -172,12 +168,12 @@ async def get_summary(force: bool = False, month: Optional[str] = None) -> dict[
     try:
         monthly = await _fetch_json("/api/budget?view=monthly")
         snapshot = await _fetch_json("/api/data")
-        summary = _summarize(monthly, snapshot, month_key=month)
+        summary = _summarize(monthly, snapshot)
     except Exception as exc:
         summary = {
             "connected": False,
-            "month": month,
-            "month_label": _month_label(month) if month and "-" in month else None,
+            "month": None,
+            "month_label": None,
             "spent": 0.0,
             "budgeted": 0.0,
             "remaining": 0.0,
@@ -190,6 +186,5 @@ async def get_summary(force: bool = False, month: Optional[str] = None) -> dict[
         }
 
     _CACHE["ts"] = now
-    _CACHE["key"] = cache_key
     _CACHE["data"] = summary
     return summary

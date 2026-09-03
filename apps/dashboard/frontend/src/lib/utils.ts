@@ -6,7 +6,6 @@ export function cn(...inputs: ClassValue[]): string {
   return twMerge(clsx(inputs));
 }
 
-/** Ticking clock; re-renders every `intervalMs` (default 1s). */
 export function useNow(intervalMs = 1000): Date {
   const [now, setNow] = useState(() => new Date());
   useEffect(() => {
@@ -16,11 +15,6 @@ export function useNow(intervalMs = 1000): Date {
   return now;
 }
 
-/**
- * Timezone-aware formatting. `tz` is an IANA name (e.g. "America/Chicago").
- * When omitted, the browser's local zone is used — but on kiosk devices the
- * device zone is unreliable, so callers should pass the configured zone.
- */
 export function formatTime(d: Date, tz?: string): string {
   return d.toLocaleTimeString("en-US", {
     hour: "numeric",
@@ -38,7 +32,6 @@ export function formatDate(d: Date, tz?: string): string {
   });
 }
 
-/** Hour-of-day (0–23) in the given zone, for greeting selection. */
 export function hourInZone(d: Date, tz?: string): number {
   const parts = new Intl.DateTimeFormat("en-US", {
     hour: "numeric",
@@ -85,17 +78,4 @@ export function greetingForHour(hour: number): string {
   if (hour < 12) return "Good morning";
   if (hour < 18) return "Good afternoon";
   return "Good evening";
-}
-
-export const CATEGORY_COLORS = [
-  "#5B8CFF",
-  "#F0B429",
-  "#3DDC97",
-  "#F07178",
-  "#A78BFA",
-  "#38BDF8",
-];
-
-export function colorForIndex(i: number): string {
-  return CATEGORY_COLORS[i % CATEGORY_COLORS.length];
 }

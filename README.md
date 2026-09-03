@@ -18,6 +18,7 @@ Browser / Tailscale client
         ├── finance.home.arpa        → Finance app (:8000)
         ├── guitar.home.arpa         → Guitar app (:8001)
         ├── theology.home.arpa       → Theology app (:8002)
+        ├── homework.home.arpa       → Homework app (:8005)
         └── homeassistant.home.arpa  → Home Assistant (:8123)
 ```
 
@@ -57,6 +58,7 @@ Each service has its own Compose stack under `compose/<name>/`. Stacks are start
 | Pi-hole | `compose/pihole/config/` (adlists, local DNS) | `/srv/appdata/pihole/etc-pihole` (query log, blocklist cache) |
 | Jellyfin | — | `/srv/appdata/jellyfin/{config,cache}` (library DB, transcodes) |
 | Finance app | `apps/finance-app/` source | `/srv/appdata/finance-app` (SQLite) |
+| Homework app | `apps/homework-app/` source | `/home/landerson/homework-test/data` (SQLite, shared with the Shortcuts scripts) |
 | Uptime Kuma | — | `/srv/appdata/uptime-kuma` (monitor DB) |
 | Portainer | — | `/srv/appdata/portainer` (Portainer DB) |
 | Home Assistant | — | `/srv/appdata/homeassistant` (config + DB) |
@@ -66,7 +68,7 @@ Each service has its own Compose stack under `compose/<name>/`. Stacks are start
 | Service | Compose path | URL | Port | Notes |
 |---------|--------------|-----|------|-------|
 | [Caddy](https://caddyserver.com/) | `compose/caddy` | — | 80 | Reverse proxy for all `*.home.arpa` hosts |
-| Dashboard | `compose/dashboard` | http://homepage.home.arpa | 8004 | Custom homepage: apps, lights, finance summary |
+| Dashboard | `compose/dashboard` | http://homepage.home.arpa | 8004 | Custom homepage: apps, lights, finance and homework summaries |
 | [Uptime Kuma](https://github.com/louislam/uptime-kuma) | `compose/uptime-kuma` | http://kuma.home.arpa | 3001 | Uptime monitoring |
 | [Jellyfin](https://jellyfin.org/) | `compose/jellyfin` | http://jellyfin.home.arpa | 8096 | Media server |
 | [Pi-hole](https://pi-hole.net/) | `compose/pihole` | http://pihole.home.arpa | 8080 (admin), 53 (DNS) | DNS ad-blocking; bound on Tailscale |
@@ -75,6 +77,7 @@ Each service has its own Compose stack under `compose/<name>/`. Stacks are start
 | Finance app | `compose/finance-app` | http://finance.home.arpa | 8000 | Custom budgeting app |
 | Guitar app | `compose/guitar-app` | http://guitar.home.arpa | 8001 | Song library |
 | Theology app | `compose/theology-app` | http://theology.home.arpa | 8002 | Study notes |
+| Homework app | `compose/homework-app` | http://homework.home.arpa | 8005 | Assignment tracker |
 
 Update the Tailscale upstream IP in `compose/caddy/Caddyfile` and local DNS in `compose/pihole/config/dnsmasq.d/99-homelab-dns.conf` if the host address changes.
 
@@ -232,6 +235,55 @@ Vite serves the SPA on port 5173 and proxies `/api` to the backend on port 8000.
 
 The production Docker image is a multi-stage build: Node builds the frontend, then Python serves both the API and static assets.
 
+## Homework app
+
+Assignment tracker at `http://homework.home.arpa`. Mobile-first list of everything due, with add / edit / delete and a done toggle.
+
+**Stack:** FastAPI · SQLite · React · Vite · Tailwind · TanStack Query
+
+### Shared database
+
+The SQLite file at `/home/landerson/homework-test/data/homework.db` is written by three things:
+
+| Writer | What it does |
+|--------|--------------|
+| Homework app (`:8005`) | Full CRUD from the browser |
+| `add.py` | Apple Shortcuts quick-add over SSH — `class,name,date` on stdin |
+| `ingest.py` | Apple Shortcuts photo/PDF upload → OpenAI → assignments |
+
+The dashboard mounts the same directory read-only for its Homework panel and TV board.
+
+Because the schema is shared, the backend uses plain `sqlite3` (not SQLModel) and adds
+new columns with defensive `ALTER TABLE` statements in `app/db.py`. Courses are seeded
+from the `COURSES` map there — keep it in sync with the Shortcuts scripts.
+
+### Run in Docker
+
+```bash
+cd compose/homework-app
+docker compose up -d --build
+```
+
+### Local development
+
+**Backend** (from `apps/homework-app`):
+
+```bash
+python -m venv .venv
+source .venv/bin/activate
+pip install -r requirements.txt
+HOMEWORK_DB=/home/landerson/homework-test/data/homework.db uvicorn app.main:app --reload --port 8005
+```
+
+**Frontend** (from `apps/homework-app/frontend`):
+
+```bash
+npm install
+npm run dev
+```
+
+Vite serves the SPA on port 5175 and proxies `/api` to the backend on port 8005.
+
 ## Automated deploy (GitHub Actions)
 
 Pushes to `main` trigger a self-hosted runner on the homelab to `git pull` and redeploy only the Compose stacks whose files changed.
@@ -278,6 +330,7 @@ Notes:
 | `compose/finance-app/` or `apps/finance-app/` | finance-app (rebuilt) |
 | `compose/guitar-app/` or `apps/guitar-app/` | guitar-app (rebuilt) |
 | `compose/theology-app/` or `apps/theology-app/` | theology-app (rebuilt) |
+| `compose/homework-app/` or `apps/homework-app/` | homework-app (rebuilt) |
 
 README-only or unrelated changes skip deploy. The logic lives in `scripts/deploy.sh`.
 
@@ -290,7 +343,13 @@ README-only or unrelated changes skip deploy. The logic lives in `scripts/deploy
 ## Configuration notes
 
 - **Secrets:** `.env` files and `*.db` / SQLite files are gitignored. Keep Plaid credentials, HA tokens, and Pi-hole passwords out of version control.
-- **Pi-hole:** Copy `compose/pihole/.env.example` to `.env` and set `FTLCONF_webserver_api_password`. Local DNS records for `*.home.arpa` are in `compose/pihole/config/dnsmasq.d/99-homelab-dns.conf`; ad block lists are in `compose/pihole/config/adlists.list`. DNS listens on the LAN IP and Tailscale IP (configured in `docker-compose.yaml`).
+- **Pi-hole:** Copy `compose/pihole/.env.example` to `.env` and set `FTLCONF_webserver_api_password`. Ad block lists are in `compose/pihole/config/adlists.list`. DNS listens on the LAN IP and Tailscale IP (configured in `docker-compose.yaml`).
+- **Local DNS records:** Pi-hole v6 serves `*.home.arpa` from `dns.hosts` in its own `pihole.toml`, *not* from `compose/pihole/config/dnsmasq.d/99-homelab-dns.conf` (that file is kept as the checked-in record of what should exist). To add a host, update the conf file for the repo and apply it to the running container:
+
+  ```bash
+  docker exec pihole pihole-FTL --config dns.hosts   # read current list
+  docker exec pihole pihole-FTL --config dns.hosts '[ "100.101.135.109 existing.home.arpa", "100.101.135.109 new.home.arpa" ]'
+  ```
 - **Dashboard:** Copy `compose/dashboard/.env.example` to `.env` and set `HA_TOKEN` (Home Assistant long-lived access token). Edit `apps/dashboard/app/services.yaml` to change service tiles.
 - **Portainer:** Caddy proxies to Portainer's HTTPS port with `tls_insecure_skip_verify` because Portainer uses a self-signed cert.
 - **Home Assistant:** Uses host networking on port 8123 (official container layout). Config lives in `/srv/appdata/homeassistant`. Reverse-proxy trust for Caddy is already set in HA's HTTP settings storage; onboarding is done in the UI at `http://homeassistant.home.arpa` (or `http://100.101.135.109:8123`).

@@ -92,8 +92,8 @@ async def weather():
 
 
 @api.get("/finance/summary")
-async def finance_summary(refresh: bool = False, month: Optional[str] = None):
-    return await finance.get_summary(force=refresh, month=month)
+async def finance_summary(refresh: bool = False):
+    return await finance.get_summary(force=refresh)
 
 
 @api.get("/homework")
@@ -113,8 +113,6 @@ async def config():
 
 app.include_router(api, prefix="/api")
 
-# The Vite build is copied here by the Docker image. __file__ is
-# /app/app/main.py, so the dist lives at /app/frontend_dist.
 FRONTEND_DIST = Path(__file__).resolve().parent.parent / "frontend_dist"
 
 

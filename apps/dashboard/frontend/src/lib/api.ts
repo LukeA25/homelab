@@ -18,7 +18,7 @@ async function request<T>(path: string, opts: RequestInit = {}): Promise<T> {
       const body = await res.json();
       if (body?.detail) message = body.detail;
     } catch {
-      // keep status text
+      /* use status text */
     }
     throw new Error(typeof message === "string" ? message : JSON.stringify(message));
   }
@@ -48,12 +48,9 @@ export const api = {
       body: JSON.stringify(body),
     }),
   weather: () => request<{ weather: Weather | null }>("/weather"),
-  finance: (refresh = false, month?: string) => {
-    const params = new URLSearchParams();
-    if (refresh) params.set("refresh", "true");
-    if (month) params.set("month", month);
-    const qs = params.toString();
-    return request<FinanceSummary>(`/finance/summary${qs ? `?${qs}` : ""}`);
+  finance: (refresh = false) => {
+    const qs = refresh ? "?refresh=true" : "";
+    return request<FinanceSummary>(`/finance/summary${qs}`);
   },
   homework: () => request<HomeworkResponse>("/homework"),
   system: () => request<SystemStats>("/system"),

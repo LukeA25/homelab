@@ -35,7 +35,7 @@ import {
   money,
   useNow,
 } from "@/lib/utils";
-import { tvLayoutStyle, TV_LAYOUT } from "@/tv-layout";
+import { tvLayoutStyle } from "@/tv-layout";
 
 function WeatherIcon({ state, className }: { state: string; className?: string }) {
   const s = state.toLowerCase();
@@ -707,9 +707,8 @@ export default function TvDashboard() {
   });
   const roomsQ = useQuery({ queryKey: ["rooms"], queryFn: api.rooms, refetchInterval: 10_000 });
   const financeQ = useQuery({
-    queryKey: ["finance", TV_LAYOUT.financeDisplayMonth],
-    queryFn: () =>
-      api.finance(false, TV_LAYOUT.financeDisplayMonth || undefined),
+    queryKey: ["finance"],
+    queryFn: () => api.finance(),
     refetchInterval: 300_000,
   });
   const homeworkQ = useQuery({

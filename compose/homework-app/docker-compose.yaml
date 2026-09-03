@@ -1,0 +1,14 @@
+services:
+  homework-app:
+    build: ../../apps/homework-app
+    container_name: homework-app
+    restart: unless-stopped
+    environment:
+      TZ: ${DISPLAY_TZ:-America/Chicago}
+      HOMEWORK_DB: /data/homework.db
+    ports:
+      - "8005:8000"
+    volumes:
+      # Shared with the Apple Shortcuts quick-add / ingest scripts and the
+      # dashboard (which mounts the same directory read-only).
+      - /home/landerson/homework-test/data:/data

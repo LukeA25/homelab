@@ -42,7 +42,6 @@ async def _check_one(client: httpx.AsyncClient, url: Optional[str]) -> str:
         return "unknown"
     try:
         resp = await client.get(url, follow_redirects=True)
-        # Anything that answers counts as up (auth walls included).
         if resp.status_code < 500:
             return "up"
         return "down"
@@ -61,7 +60,6 @@ async def get_services(force: bool = False) -> list[dict[str, Any]]:
         for si, svc in enumerate(group["services"]):
             checks.append((gi, si, svc.get("health")))
 
-    # Allow self-signed certs (Portainer).
     ssl_ctx = ssl.create_default_context()
     ssl_ctx.check_hostname = False
     ssl_ctx.verify_mode = ssl.CERT_NONE

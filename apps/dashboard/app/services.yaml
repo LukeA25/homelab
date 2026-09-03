@@ -25,6 +25,11 @@
       icon: book
       health: http://100.101.135.109:8002
       description: Study notes
+    - name: Homework
+      href: http://homework.home.arpa
+      icon: graduation
+      health: http://100.101.135.109:8005/api/health
+      description: Assignment tracker
 
 - group: Homelab
   services:
