@@ -15,6 +15,7 @@ export const keys = {
   settings: ["settings"] as const,
   rules: ["rules"] as const,
   repayable: ["repayable"] as const,
+  conversations: ["consultant", "conversations"] as const,
   transactions: (month?: string) => ["transactions", month ?? "all"] as const,
 };
 
@@ -228,4 +229,44 @@ export function useCategoryMutations() {
       onSuccess,
     }),
   };
+}
+
+export function useConsultantConversations() {
+  return useQuery({
+    queryKey: keys.conversations,
+    queryFn: api.consultantConversations,
+  });
+}
+
+export function useConsultantConversation(id: string | null) {
+  return useQuery({
+    queryKey: [...keys.conversations, id],
+    queryFn: () => api.consultantConversation(id!),
+    enabled: Boolean(id),
+  });
+}
+
+export function useConsultantChat() {
+  return useMutation({
+    mutationFn: (body: {
+      messages: { role: string; content: string }[];
+    }) => api.consultantChat(body.messages),
+  });
+}
+
+export function useApplyConsultantProposals() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (body: {
+      proposals: {
+        id: string;
+        kind: string;
+        summary: string;
+        payload: Record<string, unknown>;
+      }[];
+    }) => api.consultantApply(body.proposals),
+    onSuccess: () => {
+      qc.invalidateQueries();
+    },
+  });
 }

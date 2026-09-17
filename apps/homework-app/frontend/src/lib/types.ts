@@ -20,6 +20,10 @@ export interface Assignment {
   timeLabel: string;
   daysUntil: number | null;
   overdue: boolean;
+  recurrenceId: string | null;
+  recurring: boolean;
+  weekday: number | null;
+  repeatUntil: string | null;
 }
 
 export interface AssignmentsResponse {
@@ -35,4 +39,7 @@ export interface AssignmentInput {
   title: string;
   due: string;
   notes?: string;
+  recurring?: boolean;
+  weekday?: number;
+  repeatUntil?: string;
 }

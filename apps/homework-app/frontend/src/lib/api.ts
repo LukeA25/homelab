@@ -32,5 +32,7 @@ export const api = {
   update: (id: number, body: Partial<AssignmentInput> & { done?: boolean }) =>
     json<Assignment>("PATCH", `/assignments/${id}`, body),
   remove: (id: number) => request<null>(`/assignments/${id}`, { method: "DELETE" }),
+  removeSeries: (id: number) =>
+    request<null>(`/assignments/${id}/series`, { method: "DELETE" }),
   clearDone: () => json<{ deleted: number }>("POST", "/assignments/clear-done"),
 };

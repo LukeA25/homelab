@@ -1,5 +1,9 @@
 import type {
   CategoriesResponse,
+  ConsultantApplyResponse,
+  ConsultantChatResponse,
+  ConsultantConversation,
+  ConsultantConversationDetail,
   InvestmentsResponse,
   Monthly,
   MonthsResponse,
@@ -146,4 +150,101 @@ export const api = {
   ) => patch<{ ok: boolean }>(`/rules/${id}`, body),
   deleteRule: (id: number) =>
     request<{ ok: boolean }>(`/rules/${id}`, { method: "DELETE" }),
+
+  consultantChat: (messages: { role: string; content: string }[]) =>
+    post<ConsultantChatResponse>("/consultant/chat", { messages }),
+
+  consultantApply: (
+    proposals: {
+      id: string;
+      kind: string;
+      summary: string;
+      payload: Record<string, unknown>;
+    }[],
+  ) => post<ConsultantApplyResponse>("/consultant/apply", { proposals }),
+
+  consultantConversations: () =>
+    request<{ conversations: ConsultantConversation[] }>(
+      "/consultant/conversations",
+    ),
+  consultantConversation: (id: string) =>
+    request<ConsultantConversationDetail>(
+      `/consultant/conversations/${encodeURIComponent(id)}`,
+    ),
+  renameConsultantConversation: (id: string, title: string) =>
+    patch<{ id: string; title: string }>(
+      `/consultant/conversations/${encodeURIComponent(id)}`,
+      { title },
+    ),
+  deleteConsultantConversation: (id: string) =>
+    request<{ ok: boolean }>(
+      `/consultant/conversations/${encodeURIComponent(id)}`,
+      { method: "DELETE" },
+    ),
+  clearConsultantProposals: (turnId: string) =>
+    post<{ ok: boolean }>(
+      `/consultant/messages/${encodeURIComponent(turnId)}/clear-proposals`,
+    ),
 };
+
+export interface ConsultantStreamEvent {
+  type: "session" | "status" | "tool" | "done" | "error";
+  label?: string;
+  name?: string;
+  message?: string;
+  reply?: string;
+  proposals?: ConsultantChatResponse["proposals"];
+  tool_trace?: string[];
+  model?: string;
+  conversation_id?: string;
+  title?: string;
+  message_id?: string;
+}
+
+export async function streamConsultantChat(
+  body: { message: string; conversation_id?: string | null },
+  onEvent: (event: ConsultantStreamEvent) => void,
+  signal?: AbortSignal,
+): Promise<void> {
+  const res = await fetch(`${BASE}/consultant/chat`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Accept: "text/event-stream",
+    },
+    body: JSON.stringify(body),
+    signal,
+  });
+  if (!res.ok) {
+    let message = res.statusText;
+    try {
+      const body = await res.json();
+      if (body?.detail) message = body.detail;
+    } catch {
+      // keep status text
+    }
+    throw new Error(message);
+  }
+  if (!res.body) throw new Error("No response from consultant");
+
+  const reader = res.body.getReader();
+  const decoder = new TextDecoder();
+  let buf = "";
+  while (true) {
+    const { done, value } = await reader.read();
+    if (done) break;
+    buf += decoder.decode(value, { stream: true }).replace(/\r\n/g, "\n");
+    let sep;
+    while ((sep = buf.indexOf("\n\n")) >= 0) {
+      const block = buf.slice(0, sep);
+      buf = buf.slice(sep + 2);
+      const dataLines: string[] = [];
+      for (const line of block.split("\n")) {
+        if (line.startsWith("data:")) dataLines.push(line.slice(5).trim());
+      }
+      if (!dataLines.length) continue;
+      const data = JSON.parse(dataLines.join("\n")) as ConsultantStreamEvent;
+      onEvent(data);
+    }
+  }
+}

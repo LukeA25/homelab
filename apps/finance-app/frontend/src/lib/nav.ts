@@ -6,6 +6,7 @@ import {
   Landmark,
   LineChart,
   Settings,
+  Sparkles,
   type LucideIcon,
 } from "lucide-react";
 
@@ -22,6 +23,7 @@ export const NAV: NavItem[] = [
   { to: "/spending", label: "Spending", icon: PieChart, mobilePrimary: true },
   { to: "/budget", label: "Budget", icon: Wallet },
   { to: "/transactions", label: "Transactions", icon: ReceiptText, mobilePrimary: true },
+  { to: "/consultant", label: "Consultant", icon: Sparkles },
   { to: "/investments", label: "Investments", icon: LineChart, mobilePrimary: true },
   { to: "/accounts", label: "Accounts", icon: Landmark },
   { to: "/settings", label: "Settings", icon: Settings },

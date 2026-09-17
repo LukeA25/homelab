@@ -5,14 +5,16 @@ on demand (link/exchange and POST /refresh) because it bills per call; every
 page load reads cached data from SQLite for free.
 """
 
+import json
 import os
 import uuid
 from datetime import date, datetime, timezone
 from typing import Optional
 
 from fastapi import APIRouter, Depends, FastAPI, HTTPException, Query
-from fastapi.responses import FileResponse
+from fastapi.responses import FileResponse, StreamingResponse
 from fastapi.staticfiles import StaticFiles
+from starlette.concurrency import iterate_in_threadpool
 from pydantic import BaseModel
 from sqlmodel import Session, select
 
@@ -1208,6 +1210,142 @@ def delete_rule(rule_id: int, session: Session = Depends(get_db)):
     session.delete(rule)
     session.commit()
     return {"ok": True}
+
+
+# ---------------------------------------------------------------------------
+# AI consultant
+# ---------------------------------------------------------------------------
+
+class ConsultantChatMessage(BaseModel):
+    role: str
+    content: str
+
+
+class ConsultantChatIn(BaseModel):
+    message: str
+    conversation_id: Optional[str] = None
+
+
+class ConsultantApplyIn(BaseModel):
+    proposals: list[dict]
+
+
+class ConsultantRenameIn(BaseModel):
+    title: str
+
+
+@api.get("/consultant/conversations")
+def consultant_list_conversations(session: Session = Depends(get_db)):
+    from . import consultant as consultant_mod
+
+    return consultant_mod.list_threads(session)
+
+
+@api.get("/consultant/conversations/{thread_id}")
+def consultant_get_conversation(thread_id: str, session: Session = Depends(get_db)):
+    from . import consultant as consultant_mod
+
+    return consultant_mod.get_thread(session, thread_id)
+
+
+@api.patch("/consultant/conversations/{thread_id}")
+def consultant_rename_conversation(
+    thread_id: str, body: ConsultantRenameIn, session: Session = Depends(get_db)
+):
+    from . import consultant as consultant_mod
+
+    return consultant_mod.rename_thread(session, thread_id, body.title)
+
+
+@api.delete("/consultant/conversations/{thread_id}")
+def consultant_delete_conversation(
+    thread_id: str, session: Session = Depends(get_db)
+):
+    from . import consultant as consultant_mod
+
+    return consultant_mod.delete_thread(session, thread_id)
+
+
+@api.post("/consultant/messages/{turn_id}/clear-proposals")
+def consultant_clear_proposals(turn_id: int, session: Session = Depends(get_db)):
+    from . import consultant as consultant_mod
+
+    return consultant_mod.clear_turn_proposals(session, turn_id)
+
+
+@api.post("/consultant/chat")
+async def consultant_chat(body: ConsultantChatIn):
+    from . import consultant as consultant_mod
+
+    text = (body.message or "").strip()
+    if not text:
+        raise HTTPException(status_code=400, detail="message required")
+    conversation_id = body.conversation_id
+
+    def events():
+        try:
+            with get_session() as session:
+                if conversation_id:
+                    thread = session.get(
+                        consultant_mod.ConsultantThread, conversation_id
+                    )
+                    if thread is None:
+                        raise HTTPException(
+                            status_code=404, detail="Conversation not found"
+                        )
+                else:
+                    thread = consultant_mod.create_thread(
+                        session, consultant_mod._title_from(text)
+                    )
+
+                consultant_mod.append_turn(session, thread.id, "user", text)
+                history = consultant_mod.history_for_model(session, thread.id)
+                yield (
+                    "event: session\n"
+                    f"data: {json.dumps({'type': 'session', 'conversation_id': thread.id, 'title': thread.title})}\n\n"
+                )
+                for event in consultant_mod.iter_chat(session, history):
+                    if event.get("type") == "done":
+                        turn = consultant_mod.append_turn(
+                            session,
+                            thread.id,
+                            "assistant",
+                            event.get("reply") or "",
+                            proposals=event.get("proposals") or None,
+                            tool_trace=event.get("tool_trace") or None,
+                        )
+                        event = {
+                            **event,
+                            "conversation_id": thread.id,
+                            "message_id": str(turn.id),
+                        }
+                    yield (
+                        f"event: {event['type']}\n"
+                        f"data: {json.dumps(event, default=str)}\n\n"
+                    )
+        except HTTPException as e:
+            payload = {"type": "error", "message": e.detail}
+            yield f"event: error\ndata: {json.dumps(payload)}\n\n"
+        except Exception as e:  # noqa: BLE001
+            payload = {"type": "error", "message": str(e)}
+            yield f"event: error\ndata: {json.dumps(payload)}\n\n"
+
+    return StreamingResponse(
+        iterate_in_threadpool(events()),
+        media_type="text/event-stream",
+        headers={
+            "Cache-Control": "no-cache",
+            "Connection": "keep-alive",
+            "X-Accel-Buffering": "no",
+        },
+    )
+
+
+@api.post("/consultant/apply")
+def consultant_apply(body: ConsultantApplyIn, session: Session = Depends(get_db)):
+    from . import consultant as consultant_mod
+
+    return consultant_mod.apply_proposals(session, body.proposals)
 
 
 # ---------------------------------------------------------------------------

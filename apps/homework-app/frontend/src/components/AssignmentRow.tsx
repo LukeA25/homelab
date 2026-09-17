@@ -2,16 +2,31 @@ import { Check, Repeat, Sparkles } from "lucide-react";
 import type { Assignment } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
-function SourceBadge({ source }: { source: string }) {
-  if (source === "manual") return null;
-  const Icon = source === "ingest" ? Sparkles : Repeat;
+function SourceBadge({ assignment }: { assignment: Assignment }) {
+  if (assignment.recurring) {
+    return (
+      <span
+        title="Repeats weekly — completing this adds the next one"
+        className="inline-flex items-center gap-1 rounded-full bg-panel px-1.5 py-0.5 text-[10px] text-ink-faint"
+      >
+        <Repeat className="h-2.5 w-2.5" />
+        weekly
+      </span>
+    );
+  }
+  if (assignment.source === "manual") return null;
+  const Icon = assignment.source === "ingest" ? Sparkles : Repeat;
+  const title =
+    assignment.source === "ingest"
+      ? "Added from a photo/file upload"
+      : `Source: ${assignment.source}`;
   return (
     <span
-      title={source === "ingest" ? "Added from a photo/file upload" : `Source: ${source}`}
+      title={title}
       className="inline-flex items-center gap-1 rounded-full bg-panel px-1.5 py-0.5 text-[10px] text-ink-faint"
     >
       <Icon className="h-2.5 w-2.5" />
-      {source}
+      {assignment.source}
     </span>
   );
 }
@@ -68,7 +83,7 @@ export function AssignmentRow({
           >
             {assignment.title}
           </p>
-          <SourceBadge source={assignment.source} />
+          <SourceBadge assignment={assignment} />
         </div>
         <p className="truncate text-xs text-ink-faint">{assignment.courseName}</p>
       </button>

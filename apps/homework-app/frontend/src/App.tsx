@@ -22,6 +22,7 @@ export default function App() {
   const [sheetOpen, setSheetOpen] = useState(false);
   const [editing, setEditing] = useState<Assignment | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [notice, setNotice] = useState<string | null>(null);
 
   const coursesQ = useQuery({ queryKey: ["courses"], queryFn: api.courses, staleTime: Infinity });
   const assignmentsQ = useQuery({
@@ -62,15 +63,30 @@ export default function App() {
     onError: (e: Error) => setError(e.message),
   });
 
+  const deleteSeriesMut = useMutation({
+    mutationFn: (a: Assignment) => {
+      if (!a.recurrenceId) throw new Error("This assignment is not part of a series.");
+      return api.removeSeries(a.id);
+    },
+    onSuccess: () => {
+      invalidate();
+      closeSheet();
+      setNotice("Deleted the recurring series.");
+    },
+    onError: (e: Error) => setError(e.message),
+  });
+
   function openNew() {
     setEditing(null);
     setError(null);
+    setNotice(null);
     setSheetOpen(true);
   }
 
   function openEdit(a: Assignment) {
     setEditing(a);
     setError(null);
+    setNotice(null);
     setSheetOpen(true);
   }
 
@@ -124,6 +140,12 @@ export default function App() {
             Add
           </button>
         </header>
+
+        {notice ? (
+          <p className="rounded-xl border border-gain/30 bg-gain/10 px-3 py-2 text-xs text-gain">
+            {notice}
+          </p>
+        ) : null}
 
         {data && (data.overdueCount > 0 || data.dueTodayCount > 0) ? (
           <div className="flex flex-wrap gap-2">
@@ -223,7 +245,7 @@ export default function App() {
         <AssignmentSheet
           courses={courses}
           editing={editing}
-          saving={saveMut.isPending || deleteMut.isPending}
+          saving={saveMut.isPending || deleteMut.isPending || deleteSeriesMut.isPending}
           error={error}
           onClose={closeSheet}
           onSubmit={(values) => {
@@ -233,6 +255,10 @@ export default function App() {
           onDelete={(a) => {
             setError(null);
             deleteMut.mutate(a);
+          }}
+          onDeleteSeries={(a) => {
+            setError(null);
+            deleteSeriesMut.mutate(a);
           }}
         />
       ) : null}

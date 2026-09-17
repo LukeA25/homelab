@@ -165,3 +165,25 @@ class InvestmentTransaction(SQLModel, table=True):
     txn_type: Optional[str] = None
     subtype: Optional[str] = None
     fees: Optional[float] = None
+
+
+class ConsultantThread(SQLModel, table=True):
+    """A saved consultant chat."""
+
+    id: str = Field(primary_key=True)
+    title: str = "New chat"
+    created_at: str
+    updated_at: str
+
+
+class ConsultantTurn(SQLModel, table=True):
+    """One user or assistant message in a consultant thread."""
+
+    id: Optional[int] = Field(default=None, primary_key=True)
+    thread_id: str = Field(foreign_key="consultantthread.id", index=True)
+    role: str  # 'user' | 'assistant'
+    content: str
+    proposals_json: Optional[str] = None
+    tool_trace_json: Optional[str] = None
+    created_at: str
+    sort_order: int = 0

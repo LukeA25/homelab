@@ -25,4 +25,21 @@
   .card {
     @apply rounded-card border border-hairline bg-card shadow-card;
   }
+
+  .consultant-md ul,
+  .consultant-md ol {
+    @apply my-2 space-y-1.5 pl-5;
+  }
+
+  .consultant-md ul {
+    @apply list-disc marker:text-accent/70;
+  }
+
+  .consultant-md ol {
+    @apply list-decimal marker:text-accent/70;
+  }
+
+  .consultant-md code {
+    @apply rounded bg-black/[0.05] px-1 py-0.5 text-[0.85em];
+  }
 }

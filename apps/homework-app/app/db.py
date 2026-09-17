@@ -99,6 +99,10 @@ def _migrate(conn: sqlite3.Connection) -> None:
         "ALTER TABLE assignments ADD COLUMN done INTEGER NOT NULL DEFAULT 0",
         "ALTER TABLE assignments ADD COLUMN completed_at TEXT",
         "ALTER TABLE assignments ADD COLUMN notes TEXT",
+        "ALTER TABLE assignments ADD COLUMN recurrence_id TEXT",
+        "ALTER TABLE assignments ADD COLUMN recurring INTEGER NOT NULL DEFAULT 0",
+        "ALTER TABLE assignments ADD COLUMN weekday INTEGER",
+        "ALTER TABLE assignments ADD COLUMN repeat_until TEXT",
     ):
         try:
             conn.execute(statement)

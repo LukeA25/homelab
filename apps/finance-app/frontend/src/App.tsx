@@ -4,6 +4,7 @@ import { Dashboard } from "./pages/Dashboard";
 import { Transactions } from "./pages/Transactions";
 import { Budget } from "./pages/Budget";
 import { Spending } from "./pages/Spending";
+import { Consultant } from "./pages/Consultant";
 import { Investments } from "./pages/Investments";
 import { Accounts } from "./pages/Accounts";
 import { Settings } from "./pages/Settings";
@@ -17,6 +18,7 @@ export default function App() {
           <Route path="spending" element={<Spending />} />
           <Route path="budget" element={<Budget />} />
           <Route path="transactions" element={<Transactions />} />
+          <Route path="consultant" element={<Consultant />} />
           <Route path="investments" element={<Investments />} />
           <Route path="accounts" element={<Accounts />} />
           <Route path="settings" element={<Settings />} />

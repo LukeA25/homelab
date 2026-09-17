@@ -233,3 +233,54 @@ export interface MappingRule {
 export interface RulesResponse {
   rules: MappingRule[];
 }
+
+export interface ConsultantProposal {
+  id: string;
+  kind: string;
+  summary: string;
+  payload: Record<string, unknown>;
+}
+
+export interface ConsultantChatResponse {
+  reply: string;
+  proposals: ConsultantProposal[];
+  tool_trace: string[];
+  model?: string;
+}
+
+export interface ConsultantApplyResult {
+  summary: string;
+  ok: boolean;
+  error?: string;
+  id?: number | string;
+}
+
+export interface ConsultantApplyResponse {
+  ok: boolean;
+  results: ConsultantApplyResult[];
+}
+
+export interface ConsultantConversation {
+  id: string;
+  title: string;
+  created_at: string;
+  updated_at: string;
+  preview?: string;
+}
+
+export interface ConsultantStoredMessage {
+  id: string;
+  role: "user" | "assistant";
+  content: string;
+  proposals: ConsultantProposal[];
+  tool_trace: string[];
+  created_at?: string;
+}
+
+export interface ConsultantConversationDetail {
+  id: string;
+  title: string;
+  created_at: string;
+  updated_at: string;
+  messages: ConsultantStoredMessage[];
+}
