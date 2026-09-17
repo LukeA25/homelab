@@ -2,6 +2,7 @@ import type {
   AppConfig,
   FinanceSummary,
   HomeworkResponse,
+  LiturgyDay,
   Room,
   ServiceGroup,
   SystemStats,
@@ -55,4 +56,5 @@ export const api = {
   homework: () => request<HomeworkResponse>("/homework"),
   system: () => request<SystemStats>("/system"),
   config: () => request<AppConfig>("/config"),
+  liturgy: () => request<LiturgyDay>("/liturgy"),
 };

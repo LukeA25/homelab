@@ -109,3 +109,14 @@ export interface SystemStats {
 export interface AppConfig {
   tz: string;
 }
+
+export interface LiturgyDay {
+  connected: boolean;
+  date: string | null;
+  season: string | null;
+  name: string | null;
+  rank: string | null;
+  rank_label: string | null;
+  quote: string | null;
+  error?: string;
+}

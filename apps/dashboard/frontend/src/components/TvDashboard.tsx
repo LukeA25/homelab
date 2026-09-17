@@ -1,5 +1,5 @@
-import { useQuery } from "@tanstack/react-query";
-import type { CSSProperties, ReactNode } from "react";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useCallback, useEffect, useRef, useState, type CSSProperties, type ReactNode } from "react";
 import {
   Activity,
   BookOpen,
@@ -19,6 +19,7 @@ import type {
   Assignment,
   FinanceSummary,
   HomeworkResponse,
+  LiturgyDay,
   Room,
   ServiceGroup,
   SystemStats,
@@ -36,6 +37,12 @@ import {
   useNow,
 } from "@/lib/utils";
 import { tvLayoutStyle } from "@/tv-layout";
+import {
+  isPastTvScheduledWake,
+  TV_BEDROOM_ID,
+  TV_BEDROOM_WAKE_LIGHTS,
+  tvWakeDateKey,
+} from "@/tv-wake";
 
 function WeatherIcon({ state, className }: { state: string; className?: string }) {
   const s = state.toLowerCase();
@@ -47,9 +54,18 @@ function WeatherIcon({ state, className }: { state: string; className?: string }
   return <Cloud className={className} />;
 }
 
-function TvHeader({ weather, tz }: { weather: Weather | null | undefined; tz?: string }) {
+function TvHeader({
+  weather,
+  liturgy,
+  tz,
+}: {
+  weather: Weather | null | undefined;
+  liturgy: LiturgyDay | undefined;
+  tz?: string;
+}) {
   const now = useNow();
   const greeting = greetingForHour(hourInZone(now, tz));
+  const rankSeason = [liturgy?.rank_label, liturgy?.season].filter(Boolean).join(" · ");
 
   return (
     <div>
@@ -84,6 +100,13 @@ function TvHeader({ weather, tz }: { weather: Weather | null | undefined; tz?: s
               {weather.state.replace(/-/g, " ")}
             </div>
           </span>
+        </div>
+      ) : null}
+      {liturgy?.name ? (
+        <div className="tv-liturgy">
+          {rankSeason ? <div className="tv-liturgy-rank">{rankSeason}</div> : null}
+          <div className="tv-liturgy-name">{liturgy.name}</div>
+          {liturgy.quote ? <div className="tv-liturgy-quote">“{liturgy.quote}”</div> : null}
         </div>
       ) : null}
       <div style={{ clear: "both" }} />
@@ -697,8 +720,12 @@ function HomelabStats({
 }
 
 export default function TvDashboard() {
+  const [blanked, setBlanked] = useState(false);
+  const autoWakeDateRef = useRef<string | null>(null);
+  const qc = useQueryClient();
   const configQ = useQuery({ queryKey: ["config"], queryFn: api.config, staleTime: Infinity });
   const tz = configQ.data?.tz;
+  const now = useNow(30_000);
 
   const weatherQ = useQuery({
     queryKey: ["weather"],
@@ -726,11 +753,53 @@ export default function TvDashboard() {
     queryFn: api.services,
     refetchInterval: 30_000,
   });
+  const liturgyQ = useQuery({
+    queryKey: ["liturgy"],
+    queryFn: api.liturgy,
+    refetchInterval: 3600_000,
+    staleTime: 30 * 60_000,
+  });
+
+  const lightsMut = useMutation({
+    mutationFn: (body: Parameters<typeof api.setRoom>[1]) =>
+      api.setRoom(TV_BEDROOM_ID, body),
+    onSettled: () => qc.invalidateQueries({ queryKey: ["rooms"] }),
+  });
+
+  const wakeDisplay = useCallback(() => {
+    setBlanked(false);
+    lightsMut.mutate({ ...TV_BEDROOM_WAKE_LIGHTS });
+  }, [lightsMut]);
+
+  const toggleBlank = () => {
+    const nextBlanked = !blanked;
+    setBlanked(nextBlanked);
+    if (nextBlanked) {
+      lightsMut.mutate({ on: false });
+      return;
+    }
+    lightsMut.mutate({ ...TV_BEDROOM_WAKE_LIGHTS });
+  };
+
+  useEffect(() => {
+    if (!tz || !blanked) return;
+    if (!isPastTvScheduledWake(now, tz)) return;
+
+    const today = tvWakeDateKey(now, tz);
+    if (autoWakeDateRef.current === today) return;
+
+    autoWakeDateRef.current = today;
+    wakeDisplay();
+  }, [now, tz, blanked, wakeDisplay]);
 
   return (
-    <div className="tv-page" style={tvLayoutStyle()}>
+    <div
+      className="tv-page"
+      style={tvLayoutStyle()}
+      onClickCapture={toggleBlank}
+    >
       <div className="tv-band tv-band-header">
-        <TvHeader weather={weatherQ.data?.weather} tz={tz} />
+        <TvHeader weather={weatherQ.data?.weather} liturgy={liturgyQ.data} tz={tz} />
       </div>
 
       <div className="tv-band tv-band-content">
@@ -749,6 +818,8 @@ export default function TvDashboard() {
           </div>
         </div>
       </div>
+
+      {blanked ? <div className="tv-blank-overlay" aria-hidden="true" /> : null}
     </div>
   );
 }

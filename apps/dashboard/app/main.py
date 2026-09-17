@@ -19,7 +19,7 @@ from pydantic import BaseModel, Field
 
 load_dotenv()
 
-from .integrations import finance, homeassistant, homework, services, system  # noqa: E402
+from .integrations import finance, homeassistant, homework, liturgy, services, system  # noqa: E402
 
 DISPLAY_TZ = os.getenv("DISPLAY_TZ", "America/Chicago")
 
@@ -109,6 +109,11 @@ async def system_stats():
 @api.get("/config")
 async def config():
     return {"tz": DISPLAY_TZ}
+
+
+@api.get("/liturgy")
+async def liturgy_today():
+    return await liturgy.get_today()
 
 
 app.include_router(api, prefix="/api")

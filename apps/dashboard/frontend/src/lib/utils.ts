@@ -33,13 +33,41 @@ export function formatDate(d: Date, tz?: string): string {
 }
 
 export function hourInZone(d: Date, tz?: string): number {
+  return timePartsInZone(d, tz).hour;
+}
+
+export function weekdayInZone(d: Date, tz?: string): number {
+  const day = new Intl.DateTimeFormat("en-US", { weekday: "short", timeZone: tz }).format(d);
+  const map: Record<string, number> = {
+    Sun: 0,
+    Mon: 1,
+    Tue: 2,
+    Wed: 3,
+    Thu: 4,
+    Fri: 5,
+    Sat: 6,
+  };
+  return map[day] ?? 0;
+}
+
+export function timePartsInZone(
+  d: Date,
+  tz?: string,
+): { hour: number; minute: number } {
   const parts = new Intl.DateTimeFormat("en-US", {
     hour: "numeric",
+    minute: "numeric",
     hour12: false,
     timeZone: tz,
   }).formatToParts(d);
-  const hour = parts.find((p) => p.type === "hour")?.value ?? "0";
-  return Number(hour) % 24;
+  return {
+    hour: Number(parts.find((p) => p.type === "hour")?.value ?? 0) % 24,
+    minute: Number(parts.find((p) => p.type === "minute")?.value ?? 0),
+  };
+}
+
+export function dateKeyInZone(d: Date, tz?: string): string {
+  return d.toLocaleDateString("en-CA", { timeZone: tz });
 }
 
 export function formatUptime(seconds: number): string {

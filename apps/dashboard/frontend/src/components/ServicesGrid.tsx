@@ -16,10 +16,6 @@ function StatusDot({ status }: { status: "up" | "down" | "unknown" }) {
   );
 }
 
-/**
- * `compact` drops the descriptions so all services fit the iPad frame without
- * scrolling; the phone layout keeps them since it scrolls anyway.
- */
 export function ServicesGrid({
   groups,
   compact = false,
