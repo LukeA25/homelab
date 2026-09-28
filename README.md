@@ -2,6 +2,22 @@
 
 Personal homelab infrastructure and custom apps, managed with Docker Compose. Services are exposed on the LAN via local DNS (`*.home.arpa`) and reverse-proxied through Caddy.
 
+## Project highlights
+
+- **Networking:** Pi-hole provides local DNS, Caddy routes service hostnames to their upstreams, and Tailscale provides remote access to the host.
+- **Application development:** a finance tracker built with React, TypeScript, and FastAPI integrates Plaid for bank linking, transaction imports, balances, and investment data.
+- **Database design:** SQLModel/SQLite stores accounts, transactions, categories, monthly projections, holdings, and repayment allocations. Transaction refreshes preserve manual category overrides and reconcile pending transactions when they post.
+- **Deployment automation:** GitHub Actions runs on a self-hosted runner and deploys only the Docker Compose stacks affected by a push to `main`.
+- **Observability:** Uptime Kuma monitors services, while a custom dashboard exposes service health and host CPU, memory, disk, and uptime information.
+
+### Start with the source
+
+- [Deployment workflow](.github/workflows/deploy.yml) and [stack selection script](scripts/deploy.sh)
+- [Finance API](apps/finance-app/app/main.py), [database models](apps/finance-app/app/models.py), and [Plaid integration](apps/finance-app/app/plaid_client.py)
+- [Finance frontend](apps/finance-app/frontend/src) and [multi-stage Docker build](apps/finance-app/Dockerfile)
+- [Reverse proxy configuration](compose/caddy/Caddyfile) and [Pi-hole stack](compose/pihole/docker-compose.yaml)
+- [Dashboard API](apps/dashboard/app/main.py)
+
 ## Architecture
 
 ```
@@ -91,7 +107,7 @@ Update the Tailscale upstream IP in `compose/caddy/Caddyfile` and local DNS in `
 
 ### Start a service
 
-For Pi-hole, the finance app, and the dashboard, copy the `.env.example` to `.env` in that stack's directory first (see [Configuration notes](#configuration-notes)).
+For Pi-hole and the dashboard, copy the `.env.example` to `.env` in that stack's directory first (see [Configuration notes](#configuration-notes)). For the finance app, create `.env` using the example in [Finance app](#finance-app).
 
 ```bash
 cd compose/<service>
@@ -175,7 +191,7 @@ Vite serves the SPA on port 5174 and proxies `/api` to the backend on port 8004.
 
 ## Finance app
 
-A single-user budgeting and investment tracking app built on [Plaid](https://plaid.com/). Plaid is only called on demand (bank linking and manual refresh) because it bills per API call; normal page loads read cached data from SQLite.
+A single-user budgeting and investment tracking app built on [Plaid](https://plaid.com/). Bank linking and manual refresh request data from Plaid; normal finance pages read cached data from SQLite, avoiding a bank-data request for every page load.
 
 **Stack:** FastAPI · SQLModel/SQLite · React · Vite · Tailwind · ECharts · TanStack Query
 
@@ -221,6 +237,7 @@ pip install -r requirements.txt
 export PLAID_CLIENT_ID=...
 export PLAID_SECRET=...
 export PLAID_ENV=sandbox
+export DATABASE_PATH=./data/finance.db
 uvicorn app.main:app --reload --port 8000
 ```
 
@@ -286,7 +303,7 @@ Vite serves the SPA on port 5175 and proxies `/api` to the backend on port 8005.
 
 ## Automated deploy (GitHub Actions)
 
-Pushes to `main` trigger a self-hosted runner on the homelab to `git pull` and redeploy only the Compose stacks whose files changed.
+Pushes to `main` trigger a self-hosted runner on the homelab. The workflow fetches `main`, resets the deployment checkout to the triggering commit, and redeploys only the Compose stacks whose files changed. The checkout is dedicated to deployment; tracked local edits there are overwritten.
 
 ### One-time setup on GitHub
 
