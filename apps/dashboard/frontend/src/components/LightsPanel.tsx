@@ -80,7 +80,7 @@ function RoomCard({ room }: { room: Room }) {
             />
             <h3 className="truncate text-sm font-semibold">{room.name}</h3>
           </div>
-          <p className="mt-0.5 text-xs text-ink-faint">
+          <p className={cn("mt-0.5 text-xs", room.on ? "text-ink/80" : "text-ink-faint")}>
             {!room.available
               ? "Unavailable"
               : room.on

@@ -20,6 +20,7 @@ from pydantic import BaseModel, Field
 load_dotenv()
 
 from .integrations import finance, homeassistant, homework, liturgy, services, system  # noqa: E402
+from . import cast, cast_routes, tv_display  # noqa: E402
 
 DISPLAY_TZ = os.getenv("DISPLAY_TZ", "America/Chicago")
 
@@ -37,6 +38,11 @@ class LightControl(BaseModel):
     brightness_pct: Optional[int] = Field(default=None, ge=1, le=100)
     color_temp_kelvin: Optional[int] = None
     rgb_color: Optional[list[int]] = None
+
+
+class TvDisplayControl(BaseModel):
+    blanked: Optional[bool] = None
+    app: Optional[str] = None
 
 
 @api.get("/health")
@@ -111,12 +117,31 @@ async def config():
     return {"tz": DISPLAY_TZ}
 
 
+@api.get("/tv-display")
+async def get_tv_display():
+    return tv_display.get_state()
+
+
+@api.post("/tv-display")
+async def set_tv_display(body: TvDisplayControl):
+    try:
+        state = tv_display.set_state(blanked=body.blanked, app=body.app)
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+    if body.app is not None and body.blanked is not True:
+        cast.stop("tv")
+    cast_routes.sync_tv_display()
+    await cast.publish()
+    return state
+
+
 @api.get("/liturgy")
 async def liturgy_today():
     return await liturgy.get_today()
 
 
 app.include_router(api, prefix="/api")
+app.include_router(cast_routes.router)
 
 FRONTEND_DIST = Path(__file__).resolve().parent.parent / "frontend_dist"
 

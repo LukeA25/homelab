@@ -1,0 +1,260 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <meta name="theme-color" content="#07080D" />
+    <meta name="robots" content="noindex" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <title>Homelab screen</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Outfit:wght@500;600;700&family=Figtree:wght@400;500;600&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      * { box-sizing: border-box; }
+      html, body { margin: 0; height: 100%; overflow: hidden; background: #07080d; color: #eef1f8; }
+      body {
+        font-family: Figtree, ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+        -webkit-font-smoothing: antialiased;
+        background-color: #07080d;
+        background-image:
+          linear-gradient(180deg, rgba(92, 72, 210, 0.24) 0%, rgba(64, 96, 220, 0.14) 45%, rgba(7, 8, 13, 0.5) 100%),
+          url("/__guest/night.jpg");
+        background-size: cover;
+        background-position: center;
+      }
+
+      .idle {
+        position: fixed; inset: 0;
+        display: flex; flex-direction: column; align-items: center; justify-content: center;
+        gap: 22px; text-align: center; padding: 24px;
+        transition: opacity 0.5s ease, transform 0.6s cubic-bezier(0.2, 0.8, 0.2, 1);
+      }
+      .idle.away { opacity: 0; transform: scale(0.96); pointer-events: none; }
+
+      .orb { position: relative; width: 150px; height: 150px; }
+      .orb i {
+        position: absolute; inset: 0; border-radius: 50%;
+        border: 1px solid rgba(162, 123, 255, 0.45);
+        animation: ring 3.2s cubic-bezier(0.2, 0.6, 0.3, 1) infinite;
+      }
+      .orb i:nth-child(2) { animation-delay: 1.05s; border-color: rgba(79, 139, 255, 0.45); }
+      .orb i:nth-child(3) { animation-delay: 2.1s; border-color: rgba(52, 224, 232, 0.4); }
+      .orb b {
+        position: absolute; inset: 42px; border-radius: 50%;
+        background: radial-gradient(circle at 35% 30%, #c3b0ff, #4f8bff 55%, #2b1f66);
+        box-shadow: 0 0 60px rgba(162, 123, 255, 0.55), inset 0 0 20px rgba(255, 255, 255, 0.25);
+        animation: breathe 4s ease-in-out infinite;
+      }
+      @keyframes ring { 0% { transform: scale(0.45); opacity: 0; } 30% { opacity: 1; } 100% { transform: scale(1.35); opacity: 0; } }
+      @keyframes breathe { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.06); } }
+
+      .eyebrow { font-size: 12px; font-weight: 600; letter-spacing: 0.18em; text-transform: uppercase; color: #8d95aa; }
+      h1 {
+        margin: 6px 0 0; font: 700 clamp(28px, 5vw, 48px) / 1.05 Outfit, Figtree, sans-serif; letter-spacing: -0.01em;
+        background: linear-gradient(92deg, #eef1f8, #c3b0ff 55%, #7fb0ff);
+        -webkit-background-clip: text; background-clip: text; color: transparent;
+      }
+      .lead { margin-top: 8px; font-size: 15px; color: #9ba3b6; }
+      .clock { font: 600 clamp(20px, 3vw, 28px) / 1 Outfit, Figtree, sans-serif; color: #eef1f8; font-variant-numeric: tabular-nums; }
+      .status { display: inline-flex; align-items: center; gap: 8px; font-size: 12px; color: #8d95aa; }
+      .status .dot { width: 7px; height: 7px; border-radius: 7px; background: #5d6578; }
+      .status.on .dot { background: #b7f34d; box-shadow: 0 0 10px rgba(183, 243, 77, 0.8); }
+
+      .mirror { position: fixed; inset: 0; display: none; background: #05060a; }
+      .mirror.on { display: block; }
+      .stage { position: absolute; inset: 0; }
+      .stage.arrive { animation: arrive 760ms cubic-bezier(0.16, 1, 0.3, 1) both; }
+      @keyframes arrive {
+        0% { opacity: 0; transform: translateY(-38%) scale(0.72); border-radius: 28px; }
+        60% { opacity: 1; }
+        100% { opacity: 1; transform: none; border-radius: 0; }
+      }
+      iframe { display: block; width: 100%; height: 100%; border: 0; background: #07080d; }
+      .shield { position: absolute; inset: 0; cursor: default; }
+      .beam {
+        position: absolute; left: 0; right: 0; top: 0; height: 40%; pointer-events: none; opacity: 0;
+        background: linear-gradient(180deg, rgba(162, 123, 255, 0.55), rgba(79, 139, 255, 0.18) 45%, transparent);
+      }
+      .beam.go { animation: beam 900ms ease-out both; }
+      @keyframes beam { 0% { opacity: 0; transform: translateY(-100%); } 35% { opacity: 1; } 100% { opacity: 0; transform: translateY(160%); } }
+      .badge {
+        position: absolute; top: max(12px, env(safe-area-inset-top)); right: max(12px, env(safe-area-inset-right));
+        display: inline-flex; align-items: center; gap: 7px; padding: 6px 11px;
+        border: 1px solid rgba(162, 123, 255, 0.35); border-radius: 999px; background: rgba(7, 8, 13, 0.72);
+        color: #c3b0ff; font-size: 11px; font-weight: 600; letter-spacing: 0.02em; pointer-events: none;
+        transition: opacity 0.6s ease;
+      }
+      .badge .dot { width: 7px; height: 7px; border-radius: 7px; background: #b7f34d; box-shadow: 0 0 10px rgba(183, 243, 77, 0.8); animation: pulse 1.6s ease-in-out infinite; }
+      .badge.dim { opacity: 0; }
+      @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.35; } }
+    </style>
+  </head>
+  <body>
+    <section class="idle" id="idle">
+      <div class="orb" aria-hidden="true"><i></i><i></i><i></i><b></b></div>
+      <div>
+        <div class="eyebrow">Homelab screen</div>
+        <h1>Ready for a page</h1>
+        <div class="lead">Send something from the phone and it shows up here.</div>
+      </div>
+      <div class="clock" id="clock"></div>
+      <div class="status" id="status"><span class="dot"></span><span id="status-text">Connecting…</span></div>
+    </section>
+
+    <section class="mirror" id="mirror" aria-live="polite">
+      <div class="stage" id="stage">
+        <iframe id="frame" title="Mirrored page"></iframe>
+        <div class="shield" id="shield" aria-hidden="true"></div>
+      </div>
+      <div class="beam" id="beam" aria-hidden="true"></div>
+      <div class="badge" id="badge"><span class="dot"></span><span id="badge-text"></span></div>
+    </section>
+
+    <script>
+      (function () {
+        "use strict";
+        var NAMES = { home: "Homepage", finance: "Finance", guitar: "Guitar", theology: "Theology", homework: "Homework" };
+        var idle = document.getElementById("idle");
+        var mirror = document.getElementById("mirror");
+        var stage = document.getElementById("stage");
+        var frame = document.getElementById("frame");
+        var beam = document.getElementById("beam");
+        var badge = document.getElementById("badge");
+        var badgeText = document.getElementById("badge-text");
+        var statusEl = document.getElementById("status");
+        var statusText = document.getElementById("status-text");
+        var current = null;
+        var wakeLock = null;
+
+        function viewUrl(path) {
+          return path + (path.indexOf("?") === -1 ? "?" : "&") + "__cast=view";
+        }
+
+        function replay(el, cls) {
+          el.classList.remove(cls);
+          void el.offsetWidth;
+          el.classList.add(cls);
+        }
+
+        function apply(session) {
+          if (!session) {
+            current = null;
+            mirror.classList.remove("on");
+            idle.classList.remove("away");
+            frame.removeAttribute("src");
+            return;
+          }
+          var prev = current;
+          current = session;
+          badgeText.textContent = (NAMES[session.app] || session.app) + " · live";
+          idle.classList.add("away");
+          mirror.classList.add("on");
+          keepAwake();
+
+          var fresh = !prev || prev.sent_at !== session.sent_at;
+          if (fresh || prev.app !== session.app) {
+            frame.src = viewUrl(session.path);
+            replay(stage, "arrive");
+            replay(beam, "go");
+            badge.classList.remove("dim");
+            setTimeout(function () { badge.classList.add("dim"); }, 4000);
+            return;
+          }
+          if (prev.path !== session.path) navigate(session.path);
+        }
+
+        function navigate(path) {
+          var acked = false;
+          var onMsg = function (e) {
+            if (e.source === frame.contentWindow && e.data && e.data.type === "cast:navigated") acked = true;
+          };
+          window.addEventListener("message", onMsg);
+          try { frame.contentWindow.postMessage({ type: "cast:navigate", path: path }, "*"); } catch (err) {}
+          setTimeout(function () {
+            window.removeEventListener("message", onMsg);
+            if (!acked && current && current.path === path) frame.src = viewUrl(path);
+          }, 1500);
+        }
+
+        function connected(on) {
+          statusEl.classList.toggle("on", on);
+          statusText.textContent = on ? "Connected" : "Reconnecting…";
+        }
+
+        function poll() {
+          fetch("/__guest/state", { cache: "no-store" })
+            .then(function (r) { return r.ok ? r.json() : null; })
+            .then(function (d) { if (d) { connected(true); apply(d.session); } })
+            .catch(function () { connected(false); });
+        }
+
+        // Phone remote commands go into the mirrored page; its display reports come back.
+        window.addEventListener("message", function (e) {
+          if (e.source !== frame.contentWindow || !e.data || e.data.type !== "cast:report" || !current) return;
+          fetch("/__guest/report", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ report: e.data.report }),
+          }).catch(function () {});
+        });
+
+        if (window.EventSource) {
+          var es = new EventSource("/__guest/events");
+          es.onmessage = function (e) {
+            connected(true);
+            try { apply(JSON.parse(e.data).session); } catch (err) {}
+          };
+          es.addEventListener("command", function (e) {
+            if (!current) return;
+            try {
+              var cmd = JSON.parse(e.data).cmd;
+              frame.contentWindow.postMessage({ type: "cast:command", cmd: cmd }, "*");
+            } catch (err) {}
+          });
+          es.onerror = function () { connected(false); };
+          setInterval(poll, 20000);
+        } else {
+          setInterval(poll, 2000);
+        }
+        poll();
+
+        function keepAwake() {
+          if (!navigator.wakeLock || wakeLock) return;
+          navigator.wakeLock.request("screen").then(function (l) {
+            wakeLock = l;
+            l.addEventListener("release", function () { wakeLock = null; });
+          }).catch(function () {});
+        }
+        document.addEventListener("visibilitychange", function () {
+          if (document.visibilityState === "visible" && current) keepAwake();
+        });
+
+        // Taps never reach the app; they only toggle fullscreen on this screen.
+        function toggleFullscreen() {
+          var d = document;
+          if (d.fullscreenElement || d.webkitFullscreenElement) {
+            (d.exitFullscreen || d.webkitExitFullscreen).call(d);
+          } else {
+            var el = d.documentElement;
+            var req = el.requestFullscreen || el.webkitRequestFullscreen;
+            if (req) req.call(el);
+          }
+        }
+        document.getElementById("shield").addEventListener("click", toggleFullscreen);
+        idle.addEventListener("click", toggleFullscreen);
+
+        var clock = document.getElementById("clock");
+        function tick() {
+          clock.textContent = new Date().toLocaleTimeString([], { hour: "numeric", minute: "2-digit" });
+        }
+        tick();
+        setInterval(tick, 15000);
+      })();
+    </script>
+  </body>
+</html>

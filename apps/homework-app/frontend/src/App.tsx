@@ -125,7 +125,7 @@ export default function App() {
           <div>
             <div className="flex items-center gap-2">
               <BookOpen className="h-5 w-5 text-accent" />
-              <h1 className="font-display text-2xl font-semibold tracking-tight">Homework</h1>
+              <h1 className="font-display text-gradient text-2xl font-semibold tracking-tight">Homework</h1>
             </div>
             <p className="mt-0.5 text-xs text-ink-faint">
               {data

@@ -1,0 +1,16 @@
+[Unit]
+Description=Homelab nightstand wake-word client
+After=network-online.target sound.target
+Wants=network-online.target
+
+[Service]
+User=homelab
+Group=audio
+WorkingDirectory=/home/homelab/assistant-pi
+EnvironmentFile=/home/homelab/.config/homelab/wake.env
+ExecStart=/home/homelab/assistant-venv/bin/python /home/homelab/assistant-pi/client.py --mode wake
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target

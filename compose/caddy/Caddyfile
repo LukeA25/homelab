@@ -1,45 +1,158 @@
+{
+	# QUIC/HTTP3 often hangs over Tailscale; stick to TCP.
+	servers {
+		protocols h1 h2
+	}
+
+	# Chrome mishandles Caddy's default 12h leaf + 7d intermediate.
+	# Longer internal certs avoid the "spins forever" TLS bug.
+	pki {
+		ca local {
+			intermediate_lifetime 365d
+		}
+	}
+}
+
+(local_https) {
+	tls {
+		issuer internal {
+			lifetime 30d
+		}
+	}
+}
+
+# Cast API + phone script live on the dashboard; every app host forwards them
+# so the phone's cast requests stay same-origin.
+(cast) {
+	handle /__cast/* {
+		reverse_proxy 100.101.135.109:8004
+	}
+}
+
+# Dashboard (+ control/tv) behind assistant.home.arpa — reuses the cert
+# that already works in browsers where homepage.home.arpa HTTPS hangs.
+(assistant_host) {
+	@dash_pages path /control /control/* /tv /tv/* /__cast/*
+	handle @dash_pages {
+		reverse_proxy 100.101.135.109:8004
+	}
+
+	@dash_api path /api/rooms /api/rooms/* /api/config /api/weather /api/finance /api/finance/* /api/homework /api/services /api/system /api/liturgy /api/tv-display
+	handle @dash_api {
+		reverse_proxy 100.101.135.109:8004
+	}
+
+	# Vite hashed bundles; assistant static is app.js / style.css
+	@dash_assets path_regexp dash_assets ^/assets/(index|night)-
+	handle @dash_assets {
+		reverse_proxy 100.101.135.109:8004
+	}
+
+	handle {
+		reverse_proxy 100.101.135.109:8006
+	}
+}
+
 http://homepage.home.arpa,
 http://homelab.tail47f19f.ts.net,
 http://100.101.135.109 {
-    reverse_proxy 100.101.135.109:8004
+	reverse_proxy 100.101.135.109:8004
+}
+
+https://homepage.home.arpa {
+	import local_https
+	reverse_proxy 100.101.135.109:8004
 }
 
 http://kuma.home.arpa {
-    reverse_proxy 100.101.135.109:3001
+	reverse_proxy 100.101.135.109:3001
 }
 
 http://jellyfin.home.arpa {
-    reverse_proxy 100.101.135.109:8096
+	reverse_proxy 100.101.135.109:8096
 }
 
 http://pihole.home.arpa {
-    reverse_proxy 100.101.135.109:8080
+	reverse_proxy 100.101.135.109:8080
 }
 
 http://portainer.home.arpa {
-    reverse_proxy https://100.101.135.109:9443 {
-        transport http {
-            tls_insecure_skip_verify
-        }
-    }
+	reverse_proxy https://100.101.135.109:9443 {
+		transport http {
+			tls_insecure_skip_verify
+		}
+	}
 }
 
 http://finance.home.arpa {
-    reverse_proxy 100.101.135.109:8000
+	import cast
+	handle {
+		reverse_proxy 100.101.135.109:8000
+	}
+}
+
+https://finance.home.arpa {
+	import local_https
+	import cast
+	handle {
+		reverse_proxy 100.101.135.109:8000
+	}
 }
 
 http://guitar.home.arpa {
-    reverse_proxy 100.101.135.109:8001
+	import cast
+	handle {
+		reverse_proxy 100.101.135.109:8001
+	}
+}
+
+https://guitar.home.arpa {
+	import local_https
+	import cast
+	handle {
+		reverse_proxy 100.101.135.109:8001
+	}
 }
 
 http://theology.home.arpa {
-    reverse_proxy 100.101.135.109:8002
+	import cast
+	handle {
+		reverse_proxy 100.101.135.109:8002
+	}
+}
+
+https://theology.home.arpa {
+	import local_https
+	import cast
+	handle {
+		reverse_proxy 100.101.135.109:8002
+	}
 }
 
 http://homework.home.arpa {
-    reverse_proxy 100.101.135.109:8005
+	import cast
+	handle {
+		reverse_proxy 100.101.135.109:8005
+	}
+}
+
+https://homework.home.arpa {
+	import local_https
+	import cast
+	handle {
+		reverse_proxy 100.101.135.109:8005
+	}
 }
 
 http://homeassistant.home.arpa {
-    reverse_proxy 100.101.135.109:8123
+	reverse_proxy 100.101.135.109:8123
+}
+
+http://assistant.home.arpa {
+	import assistant_host
+}
+
+https://assistant.home.arpa {
+	import local_https
+	import assistant_host
 }

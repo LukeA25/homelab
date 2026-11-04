@@ -14,7 +14,9 @@ import {
   Server,
   Sun,
 } from "lucide-react";
+import { CastMirror } from "@/components/CastMirror";
 import { api } from "@/lib/api";
+import { castAppForTvApp, stopCast, useCastState } from "@/lib/cast";
 import type {
   Assignment,
   FinanceSummary,
@@ -73,7 +75,7 @@ function TvHeader({
         <p className="text-base font-medium text-ink-muted" style={{ lineHeight: 1.2 }}>
           {greeting}
         </p>
-        <h1 className="font-display text-3xl font-semibold tracking-tight text-ink" style={{ lineHeight: 1.1 }}>
+        <h1 className="font-display text-gradient text-3xl font-semibold tracking-tight" style={{ lineHeight: 1.1 }}>
           Homelab
         </h1>
       </div>
@@ -224,7 +226,7 @@ function rgbCss(rgb: [number, number, number]): string {
 function roomGlowStyle(room: Room): CSSProperties {
   const rgb = roomRgb(room);
   if (!rgb) {
-    return { borderColor: "#2A3344", background: "#151A22" };
+    return { borderColor: "rgba(255, 255, 255, 0.09)", background: "rgba(12, 14, 22, 0.55)" };
   }
   const [r, g, b] = rgb;
   return {
@@ -270,7 +272,7 @@ function LightStatus({ rooms }: { rooms: Room[] | undefined }) {
                         height: 10,
                         marginTop: 4,
                         borderRadius: 10,
-                        background: rgb ? rgbCss(rgb) : "#2A3344",
+                        background: rgb ? rgbCss(rgb) : "#1E2431",
                         border: "1px solid rgba(255,255,255,0.15)",
                       }}
                     />
@@ -289,7 +291,7 @@ function LightStatus({ rooms }: { rooms: Room[] | undefined }) {
                         className="tv-light-bar-fill"
                         style={{
                           width: `${fillWidth}%`,
-                          background: rgb ? rgbCss(rgb) : "#2A3344",
+                          background: rgb ? rgbCss(rgb) : "#1E2431",
                           opacity: room.on ? 1 : 0.35,
                           borderRadius: fillWidth >= 100 ? "6px" : "6px 0 0 6px",
                         }}
@@ -320,7 +322,7 @@ function MiniBar({ pct, color }: { pct: number; color: string }) {
   );
 }
 
-const PIE_COLORS = ["#F0B429", "#3DDC97", "#5B8CFF", "#A78BFA"];
+const PIE_COLORS = ["#A27BFF", "#B7F34D", "#4F8BFF", "#34E0E8"];
 
 function polar(cx: number, cy: number, r: number, deg: number) {
   const rad = ((deg - 90) * Math.PI) / 180;
@@ -395,11 +397,11 @@ function FinanceDonut({
   if (total <= 0) {
     return (
       <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`}>
-        <circle cx={cx} cy={cy} r={outerR} fill="none" stroke="#2a3344" strokeWidth={outerR - innerR} />
-        <text x={cx} y={cy - 4} textAnchor="middle" fill="#6b778a" fontSize="10">
+        <circle cx={cx} cy={cy} r={outerR} fill="none" stroke="#1e2431" strokeWidth={outerR - innerR} />
+        <text x={cx} y={cy - 4} textAnchor="middle" fill="#5d6578" fontSize="10">
           No
         </text>
-        <text x={cx} y={cy + 8} textAnchor="middle" fill="#6b778a" fontSize="10">
+        <text x={cx} y={cy + 8} textAnchor="middle" fill="#5d6578" fontSize="10">
           spend
         </text>
       </svg>
@@ -427,7 +429,7 @@ function FinanceDonut({
         x={cx}
         y={cy - Math.round(spentFont * 0.35)}
         textAnchor="middle"
-        fill="#e8edf5"
+        fill="#eef1f8"
         fontSize={amountFont}
         fontWeight="600"
       >
@@ -437,7 +439,7 @@ function FinanceDonut({
         x={cx}
         y={cy + Math.round(amountFont * 0.55)}
         textAnchor="middle"
-        fill="#6b778a"
+        fill="#5d6578"
         fontSize={spentFont}
       >
         spent
@@ -491,7 +493,7 @@ function FinanceBrief({ summary }: { summary: FinanceSummary | undefined }) {
               </span>
             </div>
             <div style={{ marginTop: 6 }}>
-              <MiniBar pct={summary?.pct_used ?? 0} color={over ? "#F07178" : "#5B8CFF"} />
+              <MiniBar pct={summary?.pct_used ?? 0} color={over ? "#FF6680" : "#4F8BFF"} />
             </div>
           </div>
 
@@ -514,7 +516,7 @@ function FinanceBrief({ summary }: { summary: FinanceSummary | undefined }) {
                       <div style={{ marginTop: 5 }}>
                         <MiniBar
                           pct={track.pct_used}
-                          color={tOver ? "#F07178" : i === 0 ? "#F0B429" : "#3DDC97"}
+                          color={tOver ? "#FF6680" : i === 0 ? "#A27BFF" : "#B7F34D"}
                         />
                       </div>
                       <div className="tv-finance-subs">
@@ -682,7 +684,7 @@ function HomelabStats({
               value={`${Math.round(stats?.cpu_pct ?? 0)}%`}
               extra={
                 <div style={{ marginTop: 2 }}>
-                  <Sparkline values={stats?.cpu_history ?? []} color="#5B8CFF" height={14} />
+                  <Sparkline values={stats?.cpu_history ?? []} color="#34E0E8" height={14} />
                 </div>
               }
             />
@@ -722,6 +724,10 @@ function HomelabStats({
 export default function TvDashboard() {
   const [blanked, setBlanked] = useState(false);
   const autoWakeDateRef = useRef<string | null>(null);
+  const castState = useCastState();
+  const display = castState?.tv_display;
+  const tvCast = castState?.targets.tv ?? null;
+  const voiceApp = castAppForTvApp(display?.app);
   const qc = useQueryClient();
   const configQ = useQuery({ queryKey: ["config"], queryFn: api.config, staleTime: Infinity });
   const tz = configQ.data?.tz;
@@ -766,19 +772,42 @@ export default function TvDashboard() {
     onSettled: () => qc.invalidateQueries({ queryKey: ["rooms"] }),
   });
 
+  useEffect(() => {
+    if (display) setBlanked(display.blanked);
+  }, [display?.blanked, display?.updated_at]);
+
+  const setSharedBlank = useCallback((next: boolean) => {
+    setBlanked(next);
+    api.setTvDisplay({ blanked: next }).catch(() => undefined);
+  }, []);
+
   const wakeDisplay = useCallback(() => {
-    setBlanked(false);
+    setSharedBlank(false);
     lightsMut.mutate({ ...TV_BEDROOM_WAKE_LIGHTS });
-  }, [lightsMut]);
+  }, [lightsMut, setSharedBlank]);
 
   const toggleBlank = () => {
     const nextBlanked = !blanked;
-    setBlanked(nextBlanked);
+    setSharedBlank(nextBlanked);
     if (nextBlanked) {
       lightsMut.mutate({ on: false });
       return;
     }
     lightsMut.mutate({ ...TV_BEDROOM_WAKE_LIGHTS });
+  };
+
+  const mirror = tvCast
+    ? { app: tvCast.app, path: tvCast.path, sentAt: tvCast.sent_at, fromPhone: true }
+    : voiceApp
+      ? { app: voiceApp, path: "/", sentAt: display?.updated_at ?? 0, fromPhone: false }
+      : null;
+
+  const backToDashboard = () => {
+    if (tvCast) {
+      stopCast("tv").catch(() => undefined);
+      return;
+    }
+    api.setTvDisplay({ app: "dashboard" }).catch(() => undefined);
   };
 
   useEffect(() => {
@@ -796,7 +825,7 @@ export default function TvDashboard() {
     <div
       className="tv-page"
       style={tvLayoutStyle()}
-      onClickCapture={toggleBlank}
+      onClickCapture={mirror ? undefined : toggleBlank}
     >
       <div className="tv-band tv-band-header">
         <TvHeader weather={weatherQ.data?.weather} liturgy={liturgyQ.data} tz={tz} />
@@ -819,7 +848,25 @@ export default function TvDashboard() {
         </div>
       </div>
 
-      {blanked ? <div className="tv-blank-overlay" aria-hidden="true" /> : null}
+      {mirror ? (
+        <CastMirror
+          target="tv"
+          app={mirror.app}
+          path={mirror.path}
+          sentAt={mirror.sentAt}
+          fromPhone={mirror.fromPhone}
+          backLabel="Dashboard"
+          onBack={backToDashboard}
+        />
+      ) : null}
+
+      {blanked ? (
+        <div
+          className="tv-blank-overlay"
+          aria-hidden="true"
+          onClick={mirror ? wakeDisplay : undefined}
+        />
+      ) : null}
     </div>
   );
 }

@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <title>Homelab Assistant</title>
+    <link rel="stylesheet" href="/assets/style.css" />
+  </head>
+  <body>
+    <main class="shell">
+      <header class="top">
+        <div>
+          <p class="eyebrow">Homelab voice</p>
+          <h1>Assistant</h1>
+        </div>
+        <div class="phase" id="phase">Idle</div>
+      </header>
+
+      <section class="card status-card">
+        <p id="heard" class="heard">Press the button and speak.</p>
+        <p id="reply" class="reply"></p>
+        <p id="meta" class="meta"></p>
+      </section>
+
+      <button id="ptt" class="ptt" type="button">
+        <span class="ptt-label">Press to talk</span>
+        <span class="ptt-sub">tap again to send</span>
+      </button>
+
+      <section class="card">
+        <h2>Quick text test</h2>
+        <form id="text-form" class="text-form">
+          <input id="text-input" type="text" placeholder="Turn the bedroom lights warm and dim" autocomplete="off" />
+          <button type="submit">Send</button>
+        </form>
+      </section>
+
+      <section class="card small">
+        <p class="meta" id="health-line">Checking configuration…</p>
+        <div class="row" style="margin-top: 8px">
+          <button id="clear-chat" type="button" class="btn">Clear chat memory</button>
+        </div>
+      </section>
+
+      <section class="card small">
+        <label class="token-row">
+          Device token
+          <input id="token" type="password" value="dev-token-change-me" />
+        </label>
+        <p class="meta">Must match <code>ASSISTANT_DEVICE_TOKEN</code> in <code>compose/assistant/.env</code>.</p>
+      </section>
+    </main>
+
+    <div id="cursor-modal" class="cursor-modal" hidden aria-hidden="true">
+      <button type="button" id="cursor-backdrop" class="cursor-backdrop" aria-label="Close Cursor dialog"></button>
+      <section
+        class="card cursor-dialog"
+        id="cursor-card"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="cursor-title"
+      >
+        <div class="cursor-head">
+          <h2 id="cursor-title">Cursor edit</h2>
+          <span id="cursor-badge" class="cursor-badge">pending</span>
+        </div>
+        <p id="cursor-prompt" class="cursor-prompt"></p>
+        <div class="row" id="cursor-actions">
+          <button id="cursor-confirm" type="button" class="btn primary">Confirm &amp; run</button>
+          <button id="cursor-cancel" type="button" class="btn">Cancel</button>
+        </div>
+        <div id="cursor-status" class="cursor-result" hidden></div>
+      </section>
+    </div>
+
+    <script src="/assets/app.js"></script>
+  </body>
+</html>

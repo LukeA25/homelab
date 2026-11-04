@@ -188,6 +188,8 @@ export function Accounts() {
   const bankingTotal = banking.reduce((sum, a) => sum + balance(a), 0);
   const investmentTotal = investments.reduce((sum, a) => sum + balance(a), 0);
   const bankGroups = useMemo(() => groupBankAccounts(banking), [banking]);
+  const needsReconnect = snapshot?.needs_reconnect ?? false;
+  const bankName = snapshot?.institution_name || "Your bank";
 
   if (isLoading) {
     return <p className="text-sm text-ink-muted">Loading…</p>;
@@ -221,6 +223,16 @@ export function Accounts() {
         <StatCard label="Bank accounts" value={String(banking.length)} />
         <StatCard label="Investment accounts" value={String(investments.length)} />
       </div>
+
+      {needsReconnect ? (
+        <Card className="border-loss/30 bg-loss/5">
+          <CardHeader
+            title={`${bankName} needs a login`}
+            subtitle="Reconnect restores the existing Plaid item so transaction IDs and categories stay put. Add bank is only for a different institution."
+            action={<ConnectBankButton update label="Reconnect" />}
+          />
+        </Card>
+      ) : null}
 
       <div className="flex flex-wrap gap-2">
         <ConnectBankButton mode="bank" label="Add bank account" />

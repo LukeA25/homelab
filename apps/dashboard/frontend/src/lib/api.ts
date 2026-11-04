@@ -57,4 +57,19 @@ export const api = {
   system: () => request<SystemStats>("/system"),
   config: () => request<AppConfig>("/config"),
   liturgy: () => request<LiturgyDay>("/liturgy"),
+  tvDisplay: () => request<TvDisplayState>("/tv-display"),
+  setTvDisplay: (body: { blanked?: boolean; app?: TvApp }) =>
+    request<TvDisplayState>("/tv-display", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body),
+    }),
+};
+
+export type TvApp = "dashboard" | "guitar" | "finance" | "homework" | "theology";
+
+export type TvDisplayState = {
+  blanked: boolean;
+  app?: TvApp;
+  updated_at: number;
 };

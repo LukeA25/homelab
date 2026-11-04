@@ -176,6 +176,8 @@ export function Settings() {
   };
 
   const connected = snapshot?.connected ?? false;
+  const needsReconnect = snapshot?.needs_reconnect ?? false;
+  const bankName = snapshot?.institution_name || "your bank";
   const rules = rulesData?.rules ?? [];
 
   return (
@@ -215,8 +217,14 @@ export function Settings() {
           subtitle="Sync balances and transactions from Plaid"
         />
         <div className="flex flex-wrap items-center gap-3">
-          <Pill tone={connected ? "gain" : "neutral"}>
-            {connected ? "Connected" : "Not connected"}
+          <Pill
+            tone={needsReconnect ? "loss" : connected ? "gain" : "neutral"}
+          >
+            {needsReconnect
+              ? "Needs reconnect"
+              : connected
+                ? "Connected"
+                : "Not connected"}
           </Pill>
           {snapshot?.last_refreshed ? (
             <span className="text-sm text-ink-muted">
@@ -227,6 +235,18 @@ export function Settings() {
             <span className="text-sm text-ink-muted">Never synced</span>
           )}
         </div>
+        {needsReconnect ? (
+          <p className="mt-3 text-sm text-loss">
+            {bankName} needs a login. Reconnect repairs the existing link and
+            keeps transactions and categories. Do not use Add bank for this —
+            that would create a new connection and duplicate rows.
+          </p>
+        ) : (
+          <p className="mt-3 text-xs text-ink-faint">
+            Reconnect repairs an existing login. Add bank opens a new Plaid
+            connection for a different institution.
+          </p>
+        )}
         <div className="mt-4 flex flex-wrap gap-2">
           <Button
             variant="ghost"
@@ -244,10 +264,22 @@ export function Settings() {
             />
             {refresh.isPending ? "Refreshing…" : "Refresh now"}
           </Button>
-          <ConnectBankButton
-            variant="ghost"
-            label={connected ? "Add or reconnect" : "Connect bank"}
-          />
+          {connected ? (
+            <>
+              <ConnectBankButton
+                variant={needsReconnect ? "primary" : "ghost"}
+                update
+                label="Reconnect"
+              />
+              <ConnectBankButton
+                variant="ghost"
+                mode="bank"
+                label="Add bank"
+              />
+            </>
+          ) : (
+            <ConnectBankButton variant="ghost" label="Connect bank" />
+          )}
         </div>
       </Card>
 

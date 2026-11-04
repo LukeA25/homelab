@@ -1,0 +1,24 @@
+[Unit]
+Description=Homelab nightstand Chromium kiosk
+# Wait until a user graphical session exists (D-Bus / Wayland).
+After=graphical-session.target network-online.target
+Wants=network-online.target
+
+[Service]
+User=homelab
+Group=homelab
+Type=simple
+Environment=HOME=/home/homelab
+Environment=USER=homelab
+Environment=DISPLAY=:0
+Environment=XDG_RUNTIME_DIR=/run/user/1000
+Environment=DBUS_SESSION_BUS_ADDRESS=unix:path=/run/user/1000/bus
+Environment=CONTROL_URL=https://assistant.home.arpa/control
+# Give the desktop a moment after boot/login.
+ExecStartPre=/bin/sleep 5
+ExecStart=/home/homelab/bin/kiosk.sh
+Restart=on-failure
+RestartSec=8
+
+[Install]
+WantedBy=graphical.target

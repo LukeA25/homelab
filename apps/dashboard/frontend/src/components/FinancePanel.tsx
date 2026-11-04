@@ -56,7 +56,7 @@ function TrackColumn({ track, accent }: { track: FinanceTrack; accent: string })
           of {money(track.budgeted, true)} · {Math.round(track.pct_used * 100)}%
         </div>
       </div>
-      <Bar pct={track.pct_used} color={over ? "#F07178" : accent} />
+      <Bar pct={track.pct_used} color={over ? "#FF6680" : accent} />
       <SubList track={track} />
     </div>
   );
@@ -73,7 +73,7 @@ function TrackRow({ track, accent }: { track: FinanceTrack; accent: string }) {
           <span className="text-ink-faint"> / {money(track.budgeted, true)}</span>
         </span>
       </div>
-      <Bar pct={track.pct_used} color={over ? "#F07178" : accent} />
+      <Bar pct={track.pct_used} color={over ? "#FF6680" : accent} />
       <div className="flex justify-between text-[11px] text-ink-faint">
         <span className="tnum">{Math.round(track.pct_used * 100)}% used</span>
         <span className={cn("tnum", over ? "text-loss" : "text-gain")}>
@@ -159,7 +159,7 @@ export function FinancePanel({
           of {money(summary?.budgeted, true)} · {Math.round((summary?.pct_used ?? 0) * 100)}%
         </div>
       </div>
-      <Bar pct={summary?.pct_used ?? 0} color={over ? "#F07178" : "#5B8CFF"} />
+      <Bar pct={summary?.pct_used ?? 0} color={over ? "#FF6680" : "#4F8BFF"} />
       <div className="mt-auto space-y-1 pt-2">
         <div className="flex items-baseline justify-between gap-2 text-xs">
           <span className="text-ink-faint">Cash</span>
@@ -187,7 +187,7 @@ export function FinancePanel({
               {overallCard}
               {focus.map((track, i) => (
                 <div key={track.name} className="flex min-w-0 flex-1 border-l border-hairline pl-4">
-                  <TrackColumn track={track} accent={i === 0 ? "#F0B429" : "#3DDC97"} />
+                  <TrackColumn track={track} accent={i === 0 ? "#A27BFF" : "#B7F34D"} />
                 </div>
               ))}
             </div>
@@ -225,13 +225,13 @@ export function FinancePanel({
             </span>
           </div>
           <div className="mt-2">
-            <Bar pct={summary?.pct_used ?? 0} color={over ? "#F07178" : "#5B8CFF"} />
+            <Bar pct={summary?.pct_used ?? 0} color={over ? "#FF6680" : "#4F8BFF"} />
           </div>
         </div>
 
         <div className="space-y-4">
           {focus.map((track, i) => (
-            <TrackRow key={track.name} track={track} accent={i === 0 ? "#F0B429" : "#3DDC97"} />
+            <TrackRow key={track.name} track={track} accent={i === 0 ? "#A27BFF" : "#B7F34D"} />
           ))}
         </div>
 

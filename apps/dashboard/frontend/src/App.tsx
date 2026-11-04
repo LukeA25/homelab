@@ -1,5 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { api } from "@/lib/api";
+import ControlDashboard from "@/components/ControlDashboard";
 import { FinancePanel } from "@/components/FinancePanel";
 import { Header } from "@/components/Header";
 import { HomeworkPanel } from "@/components/HomeworkPanel";
@@ -8,9 +9,9 @@ import { ServicesGrid } from "@/components/ServicesGrid";
 import TvDashboard from "@/components/TvDashboard";
 
 export default function App() {
-  if (window.location.pathname.replace(/\/$/, "") === "/tv") {
-    return <TvDashboard />;
-  }
+  const path = window.location.pathname.replace(/\/$/, "") || "/";
+  if (path === "/tv") return <TvDashboard />;
+  if (path === "/control") return <ControlDashboard />;
   return <HomeDashboard />;
 }
 
@@ -54,13 +55,12 @@ function HomeDashboard() {
   const tz = configQ.data?.tz;
 
   return (
-    <div className="h-full overflow-hidden">
-      <div className="mx-auto flex min-h-full max-w-lg flex-col gap-5 overflow-y-auto px-4 py-5 pb-[calc(1.25rem+env(safe-area-inset-bottom))] dash:hidden">
+    <div className="h-full dash:overflow-hidden">
+      <div className="mx-auto flex max-w-lg flex-col gap-5 px-4 py-5 pb-[calc(1.25rem+env(safe-area-inset-bottom))] dash:hidden">
         <Header weather={weather ?? null} tz={tz} />
+        <ServicesGrid groups={groups} compact fill={false} />
         <HomeworkPanel data={homework} />
         <LightsPanel rooms={rooms} />
-        <FinancePanel summary={finance} />
-        <ServicesGrid groups={groups} compact />
       </div>
 
       <div className="hidden h-full overflow-hidden dash:block">

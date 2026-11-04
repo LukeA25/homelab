@@ -7,6 +7,7 @@ the link/exchange flow.
 
 import os
 from datetime import date
+from typing import Optional
 
 import plaid
 from plaid.api import plaid_api
@@ -27,8 +28,10 @@ from plaid.model.item_public_token_exchange_request import (
     ItemPublicTokenExchangeRequest,
 )
 from plaid.model.item_remove_request import ItemRemoveRequest
+from plaid.model.link_token_create_hosted_link import LinkTokenCreateHostedLink
 from plaid.model.link_token_create_request import LinkTokenCreateRequest
 from plaid.model.link_token_create_request_user import LinkTokenCreateRequestUser
+from plaid.model.link_token_get_request import LinkTokenGetRequest
 from plaid.model.products import Products
 from plaid.model.transactions_get_request import TransactionsGetRequest
 from plaid.model.transactions_get_request_options import (
@@ -57,24 +60,43 @@ _configuration = Configuration(
 client = plaid_api.PlaidApi(ApiClient(_configuration))
 
 
-def create_link_token(mode: str = "all") -> dict:
-    """mode: 'all' | 'bank' | 'investments' — controls which Plaid products Link requests."""
-    products = []
-    if mode in ("all", "bank"):
-        products.append(Products("transactions"))
-    if mode in ("all", "investments"):
-        products.append(Products("investments"))
-    if not products:
-        products.append(Products("transactions"))
+def create_link_token(mode: str = "all", access_token: Optional[str] = None) -> dict:
+    """Create a Link token.
 
-    request = LinkTokenCreateRequest(
-        products=products,
-        client_name="Homelab Finance App",
-        country_codes=[CountryCode("US")],
-        language="en",
-        user=LinkTokenCreateRequestUser(client_user_id="landerson"),
-    )
+    mode: 'all' | 'bank' | 'investments' — products for a *new* Item.
+    access_token: when set, opens Link in update mode for that existing Item.
+    Update mode must omit products; exchanging the public token afterward
+    would create a *new* Item and new transaction IDs.
+    """
+    kwargs: dict = {
+        "client_name": "Homelab Finance App",
+        "country_codes": [CountryCode("US")],
+        "language": "en",
+        "user": LinkTokenCreateRequestUser(client_user_id="landerson"),
+        # Hosted Link so Bank of America OAuth runs on Plaid's domain. The
+        # embedded modal has no dashboard redirect URI and dies with a
+        # generic "Internal error occurred" on BofA's post-2026-10-15 API.
+        "hosted_link": LinkTokenCreateHostedLink(url_lifetime_seconds=1800),
+    }
+    if access_token:
+        kwargs["access_token"] = access_token
+    else:
+        products = []
+        if mode in ("all", "bank"):
+            products.append(Products("transactions"))
+        if mode in ("all", "investments"):
+            products.append(Products("investments"))
+        if not products:
+            products.append(Products("transactions"))
+        kwargs["products"] = products
+
+    request = LinkTokenCreateRequest(**kwargs)
     return client.link_token_create(request).to_dict()
+
+
+def get_link_token(link_token: str) -> dict:
+    """Session results for a Hosted Link token (public_token, exit error)."""
+    return client.link_token_get(LinkTokenGetRequest(link_token=link_token)).to_dict()
 
 
 def exchange_public_token(public_token: str) -> dict:

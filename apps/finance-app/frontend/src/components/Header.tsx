@@ -5,6 +5,7 @@ import { useSnapshot, useRefresh } from "@/lib/queries";
 import { Button } from "./ui/Button";
 import { Pill } from "./ui/Pill";
 import { ConnectBankButton } from "./PlaidConnect";
+import { useToast } from "./ui/Toast";
 import { cn } from "@/lib/utils";
 
 export function Header() {
@@ -12,7 +13,9 @@ export function Header() {
   const title = PAGE_TITLES[pathname] ?? "Finances";
   const { data: snapshot } = useSnapshot();
   const refresh = useRefresh();
+  const { show: toast } = useToast();
   const connected = snapshot?.connected ?? false;
+  const needsReconnect = snapshot?.needs_reconnect ?? false;
 
   return (
     <header className="sticky top-0 z-30 border-b border-hairline bg-canvas/90 px-4 py-3 backdrop-blur lg:px-8 lg:py-4">
@@ -31,14 +34,24 @@ export function Header() {
               Updated {new Date(snapshot.last_refreshed).toLocaleString()}
             </span>
           ) : null}
-          <Pill tone={connected ? "gain" : "neutral"}>
-            {connected ? "Connected" : "Not connected"}
+          <Pill
+            tone={needsReconnect ? "loss" : connected ? "gain" : "neutral"}
+          >
+            {needsReconnect
+              ? "Needs reconnect"
+              : connected
+                ? "Connected"
+                : "Not connected"}
           </Pill>
           <Button
             variant="ghost"
             size="sm"
             disabled={!connected || refresh.isPending}
-            onClick={() => refresh.mutate()}
+            onClick={() =>
+              refresh.mutate(undefined, {
+                onError: (e: Error) => toast(e.message, "error"),
+              })
+            }
           >
             <RefreshCw
               className={cn("h-4 w-4", refresh.isPending && "animate-spin")}
@@ -47,14 +60,23 @@ export function Header() {
           </Button>
           <ConnectBankButton
             variant="primary"
-            label={connected ? "Reconnect" : "Connect Bank"}
+            update={connected}
+            label={
+              needsReconnect
+                ? "Reconnect bank"
+                : connected
+                  ? "Reconnect"
+                  : "Connect Bank"
+            }
           />
         </div>
 
         {/* Mobile: compact status only — actions live in expandable nav */}
         <div className="lg:hidden">
-          <Pill tone={connected ? "gain" : "neutral"}>
-            {connected ? "Live" : "Offline"}
+          <Pill
+            tone={needsReconnect ? "loss" : connected ? "gain" : "neutral"}
+          >
+            {needsReconnect ? "Reconnect" : connected ? "Live" : "Offline"}
           </Pill>
         </div>
       </div>

@@ -29,7 +29,7 @@ export function Header({
     <header className="flex items-end justify-between gap-4">
       <div className="min-w-0">
         <p className="text-sm font-medium text-ink-muted">{greeting}</p>
-        <h1 className="font-display text-2xl font-semibold tracking-tight text-ink dash:text-3xl">
+        <h1 className="font-display text-gradient text-2xl font-semibold tracking-tight dash:text-3xl">
           Homelab
         </h1>
         <p className="mt-0.5 truncate text-sm text-ink-faint dash:hidden">{date}</p>

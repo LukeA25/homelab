@@ -23,7 +23,9 @@ async function request<T>(path: string, opts: RequestInit = {}): Promise<T> {
     let message = res.statusText;
     try {
       const body = await res.json();
-      if (body?.detail) message = body.detail;
+      const detail = body?.detail;
+      if (typeof detail === "string") message = detail;
+      else if (detail) message = JSON.stringify(detail);
     } catch {
       // no JSON body; keep the status text
     }
@@ -73,8 +75,26 @@ export const api = {
     ),
 
   refresh: () => post<Snapshot>("/refresh"),
-  createLinkToken: (mode: "all" | "bank" | "investments" = "all") =>
-    post<{ link_token: string }>(`/create_link_token?mode=${mode}`),
+  createLinkToken: (
+    mode: "all" | "bank" | "investments" = "all",
+    opts: { update?: boolean } = {},
+  ) =>
+    post<{
+      link_token: string;
+      hosted_link_url?: string | null;
+      expiration?: string;
+    }>(`/create_link_token?mode=${mode}${opts.update ? "&update=true" : ""}`),
+  linkSessionStatus: (linkToken: string) =>
+    post<{
+      started: boolean;
+      finished: boolean;
+      public_token: string | null;
+      error: {
+        error_code: string;
+        error_message: string;
+        display_message?: string | null;
+      } | null;
+    }>("/link_session_status", { link_token: linkToken }),
   exchangePublicToken: (publicToken: string) =>
     post<{ item_id: string }>("/exchange_public_token", {
       public_token: publicToken,

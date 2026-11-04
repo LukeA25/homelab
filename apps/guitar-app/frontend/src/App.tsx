@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { AddScreen } from "./components/AddScreen";
 import { DesktopSidebar, MobileBottomNav } from "./components/AppNav";
 import { HomeScreen } from "./components/HomeScreen";
@@ -8,9 +8,34 @@ import { SettingsScreen } from "./components/SettingsScreen";
 import { SheetScreen } from "./components/SheetScreen";
 import { TracksScreen } from "./components/TracksScreen";
 import { api } from "./lib/api";
+import { guitarRemoteControls, isCastScreen } from "./lib/cast";
 import type { Playlist, Screen, Song, Status, ThemeId } from "./lib/types";
 
 const THEME_KEY = "fretwork-theme-v3";
+
+const SCREEN_PATHS: Record<Exclude<Screen, "sheet">, string> = {
+  library: "/",
+  tracks: "/tracks",
+  playlists: "/playlists",
+  add: "/add",
+  settings: "/settings",
+  metronome: "/metronome",
+};
+
+function routeFromPath(pathname: string): { screen: Screen; songId: string | null } {
+  const song = pathname.match(/^\/song\/([^/]+)\/?$/);
+  if (song) return { screen: "sheet", songId: decodeURIComponent(song[1]!) };
+  const clean = pathname.replace(/(.)\/+$/, "$1");
+  const screen = (Object.keys(SCREEN_PATHS) as Exclude<Screen, "sheet">[]).find(
+    (k) => SCREEN_PATHS[k] === clean,
+  );
+  return { screen: screen ?? "library", songId: null };
+}
+
+function pathFor(screen: Screen, songId: string | null): string {
+  if (screen === "sheet") return songId ? `/song/${encodeURIComponent(songId)}` : "/";
+  return SCREEN_PATHS[screen];
+}
 
 function readTheme(): ThemeId {
   const stored = localStorage.getItem(THEME_KEY);
@@ -20,18 +45,24 @@ function readTheme(): ThemeId {
 
 export default function App() {
   const [theme, setTheme] = useState<ThemeId>(readTheme);
-  const [screen, setScreen] = useState<Screen>("library");
+  const [screen, setScreen] = useState<Screen>(() => routeFromPath(window.location.pathname).screen);
   const [sheetReturnTo, setSheetReturnTo] = useState<Exclude<Screen, "sheet">>("library");
   const [songs, setSongs] = useState<Song[]>([]);
   const [playlists, setPlaylists] = useState<Playlist[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [activeSongId, setActiveSongId] = useState<string | null>(null);
+  const [activeSongId, setActiveSongId] = useState<string | null>(
+    () => routeFromPath(window.location.pathname).songId,
+  );
   const [query, setQuery] = useState("");
   const [metronomeBpm, setMetronomeBpm] = useState(92);
   const [sheetFocusMode, setSheetFocusMode] = useState(false);
 
   const activeSong = songs.find((s) => s.id === activeSongId) ?? null;
+  const screenRef = useRef(screen);
+  screenRef.current = screen;
+  const songsRef = useRef(songs);
+  songsRef.current = songs;
 
   const refresh = useCallback(async () => {
     const [nextSongs, nextPlaylists] = await Promise.all([
@@ -56,6 +87,60 @@ export default function App() {
     })();
     return () => {
       cancelled = true;
+    };
+  }, [refresh]);
+
+  useEffect(() => {
+    if (!loading && screen === "sheet" && !activeSong) {
+      setActiveSongId(null);
+      setScreen("library");
+    }
+  }, [loading, screen, activeSong]);
+
+  useEffect(() => {
+    const path = pathFor(screen, activeSongId);
+    if (window.location.pathname !== path) {
+      window.history.pushState(null, "", path + window.location.search);
+    }
+  }, [screen, activeSongId]);
+
+  useEffect(() => {
+    const onPop = () => {
+      const next = routeFromPath(window.location.pathname);
+      const prev = screenRef.current;
+      if (next.screen === "sheet" && prev !== "sheet") setSheetReturnTo(prev);
+      if (next.screen !== "sheet") setSheetFocusMode(false);
+      setActiveSongId(next.songId);
+      setScreen(next.screen);
+    };
+    window.addEventListener("popstate", onPop);
+    return () => window.removeEventListener("popstate", onPop);
+  }, []);
+
+  useEffect(() => {
+    if (isCastScreen) {
+      const onRefresh = (e: Event) => {
+        e.preventDefault();
+        refresh().catch(() => undefined);
+      };
+      window.addEventListener("cast:refresh", onRefresh);
+      return () => window.removeEventListener("cast:refresh", onRefresh);
+    }
+    window.castApp = {
+      controlsLabel: "Song",
+      pages: () => [
+        { label: "Library", sub: "All songs", path: "/" },
+        ...songsRef.current.map((s) => ({
+          label: s.title,
+          sub: s.artist,
+          path: pathFor("sheet", s.id),
+          tab: "app",
+        })),
+      ],
+      controls: guitarRemoteControls,
+    };
+    return () => {
+      delete window.castApp;
     };
   }, [refresh]);
 

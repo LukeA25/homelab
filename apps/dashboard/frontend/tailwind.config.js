@@ -4,35 +4,48 @@ export default {
   theme: {
     extend: {
       colors: {
-        canvas: "#0E1116",
-        panel: "#151A22",
-        card: "#1B2230",
-        hairline: "#2A3344",
+        canvas: "#07080D",
+        panel: "rgba(12, 14, 22, 0.5)",
+        card: "rgba(16, 18, 30, 0.55)",
+        hairline: "rgba(255, 255, 255, 0.09)",
         ink: {
-          DEFAULT: "#E8EDF5",
-          muted: "#9AA6B8",
-          faint: "#6B778A",
+          DEFAULT: "#EEF1F8",
+          muted: "#9BA3B6",
+          faint: "#727C93",
         },
         accent: {
-          DEFAULT: "#5B8CFF",
-          soft: "rgba(91, 140, 255, 0.16)",
+          DEFAULT: "#4F8BFF",
+          soft: "rgba(79, 139, 255, 0.16)",
+        },
+        violet: {
+          DEFAULT: "#A27BFF",
+          soft: "rgba(162, 123, 255, 0.16)",
+        },
+        lime: {
+          DEFAULT: "#B7F34D",
+          soft: "rgba(183, 243, 77, 0.14)",
+        },
+        cyan: {
+          DEFAULT: "#34E0E8",
+          soft: "rgba(52, 224, 232, 0.14)",
         },
         warm: {
-          DEFAULT: "#F0B429",
-          soft: "rgba(240, 180, 41, 0.18)",
+          DEFAULT: "#FFB547",
+          soft: "rgba(255, 181, 71, 0.18)",
         },
-        gain: "#3DDC97",
-        loss: "#F07178",
+        gain: "#2FE39B",
+        loss: "#FF6680",
       },
       borderRadius: {
         card: "18px",
       },
       boxShadow: {
-        card: "0 1px 2px rgba(0, 0, 0, 0.35), 0 8px 24px rgba(0, 0, 0, 0.22)",
+        card: "0 0 0 1px rgba(255, 255, 255, 0.015), 0 14px 36px rgba(0, 0, 0, 0.5)",
+        glow: "0 0 24px rgba(162, 123, 255, 0.28)",
       },
       fontFamily: {
         sans: [
-          "Sora",
+          "Figtree",
           "ui-sans-serif",
           "system-ui",
           "-apple-system",
@@ -44,7 +57,7 @@ export default {
         ],
         display: [
           "Outfit",
-          "Sora",
+          "Figtree",
           "ui-sans-serif",
           "system-ui",
           "sans-serif",

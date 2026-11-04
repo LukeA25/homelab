@@ -6,6 +6,7 @@ import { useSnapshot, useRefresh } from "@/lib/queries";
 import { ConnectBankButton } from "@/components/PlaidConnect";
 import { Button } from "@/components/ui/Button";
 import { Pill } from "@/components/ui/Pill";
+import { useToast } from "@/components/ui/Toast";
 import { cn } from "@/lib/utils";
 
 export function MobileNav() {
@@ -13,7 +14,9 @@ export function MobileNav() {
   const { pathname } = useLocation();
   const { data: snapshot } = useSnapshot();
   const refresh = useRefresh();
+  const { show: toast } = useToast();
   const connected = snapshot?.connected ?? false;
+  const needsReconnect = snapshot?.needs_reconnect ?? false;
 
   useEffect(() => {
     setOpen(false);
@@ -85,8 +88,14 @@ export function MobileNav() {
 
             <div className="mt-4 space-y-3 border-t border-hairline pt-4">
               <div className="flex flex-wrap items-center gap-2">
-                <Pill tone={connected ? "gain" : "neutral"}>
-                  {connected ? "Connected" : "Not connected"}
+                <Pill
+                  tone={needsReconnect ? "loss" : connected ? "gain" : "neutral"}
+                >
+                  {needsReconnect
+                    ? "Needs reconnect"
+                    : connected
+                      ? "Connected"
+                      : "Not connected"}
                 </Pill>
                 {snapshot?.last_refreshed ? (
                   <span className="text-xs text-ink-faint">
@@ -99,7 +108,11 @@ export function MobileNav() {
                   variant="ghost"
                   size="sm"
                   disabled={!connected || refresh.isPending}
-                  onClick={() => refresh.mutate()}
+                  onClick={() =>
+                    refresh.mutate(undefined, {
+                      onError: (e: Error) => toast(e.message, "error"),
+                    })
+                  }
                 >
                   <RefreshCw
                     className={cn("h-4 w-4", refresh.isPending && "animate-spin")}
@@ -108,7 +121,14 @@ export function MobileNav() {
                 </Button>
                 <ConnectBankButton
                   variant="primary"
-                  label={connected ? "Reconnect" : "Connect"}
+                  update={connected}
+                  label={
+                    needsReconnect
+                      ? "Reconnect bank"
+                      : connected
+                        ? "Reconnect"
+                        : "Connect"
+                  }
                 />
               </div>
             </div>

@@ -21,6 +21,7 @@ import { transposeChord, transposeChordLine, transposeKey } from "../lib/transpo
 import { ChordDiagramStrip } from "./ChordDiagramStrip";
 import { MiniMetronome } from "./MiniMetronome";
 import { Page } from "./Page";
+import { castStep, isCastScreen, publishCastState, remoteSheet, useCastCommand } from "../lib/cast";
 import { SongArt } from "./SongArt";
 import { MetaTag, StatusTag } from "./StatusTag";
 
@@ -400,7 +401,7 @@ function SheetLines({
   return (
     <div
       ref={containerRef}
-      className="mx-auto w-full min-w-0 max-w-full overflow-x-hidden"
+      className="mx-auto w-full min-w-0 max-w-full shrink-0 overflow-x-hidden"
       style={{ gap: textStyle.gap, display: "flex", flexDirection: "column" }}
     >
       {lines.length === 0 && (
@@ -536,6 +537,18 @@ function LyricsFocusPopup({
   const canPrev = safeIndex > 0;
   const canNext = safeIndex < pages.length - 1;
 
+  useCastCommand((cmd) => {
+    if (cmd.type !== "app.page") return;
+    const d = castStep(cmd);
+    setPageIndex((i) => Math.max(0, Math.min(pages.length - 1, i + d)));
+  });
+
+  useEffect(() => {
+    publishCastState({ page: safeIndex, pages: pages.length || 1, pageLabel });
+  }, [safeIndex, pages.length, pageLabel]);
+
+  useEffect(() => () => publishCastState({ page: undefined, pages: undefined, pageLabel: undefined }), []);
+
   function jumpFromClientX(clientX: number, target: HTMLElement) {
     const rect = target.getBoundingClientRect();
     const mid = rect.left + rect.width / 2;
@@ -640,7 +653,7 @@ export function SheetScreen({
 }: SheetScreenProps) {
   const [semitones, setSemitones] = useState(0);
   const [textStep, setTextStep] = useState(readTextStep);
-  const [focusMode, setFocusMode] = useState(false);
+  const [focusMode, setFocusMode] = useState(() => isCastScreen && remoteSheet.focus);
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState("");
   const [editStyle, setEditStyle] = useState<Style>("chords");
@@ -664,6 +677,22 @@ export function SheetScreen({
     onFocusModeChange?.(focusMode);
     return () => onFocusModeChange?.(false);
   }, [focusMode, onFocusModeChange]);
+
+  useCastCommand((cmd) => {
+    if (cmd.type === "app.focus") {
+      remoteSheet.focus = Boolean(cmd.on);
+      setFocusMode(Boolean(cmd.on));
+    } else if (cmd.type === "app.text") {
+      const d = castStep(cmd);
+      setTextStep((n) => Math.max(0, Math.min(SHEET_TEXT_STEPS.length - 1, n + d)));
+    }
+  });
+
+  useEffect(() => {
+    publishCastState({ song: song.id, focus: focusMode, text: textStep, texts: SHEET_TEXT_STEPS.length });
+  }, [song.id, focusMode, textStep]);
+
+  useEffect(() => () => publishCastState({ song: null, focus: false }), []);
 
   useEffect(() => {
     let cancelled = false;
@@ -967,6 +996,7 @@ export function SheetScreen({
 
       {focusMode && (
         <LyricsFocusPopup
+          key={song.id}
           song={song}
           semitones={semitones}
           textStyle={textStyle}

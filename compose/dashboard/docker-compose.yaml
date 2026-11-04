@@ -10,7 +10,11 @@ services:
       TZ: ${DISPLAY_TZ:-America/Chicago}
       HOMEWORK_DB: /homework/homework.db
       DISK_PATH: /homework
+      DASHBOARD_DATA_DIR: /data
     ports:
       - "8004:8000"
+      # Guest screen gateway — localhost only; Tailscale Funnel is its sole way in.
+      - "127.0.0.1:8010:8010"
     volumes:
       - /home/landerson/homework-test/data:/homework:ro
+      - /srv/appdata/dashboard:/data

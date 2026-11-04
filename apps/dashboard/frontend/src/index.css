@@ -9,15 +9,42 @@
     height: 100%;
   }
 
+  /* Phones: let the homepage document grow and scroll. */
+  @media (max-width: 1023px) {
+    html,
+    body,
+    #root {
+      height: auto;
+      min-height: 100%;
+    }
+  }
+
+  html {
+    background-color: #07080d;
+  }
+
   body {
-    @apply bg-canvas text-ink antialiased;
-    font-feature-settings: "ss01", "cv11";
+    @apply text-ink antialiased;
+    background: transparent;
     -webkit-tap-highlight-color: transparent;
+  }
+
+  /* Fixed layer rather than background-attachment, which iOS ignores. */
+  body::before {
+    content: "";
+    position: fixed;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    z-index: -1;
+    pointer-events: none;
+    background-color: #07080d;
     background-image:
-      radial-gradient(ellipse 80% 50% at 10% -10%, rgba(91, 140, 255, 0.14), transparent 55%),
-      radial-gradient(ellipse 60% 40% at 90% 0%, rgba(240, 180, 41, 0.08), transparent 50%),
-      linear-gradient(180deg, #0e1116 0%, #0b0e13 100%);
-    background-attachment: fixed;
+      linear-gradient(180deg, rgba(92, 72, 210, 0.24) 0%, rgba(64, 96, 220, 0.14) 45%, rgba(7, 8, 13, 0.5) 100%),
+      url("./assets/night.jpg");
+    background-size: cover;
+    background-position: center;
   }
 
   .tnum {
@@ -27,7 +54,15 @@
 
 @layer components {
   .card {
-    @apply rounded-card border border-hairline bg-card/90 shadow-card backdrop-blur-sm;
+    @apply rounded-card border border-hairline bg-card shadow-card backdrop-blur-md backdrop-saturate-150;
+    background-image: linear-gradient(180deg, rgba(255, 255, 255, 0.05), rgba(255, 255, 255, 0) 42%);
+  }
+
+  .text-gradient {
+    background-image: linear-gradient(92deg, #eef1f8 0%, #c3b0ff 55%, #7fb0ff 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
   }
 
   .dash-scroll {
@@ -45,8 +80,161 @@
   left: 0;
   overflow: hidden;
   box-sizing: border-box;
-  background: #0e1116;
+  background-color: #07080d;
+  background-image:
+    linear-gradient(180deg, rgba(92, 72, 210, 0.24) 0%, rgba(64, 96, 220, 0.14) 45%, rgba(7, 8, 13, 0.5) 100%),
+    url("./assets/night.jpg");
+  background-size: cover;
+  background-position: center;
   cursor: pointer;
+}
+
+/* Read-only cast mirror (TV + kiosk). Sits under the TV blank overlay. */
+.cast-mirror {
+  position: fixed;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  z-index: 90;
+  overflow: hidden;
+  background: #05060a;
+  cursor: default;
+}
+
+.cast-mirror-stage {
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+}
+
+.cast-mirror-frame {
+  display: block;
+  width: 100%;
+  height: 100%;
+  border: 0;
+  background: rgba(0, 0, 0, 0.35);
+}
+
+.cast-mirror-shield {
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  cursor: default;
+}
+
+.cast-arrive {
+  -webkit-animation: cast-arrive 760ms cubic-bezier(0.16, 1, 0.3, 1) both;
+  animation: cast-arrive 760ms cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+@-webkit-keyframes cast-arrive {
+  0% { opacity: 0; -webkit-transform: translateY(-38%) scale(0.72); transform: translateY(-38%) scale(0.72); }
+  60% { opacity: 1; }
+  100% { opacity: 1; -webkit-transform: none; transform: none; }
+}
+
+@keyframes cast-arrive {
+  0% { opacity: 0; transform: translateY(-38%) scale(0.72); border-radius: 28px; }
+  60% { opacity: 1; }
+  100% { opacity: 1; transform: none; border-radius: 0; }
+}
+
+.cast-beam {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 0;
+  height: 40%;
+  pointer-events: none;
+  background: linear-gradient(180deg, rgba(162, 123, 255, 0.55), rgba(79, 139, 255, 0.18) 45%, transparent);
+  -webkit-animation: cast-beam 900ms ease-out both;
+  animation: cast-beam 900ms ease-out both;
+}
+
+@-webkit-keyframes cast-beam {
+  0% { opacity: 0; -webkit-transform: translateY(-100%); transform: translateY(-100%); }
+  35% { opacity: 1; }
+  100% { opacity: 0; -webkit-transform: translateY(160%); transform: translateY(160%); }
+}
+
+@keyframes cast-beam {
+  0% { opacity: 0; transform: translateY(-100%); }
+  35% { opacity: 1; }
+  100% { opacity: 0; transform: translateY(160%); }
+}
+
+.cast-mirror-back {
+  position: absolute;
+  top: 12px;
+  left: 12px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 12px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 999px;
+  background: rgba(7, 8, 13, 0.78);
+  color: #eef1f8;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  -webkit-backdrop-filter: blur(8px);
+  backdrop-filter: blur(8px);
+}
+
+.cast-mirror-badge {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 6px 11px;
+  border: 1px solid rgba(162, 123, 255, 0.35);
+  border-radius: 999px;
+  background: rgba(7, 8, 13, 0.72);
+  color: #c3b0ff;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  pointer-events: none;
+  -webkit-animation: cast-badge-fade 5s ease both;
+  animation: cast-badge-fade 5s ease both;
+}
+
+@-webkit-keyframes cast-badge-fade {
+  0%, 80% { opacity: 1; }
+  100% { opacity: 0; }
+}
+
+@keyframes cast-badge-fade {
+  0%, 80% { opacity: 1; }
+  100% { opacity: 0; }
+}
+
+.cast-live-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 7px;
+  background: #b7f34d;
+  box-shadow: 0 0 10px rgba(183, 243, 77, 0.8);
+  -webkit-animation: cast-pulse 1.6s ease-in-out infinite;
+  animation: cast-pulse 1.6s ease-in-out infinite;
+}
+
+@-webkit-keyframes cast-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.35; }
+}
+
+@keyframes cast-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.35; }
 }
 
 .tv-blank-overlay {
@@ -84,9 +272,9 @@
   margin-right: 18px;
   margin-top: 2px;
   padding: 8px 14px;
-  border: 1px solid #2a3344;
+  border: 1px solid rgba(255, 255, 255, 0.09);
   border-radius: 16px;
-  background: #151a22;
+  background: rgba(12, 14, 22, 0.55);
 }
 
 .tv-weather-icon {
@@ -119,7 +307,7 @@
   font-size: 10px;
   letter-spacing: 0.14em;
   text-transform: uppercase;
-  color: #c9a24a;
+  color: #c3b0ff;
   line-height: 1.2;
 }
 
@@ -127,7 +315,7 @@
   margin-top: 2px;
   font-size: 15px;
   font-weight: 600;
-  color: #e8edf5;
+  color: #eef1f8;
   line-height: 1.2;
   white-space: nowrap;
   overflow: hidden;
@@ -138,7 +326,7 @@
   margin-top: 3px;
   font-size: 12px;
   font-style: italic;
-  color: #9aa6b8;
+  color: #9ba3b6;
   line-height: 1.2;
   white-space: nowrap;
   overflow: hidden;
@@ -195,9 +383,10 @@
   overflow: hidden;
   box-sizing: border-box;
   padding: 10px 12px;
-  border: 1px solid #2a3344;
+  border: 1px solid rgba(255, 255, 255, 0.09);
   border-radius: 16px;
-  background: #1b2230;
+  background-color: rgba(16, 18, 30, 0.62);
+  background-image: linear-gradient(180deg, rgba(255, 255, 255, 0.035), rgba(255, 255, 255, 0) 42%);
 }
 
 .tv-card-compact {
@@ -300,7 +489,7 @@
   margin-bottom: 3px;
   font-size: 11px;
   line-height: 1.2;
-  color: #9aa6b8;
+  color: #9ba3b6;
 }
 
 .tv-pie-dot {
@@ -317,16 +506,16 @@
   overflow: hidden;
   box-sizing: border-box;
   padding: 8px 10px;
-  border: 1px solid #2a3344;
+  border: 1px solid rgba(255, 255, 255, 0.09);
   border-radius: 10px;
-  background: #151a22;
+  background: rgba(12, 14, 22, 0.55);
 }
 
 .tv-bar {
   height: 7px;
   overflow: hidden;
   border-radius: 7px;
-  background: #0e1116;
+  background: rgba(0, 0, 0, 0.35);
 }
 
 .tv-bar > span {
@@ -362,9 +551,9 @@
   overflow: hidden;
   box-sizing: border-box;
   padding: 6px 8px;
-  border: 1px solid #2a3344;
+  border: 1px solid rgba(255, 255, 255, 0.09);
   border-radius: 8px;
-  background: #151a22;
+  background: rgba(12, 14, 22, 0.55);
 }
 
 .tv-mini-label {
@@ -372,20 +561,20 @@
   line-height: 1.1;
   letter-spacing: 0.04em;
   text-transform: uppercase;
-  color: #6b778a;
+  color: #5d6578;
 }
 
 .tv-mini-value {
   font-size: 17px;
   line-height: 1.15;
   font-weight: 600;
-  color: #e8edf5;
+  color: #eef1f8;
 }
 
 .tv-mini-sub {
   font-size: 10px;
   line-height: 1.1;
-  color: #6b778a;
+  color: #5d6578;
 }
 
 .tv-card-title {
@@ -403,9 +592,9 @@
   overflow: hidden;
   box-sizing: border-box;
   padding: 8px 10px;
-  border: 1px solid #2a3344;
+  border: 1px solid rgba(255, 255, 255, 0.09);
   border-radius: 12px;
-  background: #151a22;
+  background: rgba(12, 14, 22, 0.55);
 }
 
 .tv-light-bar-row {
@@ -420,7 +609,7 @@
   min-width: 0;
   height: 6px;
   border-radius: 6px;
-  background: #0e1116;
+  background: rgba(0, 0, 0, 0.35);
   overflow: hidden;
 }
 
@@ -435,7 +624,7 @@
   font-size: 11px;
   line-height: 1;
   text-align: right;
-  color: #9aa6b8;
+  color: #9ba3b6;
   white-space: nowrap;
 }
 
@@ -446,7 +635,7 @@
   pointer-events: none;
   appearance: none;
   -webkit-appearance: none;
-  background: #0e1116;
+  background: rgba(0, 0, 0, 0.35);
   border-radius: 6px;
   outline: none;
 }
@@ -484,7 +673,7 @@
   float: right;
   margin-top: 4px;
   font-size: 11px;
-  color: #6b778a;
+  color: #5d6578;
 }
 
 .tv-stack {

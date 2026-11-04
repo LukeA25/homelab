@@ -266,18 +266,120 @@ class SettingsIn(BaseModel):
     budget_year_start_month: int
 
 
+class LinkTokenIn(BaseModel):
+    link_token: str
+
+
 # ---------------------------------------------------------------------------
 # Plaid link / exchange / refresh
 # ---------------------------------------------------------------------------
 
+def _plaid_error_payload(exc: ApiException) -> dict:
+    try:
+        body = json.loads(exc.body) if exc.body else {}
+    except (TypeError, json.JSONDecodeError):
+        body = {}
+    return {
+        "error_code": body.get("error_code") or "PLAID_ERROR",
+        "error_type": body.get("error_type"),
+        "error_message": body.get("error_message") or str(exc),
+        "display_message": body.get("display_message"),
+    }
+
+
+def _record_plaid_item_error(session: Session, payload: dict) -> None:
+    budget.set_meta(session, "plaid_item_error", json.dumps(payload))
+
+
+def _clear_plaid_item_error(session: Session) -> None:
+    budget.set_meta(session, "plaid_item_error", "")
+
+
+def _snapshot_plaid_fields(session: Session, item: Optional[Item]) -> dict:
+    raw = budget.get_meta(session, "plaid_item_error") or ""
+    error = None
+    if raw:
+        try:
+            error = json.loads(raw)
+        except json.JSONDecodeError:
+            error = {"error_code": "PLAID_ERROR", "error_message": raw}
+    code = (error or {}).get("error_code") if error else None
+    return {
+        "institution_name": item.institution_name if item else None,
+        "needs_reconnect": code == "ITEM_LOGIN_REQUIRED",
+        "plaid_error": error,
+    }
+
+
+def _login_required_detail(item: Optional[Item]) -> str:
+    name = (item.institution_name if item else None) or "your bank"
+    return (
+        f"Login required for {name}. Use Reconnect to restore the existing "
+        "link without losing transactions or categories."
+    )
+
+
 @api.post("/create_link_token")
-def create_link_token(mode: str = Query(default="all")):
+def create_link_token(
+    mode: str = Query(default="all"),
+    update: bool = Query(default=False),
+    session: Session = Depends(get_db),
+):
     if mode not in ("all", "bank", "investments"):
         raise HTTPException(status_code=400, detail="Invalid mode")
+    access_token = None
+    if update:
+        item = active_item(session)
+        if not item:
+            raise HTTPException(status_code=400, detail="No bank connected yet")
+        access_token = item.access_token
     try:
-        return plaid_client.create_link_token(mode)
+        return plaid_client.create_link_token(mode, access_token=access_token)
     except ApiException as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        payload = _plaid_error_payload(e)
+        raise HTTPException(status_code=500, detail=payload["error_message"])
+
+
+def _session_public_token(session: dict) -> Optional[str]:
+    success = session.get("on_success") or {}
+    if success.get("public_token"):
+        return success["public_token"]
+    results = session.get("results") or {}
+    for row in results.get("item_add_results") or []:
+        if row.get("public_token"):
+            return row["public_token"]
+    return None
+
+
+def _session_error(session: dict) -> Optional[dict]:
+    exit_info = session.get("exit") or session.get("on_exit") or {}
+    err = exit_info.get("error")
+    if isinstance(err, dict) and err:
+        return {
+            "error_code": err.get("error_code") or "PLAID_ERROR",
+            "error_message": err.get("error_message") or err.get("display_message") or "Plaid Link failed",
+            "display_message": err.get("display_message"),
+        }
+    return None
+
+
+@api.post("/link_session_status")
+def link_session_status(body: LinkTokenIn):
+    """Poll Hosted Link results after the Plaid window closes."""
+    try:
+        data = plaid_client.get_link_token(body.link_token)
+    except ApiException as e:
+        payload = _plaid_error_payload(e)
+        raise HTTPException(status_code=500, detail=payload["error_message"])
+
+    sessions = data.get("link_sessions") or []
+    latest = sessions[-1] if sessions else {}
+    return {
+        "started": bool(sessions),
+        "finished": bool(latest.get("finished_at")),
+        "public_token": _session_public_token(latest) if latest else None,
+        "error": _session_error(latest) if latest else None,
+    }
 
 
 @api.post("/exchange_public_token")
@@ -399,8 +501,8 @@ def _upsert_transactions(session: Session, txns: list[dict]):
 @api.post("/refresh")
 def refresh(session: Session = Depends(get_db)):
     """Pull the full budget year from Plaid and upsert into SQLite."""
-    item = active_item(session)
-    if not item:
+    items = session.exec(select(Item).order_by(Item.id.asc())).all()
+    if not items:
         raise HTTPException(status_code=400, detail="No bank connected yet")
 
     start_month = budget.get_start_month(session)
@@ -408,15 +510,32 @@ def refresh(session: Session = Depends(get_db)):
     start_date = date(int(months[0][:4]), int(months[0][5:7]), 1)
     end_date = date.today()
 
-    try:
-        accounts = plaid_client.get_balances(item.access_token)
-        txns = plaid_client.get_transactions(item.access_token, start_date, end_date)
-    except ApiException as e:
-        raise HTTPException(status_code=500, detail=str(e))
+    login_item: Optional[Item] = None
+    other_error: Optional[dict] = None
+    for item in items:
+        try:
+            accounts = plaid_client.get_balances(item.access_token)
+            txns = plaid_client.get_transactions(
+                item.access_token, start_date, end_date
+            )
+        except ApiException as e:
+            payload = _plaid_error_payload(e)
+            _record_plaid_item_error(session, payload)
+            if payload["error_code"] == "ITEM_LOGIN_REQUIRED":
+                login_item = item
+            else:
+                other_error = payload
+            continue
+        _upsert_accounts(session, item, accounts)
+        _upsert_transactions(session, txns)
+        _sync_investments(session, item, item.access_token, start_date, end_date)
 
-    _upsert_accounts(session, item, accounts)
-    _upsert_transactions(session, txns)
-    _sync_investments(session, item, item.access_token, start_date, end_date)
+    if login_item is not None:
+        raise HTTPException(status_code=409, detail=_login_required_detail(login_item))
+    if other_error is not None:
+        raise HTTPException(status_code=500, detail=other_error["error_message"])
+
+    _clear_plaid_item_error(session)
     budget.set_meta(session, "last_refreshed", datetime.now(timezone.utc).isoformat())
 
     return snapshot(session)
@@ -487,6 +606,7 @@ def snapshot(session: Session) -> dict:
     return {
         "connected": item is not None,
         "last_refreshed": budget.get_meta(session, "last_refreshed"),
+        **_snapshot_plaid_fields(session, item),
         "accounts": [
             {
                 "id": a.id,

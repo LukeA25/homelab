@@ -3,12 +3,19 @@
 from __future__ import annotations
 
 import os
+from datetime import datetime
 from typing import Any, Optional
+from zoneinfo import ZoneInfo
 
 import httpx
 
 HA_BASE_URL = os.getenv("HA_BASE_URL", "http://100.101.135.109:8123").rstrip("/")
 HA_TOKEN = os.getenv("HA_TOKEN", "")
+DISPLAY_TZ = os.getenv("DISPLAY_TZ", "America/Chicago")
+
+_RAINY_CONDITIONS = frozenset(
+    {"rainy", "pouring", "lightning-rainy", "hail", "snowy-rainy"}
+)
 
 ROOMS: dict[str, dict[str, Any]] = {
     "bedroom": {
@@ -206,6 +213,115 @@ async def set_all_lights(payload: dict[str, Any]) -> list[dict[str, Any]]:
     return results
 
 
+def _forecast_datetime(raw: Any) -> Optional[datetime]:
+    if raw is None:
+        return None
+    if isinstance(raw, datetime):
+        return raw if raw.tzinfo else raw.replace(tzinfo=ZoneInfo("UTC"))
+    if isinstance(raw, str):
+        try:
+            return datetime.fromisoformat(raw.replace("Z", "+00:00"))
+        except ValueError:
+            return None
+    return None
+
+
+def _is_rainy_period(condition: Any, precipitation: Any) -> bool:
+    try:
+        if precipitation is not None and float(precipitation) > 0:
+            return True
+    except (TypeError, ValueError):
+        pass
+    if not isinstance(condition, str):
+        return False
+    c = condition.lower()
+    return c in _RAINY_CONDITIONS or "rain" in c
+
+
+async def _fetch_ha_forecast(
+    client: httpx.AsyncClient, entity_id: str, forecast_type: str
+) -> list[dict[str, Any]]:
+    try:
+        resp = await client.post(
+            f"{HA_BASE_URL}/api/services/weather/get_forecasts",
+            params={"return_response": "true"},
+            headers=_headers(),
+            json={"entity_id": entity_id, "type": forecast_type},
+        )
+        resp.raise_for_status()
+        service_response = (resp.json() or {}).get("service_response") or {}
+        entity_fc = service_response.get(entity_id) or {}
+        raw = entity_fc.get("forecast") or []
+        return [item for item in raw if isinstance(item, dict)]
+    except Exception:
+        return []
+
+
+def _normalize_daily_forecast(items: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    out: list[dict[str, Any]] = []
+    for item in items:
+        out.append(
+            {
+                "datetime": item.get("datetime"),
+                "condition": item.get("condition"),
+                "temperature": item.get("temperature"),
+                "templow": item.get("templow"),
+                "precipitation": item.get("precipitation"),
+                "precipitation_probability": item.get("precipitation_probability"),
+            }
+        )
+    return out
+
+
+def _build_today_forecast(
+    hourly_raw: list[dict[str, Any]], tz_name: str
+) -> dict[str, Any]:
+    try:
+        tz = ZoneInfo(tz_name)
+    except Exception:
+        tz = ZoneInfo("UTC")
+    today = datetime.now(tz).date()
+    periods: list[dict[str, Any]] = []
+    total_precip = 0.0
+    max_precip = 0.0
+    will_rain = False
+
+    for item in hourly_raw:
+        dt = _forecast_datetime(item.get("datetime"))
+        if dt is None or dt.astimezone(tz).date() != today:
+            continue
+        local = dt.astimezone(tz)
+        precip = item.get("precipitation")
+        try:
+            precip_f = float(precip) if precip is not None else 0.0
+        except (TypeError, ValueError):
+            precip_f = 0.0
+        condition = item.get("condition")
+        rainy = _is_rainy_period(condition, precip)
+        will_rain = will_rain or rainy
+        total_precip += precip_f
+        max_precip = max(max_precip, precip_f)
+        periods.append(
+            {
+                "datetime": local.isoformat(),
+                "time_local": local.strftime("%H:%M"),
+                "condition": condition,
+                "temperature": item.get("temperature"),
+                "precipitation": precip,
+                "will_rain": rainy,
+            }
+        )
+
+    return {
+        "date": today.isoformat(),
+        "timezone": tz.key,
+        "will_rain": will_rain,
+        "total_precipitation": round(total_precip, 4),
+        "max_hourly_precipitation": round(max_precip, 4),
+        "periods": periods,
+    }
+
+
 async def get_weather() -> Optional[dict[str, Any]]:
     async with _client() as client:
         try:
@@ -218,21 +334,29 @@ async def get_weather() -> Optional[dict[str, Any]]:
         except Exception:
             return None
 
-    weather = next(
-        (s for s in states if str(s.get("entity_id", "")).startswith("weather.")),
-        None,
-    )
-    if not weather:
-        return None
+        weather = next(
+            (s for s in states if str(s.get("entity_id", "")).startswith("weather.")),
+            None,
+        )
+        if not weather:
+            return None
 
-    attrs = weather.get("attributes") or {}
-    return {
-        "entity_id": weather.get("entity_id"),
-        "state": weather.get("state"),
-        "temperature": attrs.get("temperature"),
-        "temperature_unit": attrs.get("temperature_unit") or "°F",
-        "humidity": attrs.get("humidity"),
-        "wind_speed": attrs.get("wind_speed"),
-        "friendly_name": attrs.get("friendly_name") or "Weather",
-        "forecast": (attrs.get("forecast") or [])[:3],
-    }
+        entity_id = str(weather.get("entity_id") or "")
+        attrs = weather.get("attributes") or {}
+        hourly_raw = await _fetch_ha_forecast(client, entity_id, "hourly")
+        daily_raw = await _fetch_ha_forecast(client, entity_id, "daily")
+        legacy_forecast = attrs.get("forecast") or []
+        daily_forecast = _normalize_daily_forecast(daily_raw or legacy_forecast)
+
+        return {
+            "entity_id": entity_id,
+            "state": weather.get("state"),
+            "temperature": attrs.get("temperature"),
+            "temperature_unit": attrs.get("temperature_unit") or "°F",
+            "humidity": attrs.get("humidity"),
+            "wind_speed": attrs.get("wind_speed"),
+            "precipitation_unit": attrs.get("precipitation_unit"),
+            "friendly_name": attrs.get("friendly_name") or "Weather",
+            "forecast": daily_forecast[:7],
+            "today": _build_today_forecast(hourly_raw, DISPLAY_TZ),
+        }

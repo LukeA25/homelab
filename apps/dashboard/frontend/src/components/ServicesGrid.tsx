@@ -7,7 +7,7 @@ function StatusDot({ status }: { status: "up" | "down" | "unknown" }) {
     <span
       className={cn(
         "inline-block h-2 w-2 shrink-0 rounded-full",
-        status === "up" && "bg-gain shadow-[0_0_8px_rgba(61,220,151,0.55)]",
+        status === "up" && "bg-gain shadow-[0_0_8px_rgba(47,227,155,0.6)]",
         status === "down" && "bg-loss",
         status === "unknown" && "bg-ink-faint",
       )}
@@ -19,18 +19,30 @@ function StatusDot({ status }: { status: "up" | "down" | "unknown" }) {
 export function ServicesGrid({
   groups,
   compact = false,
+  fill = true,
 }: {
   groups: ServiceGroup[] | undefined;
   compact?: boolean;
+  fill?: boolean;
 }) {
   return (
-    <section className="flex h-full min-h-0 flex-col gap-2.5 overflow-hidden">
+    <section
+      className={cn(
+        "flex flex-col gap-2.5",
+        fill ? "h-full min-h-0 overflow-hidden" : "",
+      )}
+    >
       <div>
         <h2 className="font-display text-lg font-semibold tracking-tight">Apps</h2>
         <p className="text-xs text-ink-faint">Homelab services</p>
       </div>
 
-      <div className="dash-scroll flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto pr-0.5">
+      <div
+        className={cn(
+          "flex flex-col gap-3 pr-0.5",
+          fill ? "dash-scroll min-h-0 flex-1 overflow-y-auto" : "",
+        )}
+      >
         {(groups || []).map((group) => (
           <div key={group.group}>
             <h3 className="mb-1.5 text-[10px] font-semibold uppercase tracking-[0.16em] text-ink-faint">

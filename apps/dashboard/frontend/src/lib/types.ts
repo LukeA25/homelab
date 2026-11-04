@@ -12,6 +12,24 @@ export interface Room {
   lights_total: number;
 }
 
+export interface WeatherTodayPeriod {
+  datetime: string;
+  time_local: string;
+  condition: string;
+  temperature: number | null;
+  precipitation: number | null;
+  will_rain: boolean;
+}
+
+export interface WeatherToday {
+  date: string;
+  timezone: string;
+  will_rain: boolean;
+  total_precipitation: number;
+  max_hourly_precipitation: number;
+  periods: WeatherTodayPeriod[];
+}
+
 export interface Weather {
   entity_id: string;
   state: string;
@@ -19,8 +37,10 @@ export interface Weather {
   temperature_unit: string;
   humidity: number | null;
   wind_speed: number | null;
+  precipitation_unit?: string | null;
   friendly_name: string;
   forecast: unknown[];
+  today?: WeatherToday;
 }
 
 export interface FinanceTrack {

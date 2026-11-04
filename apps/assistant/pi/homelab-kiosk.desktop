@@ -1,0 +1,8 @@
+[Desktop Entry]
+Type=Application
+Name=Homelab Control Kiosk
+Comment=Nightstand Chromium kiosk (loads Google API keys if present)
+Exec=/bin/bash -lc 'set -a; [ -f "$HOME/.config/homelab/chromium-google-api.env" ] && . "$HOME/.config/homelab/chromium-google-api.env"; set +a; exec chromium --kiosk --noerrdialogs --disable-infobars --autoplay-policy=no-user-gesture-required --auto-accept-camera-and-microphone-capture --use-fake-ui-for-media-stream ${GOOGLE_API_KEY:+--google-api-key=$GOOGLE_API_KEY} ${GOOGLE_DEFAULT_CLIENT_ID:+--google-default-client-id=$GOOGLE_DEFAULT_CLIENT_ID} ${GOOGLE_DEFAULT_CLIENT_SECRET:+--google-default-client-secret=$GOOGLE_DEFAULT_CLIENT_SECRET} https://assistant.home.arpa/control'
+X-GNOME-Autostart-enabled=true
+StartupNotify=false
+Terminal=false

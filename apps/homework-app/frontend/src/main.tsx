@@ -14,6 +14,14 @@ const queryClient = new QueryClient({
   },
 });
 
+// On a cast screen, refetch when the phone saves instead of reloading the page.
+if (window.top !== window.self) {
+  window.addEventListener("cast:refresh", (e) => {
+    e.preventDefault();
+    queryClient.invalidateQueries();
+  });
+}
+
 ReactDOM.createRoot(document.getElementById("root")!).render(
   <React.StrictMode>
     <QueryClientProvider client={queryClient}>

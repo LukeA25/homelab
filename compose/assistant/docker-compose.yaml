@@ -1,0 +1,18 @@
+services:
+  assistant:
+    build: ../../apps/assistant
+    container_name: assistant
+    restart: unless-stopped
+    env_file:
+      - .env
+    environment:
+      DISPLAY_TZ: ${DISPLAY_TZ:-America/Chicago}
+      TZ: ${DISPLAY_TZ:-America/Chicago}
+      HA_BASE_URL: ${HA_BASE_URL:-http://100.101.135.109:8123}
+      HOMEWORK_BASE_URL: ${HOMEWORK_BASE_URL:-http://100.101.135.109:8005}
+      DASHBOARD_BASE_URL: ${DASHBOARD_BASE_URL:-http://100.101.135.109:8004}
+    ports:
+      - "8006:8000"
+    volumes:
+      - /home/landerson/homelab:/home/landerson/homelab
+      - /var/run/docker.sock:/var/run/docker.sock

@@ -517,6 +517,9 @@ function TransactionRow({
       }}
       role="button"
       tabIndex={0}
+      data-cast-action="finance.assign"
+      data-cast-id={txn.id}
+      data-cast-label={`${title} · ${money(Math.abs(txn.amount))}`}
     >
       <div
         className="w-1 shrink-0"

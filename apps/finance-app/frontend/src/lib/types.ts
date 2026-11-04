@@ -76,9 +76,19 @@ export interface InvestmentsResponse {
   activity: InvestmentActivity[];
 }
 
+export interface PlaidItemError {
+  error_code: string;
+  error_type?: string | null;
+  error_message: string;
+  display_message?: string | null;
+}
+
 export interface Snapshot {
   connected: boolean;
   last_refreshed: string | null;
+  institution_name?: string | null;
+  needs_reconnect?: boolean;
+  plaid_error?: PlaidItemError | null;
   accounts: AccountSnapshot[];
 }
 
