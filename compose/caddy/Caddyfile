@@ -144,6 +144,8 @@ https://homework.home.arpa {
 	}
 }
 
+import /etc/caddy/private/*.caddy
+
 http://homeassistant.home.arpa {
 	reverse_proxy 100.101.135.109:8123
 }

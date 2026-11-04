@@ -7,5 +7,6 @@ services:
       - "80:80"
     volumes:
       - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - ./private:/etc/caddy/private:ro
       - /srv/appdata/caddy/data:/data
       - /srv/appdata/caddy/config:/config
