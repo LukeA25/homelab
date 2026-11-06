@@ -1,4 +1,4 @@
-import { BookOpen, Library, MessageSquareText, NotebookPen } from "lucide-react";
+import { Church, Library, MessageSquareText, NotebookPen } from "lucide-react";
 import type { TabKind } from "../lib/types";
 
 type LaunchScreenProps = {
@@ -6,9 +6,9 @@ type LaunchScreenProps = {
 };
 
 const OPTIONS = [
-  { id: "bible" as const, label: "Bible", hint: "Read Scripture", icon: BookOpen },
+  { id: "prayers" as const, label: "Prayers", hint: "Readings & fixed prayers", icon: Church },
   { id: "ask" as const, label: "Ask", hint: "Find sources", icon: MessageSquareText },
-  { id: "library" as const, label: "Library", hint: "Books & documents", icon: Library },
+  { id: "library" as const, label: "Library", hint: "Books, CCC & Bible", icon: Library },
   { id: "notes" as const, label: "Notes", hint: "Personal & study", icon: NotebookPen },
 ];
 

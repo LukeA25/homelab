@@ -1,14 +1,41 @@
-import { useEffect, useMemo, useRef, useState } from "react";
-import { Heading, Link2, MessageSquare, Plus, Quote, Type } from "lucide-react";
+import { useEffect, useMemo, useRef, useState, type ClipboardEvent } from "react";
+import {
+  Bold,
+  CheckSquare,
+  Heading,
+  Heading2,
+  Italic,
+  Link2,
+  List,
+  MessageSquare,
+  Quote,
+  Square,
+  Trash2,
+  Type,
+} from "lucide-react";
+import {
+  applyMarker,
+  isHttpUrl,
+  isLocusRef,
+  normalizeHref,
+  parseLine,
+  previewPlain,
+  serializeRef,
+  splitInlineMarks,
+  wrapAsInlineLink,
+  wrapBold,
+  wrapItalic,
+  type LineFormat,
+  WIKI_LINK_RE,
+  MD_LINK_RE,
+} from "../lib/notesFormat";
+import { workIdForLocus } from "../lib/selectionClipboard";
 import type { NoteDoc, NoteSection } from "../lib/types";
-
-type LineFormat = "text" | "header" | "quote" | "comment" | "link";
 
 type EditorLine = {
   id: string;
   format: LineFormat;
   text: string;
-  /** For link lines */
   href?: string;
 };
 
@@ -21,6 +48,7 @@ type NotesScreenProps = {
   onOpenDoc: (id: string | null) => void;
   onCreateDoc: (section: NoteSection) => void;
   onUpdateDoc: (doc: NoteDoc) => void;
+  onDeleteDoc?: (id: string) => void;
   onOpenLocus: (workId: string, locusId: string) => void;
 };
 
@@ -33,6 +61,7 @@ export function NotesScreen({
   onOpenDoc,
   onCreateDoc,
   onUpdateDoc,
+  onDeleteDoc,
   onOpenLocus,
 }: NotesScreenProps) {
   const open = docs.find((d) => d.id === openDocId) ?? null;
@@ -46,18 +75,14 @@ export function NotesScreen({
         onBack={() => onOpenDoc(null)}
         onUpdate={onUpdateDoc}
         onOpenLocus={onOpenLocus}
-        clipboardHint={clipboardHint}
       />
     );
   }
 
   return (
     <div className="pane-scroll pane-fill overscroll-contain px-5 pb-8 pt-4">
-      <div className="flex items-end justify-between gap-3">
-        <div>
-          <h1 className="font-display text-3xl font-semibold">Notes</h1>
-          <p className="mt-1 text-sm text-muted">Live-formatted text notes.</p>
-        </div>
+      <div className="flex items-center justify-between gap-3">
+        <h1 className="font-display text-3xl font-semibold">Notes</h1>
         <button
           type="button"
           onClick={() => onCreateDoc(sectionFilter === "apologetics" ? "apologetics" : "personal")}
@@ -67,15 +92,13 @@ export function NotesScreen({
         </button>
       </div>
 
-      {clipboardHint && (
-        <div className="mt-4 rounded-2xl border border-accent/40 bg-accent-soft px-4 py-3 text-sm">
-          <p className="font-medium text-accent">Copied reference</p>
-          <p className="mt-1 text-muted">{clipboardHint}</p>
-          <p className="mt-2 text-xs text-muted">Open a note, select a line, tap Link.</p>
-        </div>
-      )}
+      {clipboardHint ? (
+        <p className="mt-3 text-sm text-muted">
+          Copied {clipboardHint} — open a note and paste.
+        </p>
+      ) : null}
 
-      <div className="mt-5 flex gap-1 rounded-pill border border-border bg-bg-elevated p-1">
+      <div className="mt-4 flex flex-wrap gap-2">
         {(
           [
             ["all", "All"],
@@ -87,8 +110,10 @@ export function NotesScreen({
             key={id}
             type="button"
             onClick={() => onSectionFilter(id)}
-            className={`flex-1 rounded-pill px-3 py-1.5 text-sm font-semibold ${
-              sectionFilter === id ? "btn-accent" : "text-muted"
+            className={`rounded-pill border px-3 py-1.5 text-sm font-semibold ${
+              sectionFilter === id
+                ? "border-accent bg-accent-soft text-accent"
+                : "border-border text-muted"
             }`}
           >
             {label}
@@ -96,26 +121,89 @@ export function NotesScreen({
         ))}
       </div>
 
-      <ul className="mt-5 space-y-2">
+      <ul className="mt-4 divide-y divide-border">
         {filtered.map((d) => (
-          <li key={d.id}>
-            <button
-              type="button"
-              onClick={() => onOpenDoc(d.id)}
-              className="w-full rounded-2xl border border-border bg-surface px-4 py-4 text-left"
-            >
-              <p className="font-display text-lg font-semibold">{d.title}</p>
-              <p className="mt-1 text-sm text-muted line-clamp-2">
-                {previewPlain(d.body) || "Empty note"}
-              </p>
-              <p className="mt-2 text-[11px] font-semibold uppercase tracking-wider text-muted">
-                {d.section}
-              </p>
-            </button>
-          </li>
+          <NoteListRow
+            key={d.id}
+            doc={d}
+            onOpen={() => onOpenDoc(d.id)}
+            onDelete={
+              onDeleteDoc
+                ? () => {
+                    if (
+                      window.confirm(`Delete “${d.title || "Untitled"}”? This cannot be undone.`)
+                    ) {
+                      onDeleteDoc(d.id);
+                    }
+                  }
+                : undefined
+            }
+          />
         ))}
       </ul>
     </div>
+  );
+}
+
+function NoteListRow({
+  doc,
+  onOpen,
+  onDelete,
+}: {
+  doc: NoteDoc;
+  onOpen: () => void;
+  onDelete?: () => void;
+}) {
+  const [offset, setOffset] = useState(0);
+  const startX = useRef<number | null>(null);
+  const startOffset = useRef(0);
+
+  return (
+    <li className="relative overflow-hidden">
+      {onDelete ? (
+        <button
+          type="button"
+          onClick={onDelete}
+          className="absolute inset-y-0 right-0 flex w-20 flex-col items-center justify-center bg-red-700 text-xs font-semibold text-white"
+        >
+          Delete
+        </button>
+      ) : null}
+      <button
+        type="button"
+        onClick={() => {
+          if (offset < -40) {
+            setOffset(-80);
+            return;
+          }
+          setOffset(0);
+          onOpen();
+        }}
+        onTouchStart={(e) => {
+          if (!onDelete) return;
+          startX.current = e.touches[0]?.clientX ?? null;
+          startOffset.current = offset;
+        }}
+        onTouchMove={(e) => {
+          if (startX.current == null || !onDelete) return;
+          const x = e.touches[0]?.clientX ?? startX.current;
+          const delta = x - startX.current;
+          const next = Math.min(0, Math.max(-80, startOffset.current + delta));
+          setOffset(next);
+        }}
+        onTouchEnd={() => {
+          startX.current = null;
+          setOffset((v) => (v < -40 ? -80 : 0));
+        }}
+        className="relative z-10 w-full bg-bg py-3.5 text-left transition-transform"
+        style={{ transform: `translateX(${offset}px)` }}
+      >
+        <p className="font-display text-lg font-semibold">{doc.title}</p>
+        <p className="mt-1 line-clamp-2 text-sm text-muted">
+          {previewPlain(doc.body) || "Empty note"}
+        </p>
+      </button>
+    </li>
   );
 }
 
@@ -124,13 +212,11 @@ function NoteEditor({
   onBack,
   onUpdate,
   onOpenLocus,
-  clipboardHint,
 }: {
   doc: NoteDoc;
   onBack: () => void;
   onUpdate: (doc: NoteDoc) => void;
   onOpenLocus: (workId: string, locusId: string) => void;
-  clipboardHint?: string | null;
 }) {
   const [lines, setLines] = useState<EditorLine[]>(() => parseBody(doc.body));
   const [activeId, setActiveId] = useState<string | null>(null);
@@ -138,14 +224,17 @@ function NoteEditor({
   const [keyboardPad, setKeyboardPad] = useState(0);
   const skipSync = useRef(false);
   const inputRefs = useRef<Record<string, HTMLTextAreaElement | null>>({});
+  const selectionRefs = useRef<Record<string, { start: number; end: number }>>({});
+  const linesRef = useRef(lines);
+  const focusedRef = useRef(false);
+  const lastInsetRef = useRef(0);
+  linesRef.current = lines;
 
-  // Sync from parent when switching docs
   useEffect(() => {
     setLines(parseBody(doc.body));
     setActiveId(null);
   }, [doc.id]);
 
-  // Push local edits to parent as markdown body
   useEffect(() => {
     if (skipSync.current) {
       skipSync.current = false;
@@ -154,7 +243,7 @@ function NoteEditor({
     const body = serializeBody(lines);
     if (body === doc.body) return;
     onUpdate({ ...doc, body, updatedAt: new Date().toISOString() });
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- intentional local→parent sync
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [lines]);
 
   useEffect(() => {
@@ -163,10 +252,11 @@ function NoteEditor({
     function sync() {
       if (!window.visualViewport) return;
       const inset =
-        window.innerHeight -
-        window.visualViewport.height -
-        window.visualViewport.offsetTop;
-      setKeyboardPad(Math.max(0, inset));
+        window.innerHeight - window.visualViewport.height - window.visualViewport.offsetTop;
+      const next = Math.max(0, inset);
+      // Only dock toolbar / pad when this note editor owns focus.
+      setKeyboardPad(focusedRef.current ? next : 0);
+      lastInsetRef.current = next;
     }
     sync();
     vv.addEventListener("resize", sync);
@@ -177,10 +267,7 @@ function NoteEditor({
     };
   }, []);
 
-  const active = useMemo(
-    () => lines.find((l) => l.id === activeId) ?? null,
-    [lines, activeId],
-  );
+  const active = useMemo(() => lines.find((l) => l.id === activeId) ?? null, [lines, activeId]);
 
   function patchTitle(title: string) {
     onUpdate({ ...doc, title, updatedAt: new Date().toISOString() });
@@ -190,42 +277,119 @@ function NoteEditor({
     setLines((prev) => prev.map((l) => (l.id === id ? { ...l, ...partial } : l)));
   }
 
-  function applyFormat(format: LineFormat) {
+  function openHref(href: string) {
+    const h = href.trim();
+    if (isHttpUrl(h)) {
+      window.open(h, "_blank", "noopener,noreferrer");
+      return;
+    }
+    if (h.startsWith("studydesk://")) {
+      const rest = h.replace(/^studydesk:\/\//, "");
+      onOpenLocus(workIdForLocus(rest), rest);
+      return;
+    }
+    onOpenLocus(workIdForLocus(h), h);
+  }
+
+  function applyFormat(format: Exclude<LineFormat, "ref">) {
     const id = activeId ?? lines[lines.length - 1]?.id;
     if (!id) return;
-    setLines((prev) =>
-      prev.map((l) => {
-        if (l.id !== id) return l;
-        if (format === "link") {
-          const label =
-            clipboardHint?.split(";")[0]?.trim() ||
-            l.href ||
-            l.text ||
-            window.prompt("Reference (e.g. Ps.23.1)", "") ||
-            "";
-          if (!label.trim()) return l;
-          return {
-            ...l,
-            format: "link",
-            text: label.trim(),
-            href: label.trim(),
-          };
-        }
-        return {
-          ...l,
-          format,
-          href: undefined,
-          text: l.format === "link" ? l.text : l.text,
-        };
-      }),
-    );
+    setLines((prev) => {
+      const idx = prev.findIndex((l) => l.id === id);
+      if (idx < 0) return prev;
+      const cur = prev[idx]!;
+      if (cur.format === "ref") return prev;
+      const target = cur.format === format ? "text" : format;
+      let next = prev.map((l) =>
+        l.id === id ? { ...l, format: target, href: undefined } : l,
+      );
+      if (cur.format === "quote" && target !== "quote" && next[idx + 1]?.format === "ref") {
+        next = next.filter((_, i) => i !== idx + 1);
+      }
+      return next;
+    });
     requestAnimationFrame(() => inputRefs.current[id]?.focus());
   }
 
+  async function applyLink() {
+    const id = activeId ?? lines[lines.length - 1]?.id;
+    if (!id) return;
+    const line = lines.find((l) => l.id === id);
+    if (!line || line.format === "ref") return;
+
+    let raw = "";
+    try {
+      raw = (await navigator.clipboard.readText()).trim();
+    } catch {
+      raw = "";
+    }
+    if (!isHttpUrl(raw) && !isLocusRef(raw)) {
+      raw = (window.prompt("Paste a URL or reference") ?? "").trim();
+    }
+    if (!raw) return;
+
+    const norm = normalizeHref(raw);
+    const href = norm.href;
+    const sel = selectionRefs.current[id] ?? { start: 0, end: 0 };
+    const hasSel = sel.end > sel.start;
+    const selected = hasSel ? line.text.slice(sel.start, sel.end) : "";
+
+    if (!hasSel && !line.text.trim() && !isHttpUrl(href)) {
+      updateLine(id, {
+        format: "ref",
+        text: norm.label || href,
+        href,
+      });
+      return;
+    }
+
+    const label = selected.trim() || line.text.trim() || norm.label || href;
+    const wrapped = wrapAsInlineLink(label, href);
+
+    if (hasSel) {
+      const next =
+        line.text.slice(0, sel.start) + wrapped + line.text.slice(sel.end);
+      updateLine(id, { text: next });
+      return;
+    }
+
+    updateLine(id, { text: wrapped });
+  }
+
+  function wrapSelection(kind: "bold" | "italic") {
+    const id = activeId ?? lines[lines.length - 1]?.id;
+    if (!id) return;
+    const line = lines.find((l) => l.id === id);
+    if (!line || line.format === "ref") return;
+    const sel = selectionRefs.current[id] ?? { start: 0, end: 0 };
+    const hasSel = sel.end > sel.start;
+    const selected = hasSel ? line.text.slice(sel.start, sel.end) : line.text;
+    const wrapped = kind === "bold" ? wrapBold(selected) : wrapItalic(selected);
+    if (hasSel) {
+      updateLine(id, {
+        text: line.text.slice(0, sel.start) + wrapped + line.text.slice(sel.end),
+      });
+      return;
+    }
+    updateLine(id, { text: wrapped });
+  }
+
   function addLineAfter(id: string) {
-    const neu: EditorLine = { id: newLineId(), format: "text", text: "" };
+    const curLines = linesRef.current;
+    const idx = curLines.findIndex((l) => l.id === id);
+    const cur = idx >= 0 ? curLines[idx] : undefined;
+    let neu: EditorLine = { id: newLineId(), format: "text", text: "" };
+    if (cur?.format === "bullet") neu = { ...neu, format: "bullet" };
+    if (cur?.format === "check" || cur?.format === "checkDone") {
+      neu = { ...neu, format: "check" };
+    }
+    // Quotes exit to a blank text line below the citation, if any.
+    const insertAfterId =
+      cur?.format === "quote" && curLines[idx + 1]?.format === "ref"
+        ? curLines[idx + 1]!.id
+        : id;
     setLines((prev) => {
-      const i = prev.findIndex((l) => l.id === id);
+      const i = prev.findIndex((l) => l.id === insertAfterId);
       if (i < 0) return [...prev, neu];
       const next = [...prev];
       next.splice(i + 1, 0, neu);
@@ -242,7 +406,103 @@ function NoteEditor({
     });
   }
 
-  const showToolbar = focused || keyboardPad > 40 || !!activeId;
+  /** Quote + following citation are a pair — delete them together. */
+  function quoteRefIdsToRemove(id: string): string[] {
+    const curLines = linesRef.current;
+    const idx = curLines.findIndex((l) => l.id === id);
+    if (idx < 0) return [];
+    const cur = curLines[idx]!;
+    if (cur.format === "quote" && curLines[idx + 1]?.format === "ref") {
+      return [cur.id, curLines[idx + 1]!.id];
+    }
+    if (cur.format === "ref" && curLines[idx - 1]?.format === "quote") {
+      return [curLines[idx - 1]!.id, cur.id];
+    }
+    return [cur.id];
+  }
+
+  function removeQuoteRefBlock(id: string) {
+    const curLines = linesRef.current;
+    const removeIds = new Set(quoteRefIdsToRemove(id));
+    if (!removeIds.size) return;
+
+    const firstIdx = Math.min(
+      ...[...removeIds]
+        .map((rid) => curLines.findIndex((l) => l.id === rid))
+        .filter((i) => i >= 0),
+    );
+
+    let focusId: string | null = null;
+    for (let i = firstIdx - 1; i >= 0; i--) {
+      const cand = curLines[i];
+      if (cand && !removeIds.has(cand.id) && cand.format !== "ref") {
+        focusId = cand.id;
+        break;
+      }
+    }
+
+    setLines((prev) => {
+      const next = prev.filter((l) => !removeIds.has(l.id));
+      return next.length ? next : [{ id: newLineId(), format: "text", text: "" }];
+    });
+
+    if (focusId) {
+      setActiveId(focusId);
+      requestAnimationFrame(() => inputRefs.current[focusId!]?.focus());
+    } else {
+      setActiveId(null);
+    }
+  }
+
+  function handleBackspaceEmpty(id: string) {
+    const curLines = linesRef.current;
+    const idx = curLines.findIndex((l) => l.id === id);
+    const cur = curLines[idx];
+    if (!cur) return;
+
+    if (cur.format === "bullet" || cur.format === "check" || cur.format === "checkDone") {
+      updateLine(id, { format: "text" });
+      return;
+    }
+
+    if (cur.format === "quote" || cur.format === "ref") {
+      removeQuoteRefBlock(id);
+      return;
+    }
+
+    removeLine(id);
+    const prev = curLines[idx - 1];
+    if (prev && prev.format !== "ref") {
+      setActiveId(prev.id);
+      requestAnimationFrame(() => inputRefs.current[prev.id]?.focus());
+    } else if (prev?.format === "ref" && curLines[idx - 2]) {
+      const before = curLines[idx - 2]!;
+      setActiveId(before.id);
+      requestAnimationFrame(() => inputRefs.current[before.id]?.focus());
+    }
+  }
+
+  function pasteAtLine(id: string, raw: string) {
+    const incoming = parseBody(raw);
+    if (incoming.length <= 1 && incoming[0]?.format === "text") {
+      const cur = lines.find((l) => l.id === id);
+      updateLine(id, { text: (cur?.text ?? "") + (incoming[0]?.text ?? raw) });
+      return;
+    }
+    setLines((prev) => {
+      const i = prev.findIndex((l) => l.id === id);
+      if (i < 0) return [...prev, ...incoming];
+      const cur = prev[i]!;
+      const head = [...prev.slice(0, i)];
+      const tail = prev.slice(i + 1);
+      if (!cur.text.trim() && cur.format === "text") {
+        return [...head, ...incoming, ...tail];
+      }
+      return [...head, cur, ...incoming, ...tail];
+    });
+  }
+
+  const showToolbar = focused;
 
   return (
     <div className="relative flex h-full min-h-0 flex-col overflow-hidden">
@@ -252,13 +512,31 @@ function NoteEditor({
         </button>
         <input
           value={doc.title}
+          data-note-title="1"
           onChange={(e) => patchTitle(e.target.value)}
+          onFocus={() => {
+            focusedRef.current = true;
+            setFocused(true);
+            if (lastInsetRef.current > 0) setKeyboardPad(lastInsetRef.current);
+          }}
+          onBlur={() => {
+            window.setTimeout(() => {
+              const still = Object.values(inputRefs.current).some(
+                (el) => el === document.activeElement,
+              );
+              if (still) return;
+              focusedRef.current = false;
+              setFocused(false);
+              setKeyboardPad(0);
+            }, 180);
+          }}
           className="min-w-0 flex-1 bg-transparent font-display text-lg font-semibold outline-none"
+          placeholder="Untitled"
         />
       </div>
 
       <div
-        className="pane-scroll min-h-0 flex-1 space-y-1 overflow-y-scroll overscroll-contain px-4 py-4"
+        className="pane-scroll min-h-0 flex-1 space-y-2 overflow-y-scroll overscroll-contain px-4 py-4"
         style={{ paddingBottom: showToolbar ? 72 : 16, WebkitOverflowScrolling: "touch" }}
       >
         {lines.map((line) => (
@@ -272,38 +550,41 @@ function NoteEditor({
             onFocus={() => {
               setActiveId(line.id);
               setFocused(true);
+              focusedRef.current = true;
+              if (lastInsetRef.current > 0) setKeyboardPad(lastInsetRef.current);
             }}
             onBlur={() => {
-              window.setTimeout(() => setFocused(false), 180);
+              window.setTimeout(() => {
+                const still =
+                  Object.values(inputRefs.current).some((el) => el === document.activeElement) ||
+                  document.activeElement?.getAttribute("data-note-title") === "1";
+                if (still) return;
+                focusedRef.current = false;
+                setFocused(false);
+                setKeyboardPad(0);
+              }, 180);
             }}
             onChangeText={(text) => updateLine(line.id, { text })}
-            onEnter={() => addLineAfter(line.id)}
-            onBackspaceEmpty={() => {
-              removeLine(line.id);
-              const idx = lines.findIndex((l) => l.id === line.id);
-              const prev = lines[idx - 1];
-              if (prev) {
-                setActiveId(prev.id);
-                requestAnimationFrame(() => inputRefs.current[prev.id]?.focus());
-              }
+            onSelectionChange={(start, end) => {
+              selectionRefs.current[line.id] = { start, end };
             }}
-            onOpenLink={() => {
-              if (line.href) onOpenLocus("bible-rsvce", line.href);
+            onEnter={() => addLineAfter(line.id)}
+            onBackspaceEmpty={() => handleBackspaceEmpty(line.id)}
+            onOpenHref={openHref}
+            onToggleCheck={() => {
+              if (line.format === "check") updateLine(line.id, { format: "checkDone" });
+              else if (line.format === "checkDone") updateLine(line.id, { format: "check" });
+            }}
+            onPasteText={(raw) => pasteAtLine(line.id, raw)}
+            onRemove={() => {
+              if (line.format === "quote" || line.format === "ref") {
+                removeQuoteRefBlock(line.id);
+              } else {
+                removeLine(line.id);
+              }
             }}
           />
         ))}
-        <button
-          type="button"
-          onClick={() => {
-            const neu: EditorLine = { id: newLineId(), format: "text", text: "" };
-            setLines((prev) => [...prev, neu]);
-            setActiveId(neu.id);
-            requestAnimationFrame(() => inputRefs.current[neu.id]?.focus());
-          }}
-          className="flex items-center gap-2 py-2 text-sm text-muted"
-        >
-          <Plus className="h-4 w-4" /> New line
-        </button>
       </div>
 
       {showToolbar && (
@@ -315,36 +596,53 @@ function NoteEditor({
             className="pointer-events-auto mb-1 flex max-w-lg gap-1 overflow-x-auto rounded-pill border border-border bg-bg-elevated/95 px-1.5 py-1.5 shadow-panel backdrop-blur"
             onMouseDown={(e) => e.preventDefault()}
           >
-            <ToolBtn
-              icon={Type}
-              label="Text"
-              active={active?.format === "text"}
-              onClick={() => applyFormat("text")}
-            />
+            <ToolBtn icon={Type} active={active?.format === "text"} onClick={() => applyFormat("text")} />
             <ToolBtn
               icon={Heading}
-              label="Header"
               active={active?.format === "header"}
               onClick={() => applyFormat("header")}
             />
             <ToolBtn
+              icon={Heading2}
+              active={active?.format === "subtitle"}
+              onClick={() => applyFormat("subtitle")}
+            />
+            <ToolBtn
               icon={Quote}
-              label="Quote"
               active={active?.format === "quote"}
               onClick={() => applyFormat("quote")}
             />
             <ToolBtn
+              icon={List}
+              active={active?.format === "bullet"}
+              onClick={() => applyFormat("bullet")}
+            />
+            <ToolBtn
+              icon={active?.format === "checkDone" ? CheckSquare : Square}
+              active={active?.format === "check" || active?.format === "checkDone"}
+              onClick={() => {
+                if (active?.format === "check") applyFormat("checkDone");
+                else if (active?.format === "checkDone") applyFormat("check");
+                else applyFormat("check");
+              }}
+            />
+            <ToolBtn
               icon={MessageSquare}
-              label="Comment"
               active={active?.format === "comment"}
               onClick={() => applyFormat("comment")}
             />
-            <ToolBtn
-              icon={Link2}
-              label="Link"
-              active={active?.format === "link"}
-              onClick={() => applyFormat("link")}
-            />
+            <ToolBtn icon={Bold} onClick={() => wrapSelection("bold")} />
+            <ToolBtn icon={Italic} onClick={() => wrapSelection("italic")} />
+            <ToolBtn icon={Link2} label="Link" onClick={() => void applyLink()} />
+            {active?.format === "quote" || active?.format === "ref" ? (
+              <ToolBtn
+                icon={Trash2}
+                label="Delete"
+                onClick={() => {
+                  if (activeId) removeQuoteRefBlock(activeId);
+                }}
+              />
+            ) : null}
           </div>
         </div>
       )}
@@ -359,9 +657,13 @@ function LineRow({
   onFocus,
   onBlur,
   onChangeText,
+  onSelectionChange,
   onEnter,
   onBackspaceEmpty,
-  onOpenLink,
+  onOpenHref,
+  onToggleCheck,
+  onPasteText,
+  onRemove,
 }: {
   line: EditorLine;
   active: boolean;
@@ -369,66 +671,127 @@ function LineRow({
   onFocus: () => void;
   onBlur: () => void;
   onChangeText: (text: string) => void;
+  onSelectionChange: (start: number, end: number) => void;
   onEnter: () => void;
   onBackspaceEmpty: () => void;
-  onOpenLink: () => void;
+  onOpenHref: (href: string) => void;
+  onToggleCheck: () => void;
+  onPasteText: (raw: string) => void;
+  onRemove: () => void;
 }) {
-  const shell =
+  const localRef = useRef<HTMLTextAreaElement | null>(null);
+  const showRich = !active && splitInlineMarks(line.text).some((p) => p.kind !== "text");
+
+  useEffect(() => {
+    if (active && !showRich) localRef.current?.focus();
+  }, [active, showRich]);
+
+  function setRefs(el: HTMLTextAreaElement | null) {
+    localRef.current = el;
+    inputRef(el);
+  }
+  function handlePaste(e: ClipboardEvent<HTMLTextAreaElement>) {
+    const raw = e.clipboardData.getData("text");
+    if (
+      !raw.includes("\n") &&
+      !WIKI_LINK_RE.test(raw.trim()) &&
+      !MD_LINK_RE.test(raw.trim()) &&
+      !raw.trim().startsWith("— ")
+    ) {
+      return;
+    }
+    e.preventDefault();
+    onPasteText(raw);
+  }
+
+  if (line.format === "ref") {
+    return (
+      <div className={`flex justify-end px-1 py-0.5 ${active ? "ring-1 ring-accent/30 rounded-lg" : ""}`}>
+        <button
+          type="button"
+          title="Click to open · Delete/Backspace removes quote + link"
+          onClick={() => {
+            onFocus();
+            if (line.href) onOpenHref(line.href);
+          }}
+          onContextMenu={(e) => {
+            e.preventDefault();
+            onRemove();
+          }}
+          onKeyDown={(e) => {
+            if (e.key === "Backspace" || e.key === "Delete") {
+              e.preventDefault();
+              onRemove();
+            }
+            if (e.key === "Enter") {
+              e.preventDefault();
+              onEnter();
+            }
+          }}
+          className="text-right text-sm font-semibold text-accent underline underline-offset-2 outline-none"
+        >
+          <span className="mr-1 font-medium text-muted no-underline">—</span>
+          {line.text || line.href || "Reference"}
+        </button>
+      </div>
+    );
+  }
+
+  const textClass =
     line.format === "header"
       ? "font-display text-2xl font-semibold leading-snug"
+      : line.format === "subtitle"
+        ? "font-display text-xl font-semibold leading-snug text-text"
       : line.format === "quote"
-        ? "border-l-2 border-accent pl-3 font-reader italic text-muted"
+        ? "font-reader text-[17px] italic leading-relaxed text-text"
         : line.format === "comment"
-          ? "rounded-xl bg-bg-elevated px-3 py-2 text-sm text-muted"
-          : line.format === "link"
-            ? "font-semibold text-accent"
+          ? "text-sm text-muted"
+          : line.format === "checkDone"
+            ? "font-reader text-base leading-relaxed text-muted line-through"
             : "font-reader text-base leading-relaxed";
+
+  const shell =
+    line.format === "quote"
+      ? "rounded-r-lg border-l-4 border-accent bg-accent-soft/80 py-2.5 pl-3 pr-2"
+      : line.format === "comment"
+        ? "rounded-lg bg-bg-elevated px-3 py-2"
+        : "";
 
   return (
     <div
-      className={`rounded-xl px-1 py-0.5 transition ${active ? "ring-1 ring-accent/40" : ""}`}
+      className={`flex items-start gap-2 px-1 py-0.5 ${active ? "rounded-lg ring-1 ring-accent/30" : ""} ${shell}`}
     >
-      {line.format === "link" ? (
-        <div className="flex items-center gap-2">
-          <button
-            type="button"
-            onClick={onOpenLink}
-            className="shrink-0 text-xs font-semibold text-accent underline-offset-2 hover:underline"
-          >
-            Open
-          </button>
-          <textarea
-            ref={inputRef}
-            value={line.text}
-            rows={1}
-            onFocus={onFocus}
-            onBlur={onBlur}
-            onChange={(e) => {
-              onChangeText(e.target.value);
-              e.target.style.height = "auto";
-              e.target.style.height = `${e.target.scrollHeight}px`;
-            }}
-            onKeyDown={(e) => {
-              if (e.key === "Enter") {
-                e.preventDefault();
-                onEnter();
-              }
-              if (e.key === "Backspace" && line.text === "") {
-                e.preventDefault();
-                onBackspaceEmpty();
-              }
-            }}
-            placeholder="Reference label…"
-            className={`min-h-[1.75rem] w-full resize-none bg-transparent outline-none ${shell}`}
-          />
-        </div>
-      ) : (
+      {line.format === "bullet" ? (
+        <span className="mt-1.5 w-4 shrink-0 text-center font-semibold text-accent">•</span>
+      ) : null}
+      {line.format === "check" || line.format === "checkDone" ? (
+        <button
+          type="button"
+          onMouseDown={(e) => e.preventDefault()}
+          onClick={onToggleCheck}
+          className="mt-1.5 shrink-0 text-accent"
+          aria-label="Toggle checklist item"
+        >
+          {line.format === "checkDone" ? (
+            <CheckSquare className="h-4 w-4" />
+          ) : (
+            <Square className="h-4 w-4" />
+          )}
+        </button>
+      ) : null}
+
+      {active || !splitInlineMarks(line.text).some((p) => p.kind !== "text") ? (
         <textarea
-          ref={inputRef}
+          ref={setRefs}
           value={line.text}
           rows={1}
           onFocus={onFocus}
           onBlur={onBlur}
+          onPaste={handlePaste}
+          onSelect={(e) => {
+            const t = e.currentTarget;
+            onSelectionChange(t.selectionStart, t.selectionEnd);
+          }}
           onChange={(e) => {
             onChangeText(e.target.value);
             e.target.style.height = "auto";
@@ -447,14 +810,63 @@ function LineRow({
           placeholder={
             line.format === "header"
               ? "Heading"
+              : line.format === "subtitle"
+                ? "Subtitle"
               : line.format === "quote"
                 ? "Quote"
                 : line.format === "comment"
                   ? "Comment"
-                  : "Write…"
+                  : line.format === "bullet"
+                    ? "List item"
+                    : line.format === "check" || line.format === "checkDone"
+                      ? "To-do"
+                      : "Write…"
           }
-          className={`min-h-[1.75rem] w-full resize-none bg-transparent outline-none ${shell}`}
+          className={`min-h-[1.75rem] w-full resize-none bg-transparent outline-none ${textClass}`}
         />
+      ) : (
+        <button
+          type="button"
+          onClick={onFocus}
+          className={`min-h-[1.75rem] w-full text-left ${textClass}`}
+        >
+          {splitInlineMarks(line.text).map((part, i) => {
+            if (part.kind === "text") return <span key={i}>{part.text}</span>;
+            if (part.kind === "bold")
+              return (
+                <strong key={i} className="font-semibold">
+                  {part.text}
+                </strong>
+              );
+            if (part.kind === "italic")
+              return (
+                <em key={i} className="italic">
+                  {part.text}
+                </em>
+              );
+            return (
+              <span
+                key={i}
+                role="link"
+                tabIndex={0}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onOpenHref(part.href);
+                }}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    onOpenHref(part.href);
+                  }
+                }}
+                className="font-semibold text-accent underline underline-offset-2"
+              >
+                {part.text}
+              </span>
+            );
+          })}
+        </button>
       )}
     </div>
   );
@@ -467,7 +879,7 @@ function ToolBtn({
   active,
 }: {
   icon: typeof Type;
-  label: string;
+  label?: string;
   onClick: () => void;
   active?: boolean;
 }) {
@@ -492,45 +904,24 @@ function newLineId() {
 function parseBody(body: string): EditorLine[] {
   const raw = body.replace(/\r\n/g, "\n");
   const parts = raw.length ? raw.split("\n") : [""];
-  // drop trailing empty from final newline
   if (parts.length > 1 && parts[parts.length - 1] === "") parts.pop();
   if (parts.length === 0) parts.push("");
   return parts.map((line) => {
-    const link = line.match(/^\[([^\]]+)\]\(studydesk:\/\/([^)]+)\)$/);
-    if (link) {
-      return { id: newLineId(), format: "link" as const, text: link[1], href: link[2] };
-    }
-    if (/^#\s+/.test(line)) {
-      return { id: newLineId(), format: "header" as const, text: line.replace(/^#\s+/, "") };
-    }
-    if (/^>\s+/.test(line)) {
-      return { id: newLineId(), format: "quote" as const, text: line.replace(/^>\s+/, "") };
-    }
-    if (/^\/\/\s+/.test(line)) {
-      return { id: newLineId(), format: "comment" as const, text: line.replace(/^\/\/\s+/, "") };
-    }
-    return { id: newLineId(), format: "text" as const, text: line };
+    const parsed = parseLine(line);
+    return {
+      id: newLineId(),
+      format: parsed.format,
+      text: parsed.content,
+      href: parsed.href,
+    };
   });
 }
 
 function serializeBody(lines: EditorLine[]): string {
   return lines
     .map((l) => {
-      if (l.format === "header") return `# ${l.text}`;
-      if (l.format === "quote") return `> ${l.text}`;
-      if (l.format === "comment") return `// ${l.text}`;
-      if (l.format === "link") {
-        const href = l.href || l.text;
-        return `[${l.text || href}](studydesk://${href})`;
-      }
-      return l.text;
+      if (l.format === "ref") return serializeRef(l.href || l.text, l.text || l.href || "");
+      return applyMarker(l.format, l.text);
     })
     .join("\n");
-}
-
-function previewPlain(body: string): string {
-  return parseBody(body)
-    .map((l) => l.text)
-    .filter(Boolean)
-    .join(" · ");
 }

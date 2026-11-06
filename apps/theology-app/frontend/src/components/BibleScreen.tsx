@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, type PointerEvent as ReactPointerEvent } from "react";
+import { useEffect, useMemo, useRef, useState, type PointerEvent as ReactPointerEvent } from "react";
 import { ChevronDown } from "lucide-react";
 import {
   BIBLE_ID,
@@ -6,11 +6,14 @@ import {
   flattenBibleChapters,
   getSectionBlocks,
   getWorkSections,
+  groupBibleRuns,
   toParagraph,
+  toSectionNodes,
+  toSuperscriptDigits,
   type ApiSection,
   type ChapterRef,
 } from "../lib/api";
-import type { Bookmark, Highlight, Paragraph } from "../lib/types";
+import type { Bookmark, Highlight, Paragraph, SectionNode } from "../lib/types";
 import { Sheet } from "./Sheet";
 
 const MAX_DRAG = 52;
@@ -21,11 +24,17 @@ type BibleScreenProps = {
   sectionId: string;
   highlights: Highlight[];
   bookmarks: Bookmark[];
+  focusLocusId?: string | null;
+  focusNonce?: number;
+  readingVerseStart?: number | null;
+  readingVerseEnd?: number | null;
+  readingVerses?: number[] | null;
   onSectionChange: (sectionId: string, title?: string) => void;
-  onToggleHighlight: (paragraph: Paragraph) => void;
+  onToggleHighlights: (paragraphs: Paragraph[]) => void;
   onBookmark: (paragraphs: Paragraph[]) => void;
   onAskSplit: (paragraphs: Paragraph[]) => void;
   onCopyToNotes: (paragraphs: Paragraph[]) => void;
+  onClearReadingFocus?: () => void;
   textSize: number;
 };
 
@@ -33,41 +42,58 @@ export function BibleScreen({
   sectionId,
   highlights,
   bookmarks,
+  focusLocusId,
+  focusNonce,
+  readingVerseStart,
+  readingVerseEnd,
+  readingVerses,
   onSectionChange,
-  onToggleHighlight,
+  onToggleHighlights,
   onBookmark,
   onAskSplit,
   onCopyToNotes,
+  onClearReadingFocus,
   textSize,
 }: BibleScreenProps) {
+  const [roots, setRoots] = useState<ApiSection[]>([]);
   const [paragraphs, setParagraphs] = useState<Paragraph[]>([]);
-  const [books, setBooks] = useState<ApiSection[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [pickerOpen, setPickerOpen] = useState(false);
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(() => new Set());
+  const [readingFocusActive, setReadingFocusActive] = useState(false);
   const [dragX, setDragX] = useState(0);
   const dragXRef = useRef(0);
   const rafRef = useRef(0);
   const startX = useRef(0);
   const tracking = useRef(false);
+  const focusAppliedRef = useRef(false);
 
-  const chapters = flattenBibleChapters(books, BIBLE_ID);
-  const chapter: ChapterRef = adjacentChapter(chapters, sectionId, 0) ?? {
-    bookTitle: "Bible",
-    chapterTitle: sectionId.split("/").slice(-2).join(" "),
-    sectionId,
-    workId: BIBLE_ID,
-  };
+  const chapters = useMemo(() => flattenBibleChapters(roots), [roots]);
+  const books = useMemo(() => toSectionNodes(roots), [roots]);
+  const chapter: ChapterRef = useMemo(() => {
+    return (
+      chapters.find((c) => c.sectionId === sectionId) ?? {
+        workId: BIBLE_ID,
+        sectionId,
+        bookTitle: "Bible",
+        chapterTitle: sectionId.split("/").slice(-2).join(" "),
+      }
+    );
+  }, [chapters, sectionId]);
   const prev = adjacentChapter(chapters, sectionId, -1);
   const next = adjacentChapter(chapters, sectionId, 1);
 
   useEffect(() => {
     let cancelled = false;
-    getWorkSections(BIBLE_ID)
-      .then((tree) => {
-        if (!cancelled) setBooks(tree);
-      })
-      .catch(() => {
-        if (!cancelled) setBooks([]);
-      });
+    void (async () => {
+      try {
+        const tree = await getWorkSections(BIBLE_ID);
+        if (!cancelled) setRoots(tree);
+      } catch (err) {
+        if (!cancelled) setError(err instanceof Error ? err.message : String(err));
+      }
+    })();
     return () => {
       cancelled = true;
     };
@@ -75,18 +101,71 @@ export function BibleScreen({
 
   useEffect(() => {
     let cancelled = false;
-    setParagraphs([]);
-    getSectionBlocks(sectionId)
-      .then((rows) => {
-        if (!cancelled) setParagraphs(rows.map(toParagraph));
-      })
-      .catch(() => {
-        if (!cancelled) setParagraphs([]);
-      });
+    setLoading(true);
+    setError(null);
+    focusAppliedRef.current = false;
+    void (async () => {
+      try {
+        const blocks = await getSectionBlocks(sectionId);
+        if (!cancelled) {
+          setParagraphs(blocks.map(toParagraph));
+          setLoading(false);
+        }
+      } catch (err) {
+        if (!cancelled) {
+          setParagraphs([]);
+          setError(err instanceof Error ? err.message : String(err));
+          setLoading(false);
+        }
+      }
+    })();
     return () => {
       cancelled = true;
     };
   }, [sectionId]);
+
+  useEffect(() => {
+    setSelectedIds(new Set());
+    setReadingFocusActive(false);
+    focusAppliedRef.current = false;
+    dragXRef.current = 0;
+    setDragX(0);
+    tracking.current = false;
+  }, [sectionId]);
+
+  useEffect(() => {
+    focusAppliedRef.current = false;
+  }, [focusLocusId, readingVerseStart, readingVerseEnd, readingVerses]);
+
+  useEffect(() => {
+    if (loading || !paragraphs.length) return;
+    if (!focusLocusId && readingVerseStart == null && !readingVerses?.length) return;
+    if (focusAppliedRef.current) return;
+    focusAppliedRef.current = true;
+
+    setReadingFocusActive(true);
+    const focusTimer = window.setTimeout(() => setReadingFocusActive(false), 8000);
+
+    requestAnimationFrame(() => {
+      if (focusLocusId) {
+        const el = document.querySelector(`[data-locus-id="${CSS.escape(focusLocusId)}"]`);
+        el?.scrollIntoView({ behavior: "smooth", block: "center" });
+      }
+      onClearReadingFocus?.();
+    });
+
+    return () => window.clearTimeout(focusTimer);
+  }, [
+    loading,
+    paragraphs,
+    sectionId,
+    focusLocusId,
+    focusNonce,
+    readingVerseStart,
+    readingVerseEnd,
+    readingVerses,
+    onClearReadingFocus,
+  ]);
 
   const hlSet = new Set(
     highlights.filter((h) => h.workId === BIBLE_ID).map((h) => h.paragraphId),
@@ -94,13 +173,27 @@ export function BibleScreen({
   const bmSet = new Set(
     bookmarks.filter((b) => b.workId === BIBLE_ID).map((b) => b.paragraphId),
   );
-  const selectedParas = paragraphs.filter((p) => hlSet.has(p.id));
+  const selectedParas = paragraphs.filter((p) => selectedIds.has(p.id));
+  const runs = useMemo(() => groupBibleRuns(paragraphs), [paragraphs]);
 
-  useEffect(() => {
-    dragXRef.current = 0;
-    setDragX(0);
-    tracking.current = false;
-  }, [sectionId]);
+  function toggleSelect(id: string) {
+    setReadingFocusActive(false);
+    setSelectedIds((prev) => {
+      const nextSet = new Set(prev);
+      if (nextSet.has(id)) nextSet.delete(id);
+      else nextSet.add(id);
+      return nextSet;
+    });
+  }
+
+  function verseInReadingFocus(p: Paragraph): boolean {
+    if (!readingFocusActive) return false;
+    if (focusLocusId && p.locusId === focusLocusId) return true;
+    if (p.verse != null && readingVerses?.length) return readingVerses.includes(p.verse);
+    if (readingVerseStart == null || p.verse == null) return false;
+    const end = readingVerseEnd ?? readingVerseStart;
+    return p.verse >= readingVerseStart && p.verse <= end;
+  }
 
   function scheduleDrag(x: number) {
     dragXRef.current = x;
@@ -186,7 +279,6 @@ export function BibleScreen({
         </div>
       )}
 
-      {/* Edge chapter swipe only — leaves center free for vertical scroll */}
       <div
         className="absolute inset-y-0 left-0 z-20"
         style={{ width: EDGE, touchAction: "none" }}
@@ -214,49 +306,80 @@ export function BibleScreen({
         <p className="mb-5 text-center text-xs font-semibold uppercase tracking-[0.16em] text-muted">
           {chapter.bookTitle}
         </p>
-        <article className="reader-prose mx-auto max-w-xl">
-          {paragraphs.map((p) => {
-            const highlighted = hlSet.has(p.id);
-            const bookmarked = bmSet.has(p.id);
-            return (
-              // div not button: iOS blocks scroll gestures that start on <button>
-              <div
-                key={p.id}
-                role="button"
-                tabIndex={0}
-                onClick={() => onToggleHighlight(p)}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter" || e.key === " ") {
-                    e.preventDefault();
-                    onToggleHighlight(p);
-                  }
-                }}
-                className={`mb-1 w-full cursor-pointer rounded-lg px-2 py-1.5 text-left ${
-                  highlighted ? "bg-accent-soft" : ""
-                }`}
-              >
-                {p.kind === "heading" ? null : (
-                  <sup className="mr-1.5 align-super font-body text-[0.7em] font-semibold text-muted">
-                    {p.verse ?? p.label}
-                  </sup>
-                )}
-                <span className={bookmarked ? "verse-underline" : undefined}>{p.text}</span>
-              </div>
-            );
-          })}
-        </article>
+        {error ? (
+          <p className="mx-auto max-w-xl text-sm text-muted">Could not load chapter: {error}</p>
+        ) : loading ? (
+          <p className="mx-auto max-w-xl text-sm text-muted">Loading…</p>
+        ) : (
+          <article className="reader-prose mx-auto max-w-xl">
+            {runs.map((run) => {
+              if (run.type === "heading") {
+                return (
+                  <h3
+                    key={run.paragraph.id}
+                    className="mb-3 mt-6 font-display text-lg font-semibold text-text first:mt-0"
+                  >
+                    {run.paragraph.text}
+                  </h3>
+                );
+              }
+              return (
+                <p key={run.verses[0]?.id} className="bible-para">
+                  {run.verses.map((p, i) => {
+                    const highlighted = hlSet.has(p.id);
+                    const selected = selectedIds.has(p.id);
+                    const bookmarked = bmSet.has(p.id);
+                    const readingFocus = verseInReadingFocus(p);
+                    const num = toSuperscriptDigits(p.verse ?? p.label);
+                    const classes = [
+                      "verse-run",
+                      highlighted ? "is-highlighted" : "",
+                      selected ? "is-selected" : "",
+                      readingFocus ? "is-reading-focus" : "",
+                    ]
+                      .filter(Boolean)
+                      .join(" ");
+                    return (
+                      <span
+                        key={p.id}
+                        role="button"
+                        tabIndex={0}
+                        data-locus-id={p.locusId}
+                        data-verse={p.verse ?? ""}
+                        onClick={() => toggleSelect(p.id)}
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter" || e.key === " ") {
+                            e.preventDefault();
+                            toggleSelect(p.id);
+                          }
+                        }}
+                        className={classes}
+                      >
+                        <span className="verse-num">{num}</span>
+                        <span className={bookmarked ? "verse-underline" : undefined}>
+                          {p.text}
+                        </span>
+                        {i < run.verses.length - 1 ? " " : null}
+                      </span>
+                    );
+                  })}
+                </p>
+              );
+            })}
+          </article>
+        )}
       </div>
 
-      {selectedParas.length > 0 && (
+      {selectedIds.size > 0 && (
         <div className="pointer-events-none absolute inset-x-0 bottom-3 z-40 flex justify-center px-3">
           <div className="pointer-events-auto flex items-center gap-1 rounded-pill border border-border bg-bg-elevated px-2 py-2 shadow-panel">
-            <span className="px-2 text-xs font-semibold text-muted">{selectedParas.length}</span>
+            <span className="px-2 text-xs font-semibold text-muted">{selectedIds.size}</span>
             <button
               type="button"
               onClick={() => onCopyToNotes(selectedParas)}
               className="rounded-pill px-3 py-2 text-sm font-medium hover:bg-surface"
             >
-              Add note
+              Copy
             </button>
             <button
               type="button"
@@ -267,7 +390,19 @@ export function BibleScreen({
             </button>
             <button
               type="button"
-              onClick={() => onBookmark(selectedParas)}
+              onClick={() => {
+                onToggleHighlights(selectedParas);
+              }}
+              className="rounded-pill px-3 py-2 text-sm font-medium hover:bg-surface"
+            >
+              Highlight
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                onBookmark(selectedParas);
+                setSelectedIds(new Set());
+              }}
               className="rounded-pill px-3 py-2 text-sm font-medium hover:bg-surface"
             >
               Bookmark
@@ -281,8 +416,8 @@ export function BibleScreen({
         books={books}
         currentSectionId={sectionId}
         onClose={() => setPickerOpen(false)}
-        onPick={(id) => {
-          onSectionChange(id, chapters.find((c) => c.sectionId === id)?.chapterTitle);
+        onPick={(id, title) => {
+          onSectionChange(id, title);
           setPickerOpen(false);
         }}
       />
@@ -291,8 +426,7 @@ export function BibleScreen({
 }
 
 function shortChapterLabel(title: string) {
-  const match = title.match(/(\d+)\s*$/);
-  return match ? match[1] : title;
+  return title.replace(/^(Psalms?|Genesis|Exodus|Matthew|John|Romans|Revelation)\s+/i, "");
 }
 
 function BookPicker({
@@ -303,10 +437,10 @@ function BookPicker({
   onPick,
 }: {
   open: boolean;
-  books: ApiSection[];
+  books: SectionNode[];
   currentSectionId: string;
   onClose: () => void;
-  onPick: (sectionId: string) => void;
+  onPick: (sectionId: string, title: string) => void;
 }) {
   const [bookId, setBookId] = useState<string | null>(null);
 
@@ -347,7 +481,7 @@ function BookPicker({
                 <button
                   key={ch.id}
                   type="button"
-                  onClick={() => onPick(ch.id)}
+                  onClick={() => onPick(ch.id, ch.title)}
                   className={`rounded-2xl px-2 py-3 text-sm font-semibold ${
                     on ? "btn-accent" : "border border-border bg-surface"
                   }`}
