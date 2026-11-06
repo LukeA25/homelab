@@ -56,7 +56,7 @@ function HomeDashboard() {
 
   return (
     <div className="h-full dash:overflow-hidden">
-      <div className="mx-auto flex max-w-lg flex-col gap-5 px-4 py-5 pb-[calc(1.25rem+env(safe-area-inset-bottom))] dash:hidden">
+      <div className="mx-auto flex max-w-lg flex-col gap-5 px-4 pt-[calc(1.25rem+env(safe-area-inset-top))] pb-[calc(1.25rem+env(safe-area-inset-bottom))] dash:hidden">
         <Header weather={weather ?? null} tz={tz} />
         <ServicesGrid groups={groups} compact fill={false} />
         <HomeworkPanel data={homework} />
@@ -64,7 +64,7 @@ function HomeDashboard() {
       </div>
 
       <div className="hidden h-full overflow-hidden dash:block">
-        <div className="mx-auto flex h-full max-w-[1280px] flex-col gap-3 overflow-hidden px-5 py-3 lg:px-6">
+        <div className="mx-auto flex h-full max-w-[1280px] flex-col gap-3 overflow-hidden px-5 pt-[calc(0.75rem+env(safe-area-inset-top))] pb-3 lg:px-6">
           <Header weather={weather ?? null} tz={tz} />
           <div className="grid min-h-0 flex-1 grid-cols-12 gap-4 overflow-hidden">
             <div className="col-span-8 grid min-h-0 grid-rows-[auto_1fr] gap-3 overflow-hidden">

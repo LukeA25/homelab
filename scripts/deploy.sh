@@ -22,6 +22,7 @@ declare -A STACKS=(
   [theology-app]=compose/theology-app
   [homework-app]=compose/homework-app
   [homeassistant]=compose/homeassistant
+  [notify]=compose/notify
 )
 
 declare -A PATH_PREFIXES=(
@@ -36,6 +37,7 @@ declare -A PATH_PREFIXES=(
   [theology-app]=compose/theology-app/
   [homework-app]=compose/homework-app/
   [homeassistant]=compose/homeassistant/
+  [notify]=compose/notify/
 )
 
 DASHBOARD_PREFIX=apps/dashboard/
@@ -43,6 +45,7 @@ FINANCE_APP_PREFIX=apps/finance-app/
 GUITAR_APP_PREFIX=apps/guitar-app/
 THEOLOGY_APP_PREFIX=apps/theology-app/
 HOMEWORK_APP_PREFIX=apps/homework-app/
+NOTIFY_PREFIX=apps/notify/
 
 matches_stack() {
   local stack="$1"
@@ -73,6 +76,10 @@ matches_stack() {
     return 0
   fi
 
+  if [[ "$stack" == "notify" && "$file" == "$NOTIFY_PREFIX"* ]]; then
+    return 0
+  fi
+
   return 1
 }
 
@@ -80,7 +87,7 @@ declare -a TO_DEPLOY=()
 
 if [[ "$BEFORE" == "0000000000000000000000000000000000000000" ]]; then
   echo "Initial push or unknown base commit — deploying all stacks."
-  TO_DEPLOY=(caddy dashboard pihole jellyfin portainer uptime-kuma finance-app guitar-app theology-app homework-app homeassistant)
+  TO_DEPLOY=(caddy dashboard pihole jellyfin portainer uptime-kuma finance-app guitar-app theology-app homework-app homeassistant notify)
 else
   mapfile -t CHANGED < <(git diff --name-only "$BEFORE" "$AFTER")
 
@@ -113,7 +120,7 @@ deploy_stack() {
   cd "$REPO_ROOT/$dir"
 
   case "$stack" in
-    dashboard|finance-app|guitar-app|theology-app|homework-app)
+    dashboard|finance-app|guitar-app|theology-app|homework-app|notify)
       docker compose up -d --build --remove-orphans
       ;;
     *)

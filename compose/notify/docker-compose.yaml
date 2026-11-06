@@ -1,0 +1,15 @@
+services:
+  notify:
+    build: ../../apps/notify
+    container_name: notify
+    restart: unless-stopped
+    env_file:
+      - .env
+    environment:
+      TZ: ${DISPLAY_TZ:-America/Chicago}
+      NOTIFY_DB: /data/notify.db
+      NOTIFY_VAPID: /data/vapid.json
+    ports:
+      - "8008:8000"
+    volumes:
+      - /srv/appdata/notify:/data

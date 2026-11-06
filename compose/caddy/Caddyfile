@@ -21,11 +21,33 @@
 	}
 }
 
+# The iPhone has to trust this before https://*.home.arpa will load.
+(local_ca) {
+	handle /caddy-root.crt {
+		root * /data/caddy/pki/authorities/local
+		rewrite * /root.crt
+		header Content-Type application/x-x509-ca-cert
+		header Content-Disposition "attachment; filename=caddy-root.crt"
+		file_server
+	}
+}
+
 # Cast API + phone script live on the dashboard; every app host forwards them
 # so the phone's cast requests stay same-origin.
 (cast) {
 	handle /__cast/* {
 		reverse_proxy 100.101.135.109:8004
+	}
+}
+
+# Phone notifications. Forwarded onto each app so a subscription belongs to
+# that app. Sending stays on :8008 and is not exposed through this path.
+(notify) {
+	handle /__notify/* {
+		reverse_proxy 100.101.135.109:8008
+	}
+	handle /manifest.webmanifest {
+		reverse_proxy 100.101.135.109:8008
 	}
 }
 
@@ -48,6 +70,8 @@
 		reverse_proxy 100.101.135.109:8004
 	}
 
+	import notify
+
 	handle {
 		reverse_proxy 100.101.135.109:8006
 	}
@@ -56,12 +80,19 @@
 http://homepage.home.arpa,
 http://homelab.tail47f19f.ts.net,
 http://100.101.135.109 {
-	reverse_proxy 100.101.135.109:8004
+	import local_ca
+	import notify
+	handle {
+		reverse_proxy 100.101.135.109:8004
+	}
 }
 
 https://homepage.home.arpa {
 	import local_https
-	reverse_proxy 100.101.135.109:8004
+	import notify
+	handle {
+		reverse_proxy 100.101.135.109:8004
+	}
 }
 
 http://kuma.home.arpa {
@@ -86,6 +117,7 @@ http://portainer.home.arpa {
 
 http://finance.home.arpa {
 	import cast
+	import notify
 	handle {
 		reverse_proxy 100.101.135.109:8000
 	}
@@ -94,6 +126,7 @@ http://finance.home.arpa {
 https://finance.home.arpa {
 	import local_https
 	import cast
+	import notify
 	handle {
 		reverse_proxy 100.101.135.109:8000
 	}
@@ -101,6 +134,7 @@ https://finance.home.arpa {
 
 http://guitar.home.arpa {
 	import cast
+	import notify
 	handle {
 		reverse_proxy 100.101.135.109:8001
 	}
@@ -109,6 +143,7 @@ http://guitar.home.arpa {
 https://guitar.home.arpa {
 	import local_https
 	import cast
+	import notify
 	handle {
 		reverse_proxy 100.101.135.109:8001
 	}
@@ -116,6 +151,7 @@ https://guitar.home.arpa {
 
 http://theology.home.arpa {
 	import cast
+	import notify
 	handle {
 		reverse_proxy 100.101.135.109:8002
 	}
@@ -124,6 +160,7 @@ http://theology.home.arpa {
 https://theology.home.arpa {
 	import local_https
 	import cast
+	import notify
 	handle {
 		reverse_proxy 100.101.135.109:8002
 	}
@@ -131,6 +168,7 @@ https://theology.home.arpa {
 
 http://homework.home.arpa {
 	import cast
+	import notify
 	handle {
 		reverse_proxy 100.101.135.109:8005
 	}
@@ -139,9 +177,19 @@ http://homework.home.arpa {
 https://homework.home.arpa {
 	import local_https
 	import cast
+	import notify
 	handle {
 		reverse_proxy 100.101.135.109:8005
 	}
+}
+
+http://notify.home.arpa {
+	reverse_proxy 100.101.135.109:8008
+}
+
+https://notify.home.arpa {
+	import local_https
+	reverse_proxy 100.101.135.109:8008
 }
 
 import /etc/caddy/private/*.caddy

@@ -120,7 +120,7 @@ export default function App() {
 
   return (
     <div className="min-h-full">
-      <div className="mx-auto flex min-h-full max-w-2xl flex-col gap-4 px-4 py-5 pb-[calc(6rem+env(safe-area-inset-bottom))]">
+      <div className="mx-auto flex min-h-full max-w-2xl flex-col gap-4 px-4 pt-[calc(1.25rem+env(safe-area-inset-top))] pb-[calc(6rem+env(safe-area-inset-bottom))]">
         <header className="flex items-start justify-between gap-3">
           <div>
             <div className="flex items-center gap-2">
