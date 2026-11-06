@@ -4,7 +4,7 @@
 
 export type NoteSection = "personal" | "apologetics";
 
-export type TabKind = "bible" | "library" | "ask" | "notes" | "reader";
+export type TabKind = "prayers" | "bible" | "library" | "ask" | "notes" | "reader";
 
 export type WorkspaceTab = {
   id: string;
@@ -14,14 +14,26 @@ export type WorkspaceTab = {
   libraryWorkId?: string | null;
   readerWorkId?: string;
   readerSectionId?: string;
+  /** One-shot scroll/highlight when opening the Bible */
+  focusLocusId?: string | null;
+  focusNonce?: number;
+  readingVerseStart?: number | null;
+  readingVerseEnd?: number | null;
+  readingVerses?: number[] | null;
+  /** One-shot scroll/highlight when opening reader from bookmark */
+  readerFocusLocusId?: string | null;
+  readerFocusNonce?: number;
   /** notes: null = list view; string = open document */
   notesDocId?: string | null;
   askSeed?: string;
+  askThreadId?: string | null;
+  /** prayers hub: null = index; readings | prayer id */
+  prayersView?: string | null;
 };
 
 export type WorkspaceLayout =
   | { mode: "single"; focusId: string }
-  | { mode: "split"; leftId: string; rightId: string; ratio: number };
+  | { mode: "split"; leftId: string; rightId: string | null; ratio: number };
 
 export type WorkKind = "bible" | "catechism" | "summa" | "book" | "fathers";
 
@@ -52,6 +64,7 @@ export type Paragraph = {
   label: string;
   verse?: number;
   text: string;
+  kind?: string;
 };
 
 export type ReadingPosition = {
@@ -73,6 +86,8 @@ export type Highlight = {
 export type Bookmark = {
   id: string;
   workId: string;
+  scope?: string;
+  sectionId?: string;
   paragraphId: string;
   locusId: string;
   label: string;
@@ -117,6 +132,52 @@ export type AskResponse = {
   resources: AskResourceCard[];
   citations: AskCitation[];
   bullets: string[];
+  recommendations?: AskRecommendation[];
+  actionsTaken?: AskActionTaken[];
+  pendingActions?: AskPendingAction[];
+  threadId?: string | null;
+};
+
+export type AskRecommendation = {
+  catalogId: string;
+  title: string;
+  author: string;
+  inLibrary: boolean;
+  workId?: string | null;
+  reason: string;
+  sectionId?: string | null;
+  sectionTitle?: string | null;
+};
+
+export type AskActionTaken = {
+  type: string;
+  noteId?: string | null;
+  title?: string | null;
+  message: string;
+};
+
+export type AskPendingAction = {
+  type: string;
+  noteId?: string | null;
+  title?: string | null;
+  section?: string | null;
+  message: string;
+};
+
+export type AskThread = {
+  id: string;
+  title: string;
+  createdAt: string;
+  updatedAt: string;
+};
+
+export type AskChatMessage = {
+  id: string;
+  threadId: string;
+  role: "user" | "assistant" | string;
+  content: string;
+  response?: AskResponse | null;
+  createdAt: string;
 };
 
 export type AskMessage = {
@@ -125,6 +186,48 @@ export type AskMessage = {
   content: string;
   response?: AskResponse;
   createdAt: string;
+};
+
+export type PrayerItem = {
+  id: string;
+  title: string;
+  subtitle: string;
+  kind: string;
+  sort: number;
+  body?: string | null;
+};
+
+export type CatalogWork = {
+  id: string;
+  title: string;
+  author: string;
+  category: string;
+  topics: string[];
+  summary: string;
+  sourceUrl?: string | null;
+  rights: string;
+  rightsHint: string;
+  inLibrary: boolean;
+  workId?: string | null;
+  downloadable?: boolean;
+};
+
+export type ReadingsDay = {
+  date: string;
+  celebration: string;
+  season: string;
+  source: string;
+  error?: string | null;
+  readings: Array<{
+    type: string;
+    reference: string;
+    label: string;
+    sectionId?: string | null;
+    focusLocusId?: string | null;
+    verseStart?: number | null;
+    verseEnd?: number | null;
+    verses?: number[];
+  }>;
 };
 
 export type SearchResultKind = "scripture" | "book" | "note" | "topic";

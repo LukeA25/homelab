@@ -4,6 +4,7 @@ type NotesBodyViewProps = {
   body: string;
   onOpenHref?: (href: string) => void;
   inverted?: boolean;
+  /** `chat` = ChatGPT-like scannable layout; default keeps note-reader styling. */
   variant?: "note" | "chat";
 };
 

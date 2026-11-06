@@ -70,6 +70,60 @@ textarea {
   line-height: 1.8;
 }
 
+.bible-para {
+  margin: 0 0 1.1em;
+  text-align: left;
+  hyphens: auto;
+}
+
+.verse-run {
+  border-radius: 3px;
+  cursor: pointer;
+  box-decoration-break: clone;
+  -webkit-box-decoration-break: clone;
+}
+
+.verse-run:hover {
+  background: color-mix(in srgb, var(--accent-soft) 55%, transparent);
+}
+
+.verse-run.is-highlighted,
+.reader-para.is-highlighted {
+  background: var(--highlight);
+}
+
+.verse-run.is-selected,
+.reader-para.is-selected {
+  outline: 2px solid color-mix(in srgb, var(--accent) 65%, transparent);
+  outline-offset: 2px;
+}
+
+.verse-run.is-reading-focus,
+.reader-para.is-reading-focus {
+  background: rgba(212, 168, 75, 0.28);
+  animation: reading-focus-pulse 2s ease-in-out 3;
+}
+
+@keyframes reading-focus-pulse {
+  0%,
+  100% {
+    background: rgba(212, 168, 75, 0.22);
+  }
+  50% {
+    background: rgba(212, 168, 75, 0.42);
+  }
+}
+
+.verse-num {
+  font-family: "Figtree", system-ui, sans-serif;
+  font-size: 0.85em;
+  font-weight: 600;
+  color: var(--muted);
+  margin-right: 0.1em;
+  user-select: none;
+  white-space: nowrap;
+}
+
 .verse-underline {
   text-decoration: underline;
   text-decoration-color: var(--accent);
