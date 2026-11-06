@@ -249,7 +249,8 @@ textarea {
   overflow-y: scroll;
 }
 
-.pane-scroll [role="button"] {
+.pane-scroll [role="button"],
+.pane-scroll button {
   touch-action: pan-y;
   -webkit-user-select: none;
   user-select: none;
