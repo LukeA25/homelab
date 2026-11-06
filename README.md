@@ -374,3 +374,7 @@ README-only or unrelated changes skip deploy. The logic lives in `scripts/deploy
 ## Network
 
 Services use the `home.arpa` special-use domain. Pi-hole maps each subdomain to the Tailscale IP (`100.101.135.109`). Access is via Tailscale; Caddy reverse-proxy upstreams also target that Tailscale IP.
+
+## Learning app (first iteration)
+
+[Learning Grove](apps/learning-app/README.md) provides scoped learning paths, directional concept maps, a quiet idea inbox, and a reviewable ChatGPT prompt/JSON recap loop. It uses FastAPI, SQLite, and React/Vite, with a Docker Compose stack at `compose/learning-app` (port 8009; `learning.home.arpa` after deployment). AI advising and automatic integrations are future work.

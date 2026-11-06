@@ -1,0 +1,11 @@
+services:
+  learning-app:
+    build: ../../apps/learning-app
+    container_name: learning-app
+    restart: unless-stopped
+    environment:
+      LEARNING_DB: /data/learning.db
+    ports:
+      - "8009:8000"
+    volumes:
+      - /srv/appdata/learning-app:/data

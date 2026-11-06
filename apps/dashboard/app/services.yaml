@@ -30,6 +30,11 @@
       icon: graduation
       health: http://100.101.135.109:8005/api/health
       description: Assignment tracker
+    - name: Learning
+      href: http://learning.home.arpa
+      icon: graduation
+      health: http://100.101.135.109:8009/api/health
+      description: Learning paths and concept notes
 
 - group: Homelab
   services:

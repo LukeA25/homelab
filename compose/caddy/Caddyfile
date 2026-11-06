@@ -206,3 +206,13 @@ https://assistant.home.arpa {
 	import local_https
 	import assistant_host
 }
+
+# Personal learning companion
+http://learning.home.arpa {
+	reverse_proxy 100.101.135.109:8009
+}
+
+https://learning.home.arpa {
+	import local_https
+	reverse_proxy 100.101.135.109:8009
+}
