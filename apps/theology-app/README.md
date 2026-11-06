@@ -1,28 +1,23 @@
 # Study Desk — theology app
 
-## Packages
+Web app in the same shape as the other homelab apps: a Vite frontend and a FastAPI `app/` package, served together from one container.
 
 | Path | Role |
 |------|------|
-| [`frontend/`](frontend/) | React + Vite web UI (desktop / Safari fallback) |
-| [`mobile/`](mobile/) | Expo / React Native iPad client (native scroll) |
+| [`frontend/`](frontend/) | React + Vite UI |
+| [`app/`](app/) | FastAPI library, Bible, notes, and Ask API |
+| [`Dockerfile`](Dockerfile) | Builds the UI, then serves it and `/api` on port 8000 |
 
-## Run web
-
-```bash
-cd frontend && npm install && npm run dev -- --host 0.0.0.0 --port 5175
-```
-
-## Run mobile (Expo Go)
+Compose: `compose/theology-app` → `theology.home.arpa` on port 8002.
 
 ```bash
-cd mobile && npm install && npm start
+cd compose/theology-app && docker compose up -d --build
 ```
 
-See [`mobile/README.md`](mobile/README.md) for Expo Go, Metro systemd, free Xcode sideload, and ATS notes.
+Local UI (proxies `/api` to `127.0.0.1:8002`):
 
-## Homelab
+```bash
+cd frontend && npm install && npm run dev
+```
 
-- Web: Vite `:5175`
-- Metro: `:8081`
-- Future API: `theology.home.arpa` → `:8002` (Caddy entry already reserved)
+The Expo client under [`mobile/`](mobile/) is optional and still talks to `http://theology.home.arpa`.

@@ -52,6 +52,34 @@ export type Paragraph = {
   label: string;
   verse?: number;
   text: string;
+  kind?: string;
+};
+
+export type PrayerItem = {
+  id: string;
+  title: string;
+  subtitle: string;
+  kind: string;
+  sort: number;
+  body?: string | null;
+};
+
+export type ReadingsDay = {
+  date: string;
+  celebration: string;
+  season: string;
+  source: string;
+  error?: string | null;
+  readings: Array<{
+    type: string;
+    reference: string;
+    label: string;
+    sectionId?: string | null;
+    focusLocusId?: string | null;
+    verseStart?: number | null;
+    verseEnd?: number | null;
+    verses?: number[];
+  }>;
 };
 
 export type ReadingPosition = {

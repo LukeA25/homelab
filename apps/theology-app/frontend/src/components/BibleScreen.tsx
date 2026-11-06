@@ -2,11 +2,14 @@ import { useEffect, useRef, useState, type PointerEvent as ReactPointerEvent } f
 import { ChevronDown } from "lucide-react";
 import {
   BIBLE_ID,
-  PARAGRAPHS,
-  SECTIONS,
   adjacentChapter,
-  sectionTitle,
-} from "../lib/mockData";
+  flattenBibleChapters,
+  getSectionBlocks,
+  getWorkSections,
+  toParagraph,
+  type ApiSection,
+  type ChapterRef,
+} from "../lib/api";
 import type { Bookmark, Highlight, Paragraph } from "../lib/types";
 import { Sheet } from "./Sheet";
 
@@ -18,8 +21,8 @@ type BibleScreenProps = {
   sectionId: string;
   highlights: Highlight[];
   bookmarks: Bookmark[];
-  onSectionChange: (sectionId: string) => void;
-  onToggleHighlight: (paragraphId: string) => void;
+  onSectionChange: (sectionId: string, title?: string) => void;
+  onToggleHighlight: (paragraph: Paragraph) => void;
   onBookmark: (paragraphs: Paragraph[]) => void;
   onAskSplit: (paragraphs: Paragraph[]) => void;
   onCopyToNotes: (paragraphs: Paragraph[]) => void;
@@ -37,7 +40,8 @@ export function BibleScreen({
   onCopyToNotes,
   textSize,
 }: BibleScreenProps) {
-  const paragraphs = PARAGRAPHS[sectionId] ?? [];
+  const [paragraphs, setParagraphs] = useState<Paragraph[]>([]);
+  const [books, setBooks] = useState<ApiSection[]>([]);
   const [pickerOpen, setPickerOpen] = useState(false);
   const [dragX, setDragX] = useState(0);
   const dragXRef = useRef(0);
@@ -45,14 +49,44 @@ export function BibleScreen({
   const startX = useRef(0);
   const tracking = useRef(false);
 
-  const chapter = adjacentChapter(sectionId, 0) ?? {
+  const chapters = flattenBibleChapters(books, BIBLE_ID);
+  const chapter: ChapterRef = adjacentChapter(chapters, sectionId, 0) ?? {
     bookTitle: "Bible",
-    chapterTitle: sectionTitle(BIBLE_ID, sectionId),
+    chapterTitle: sectionId.split("/").slice(-2).join(" "),
     sectionId,
     workId: BIBLE_ID,
   };
-  const prev = adjacentChapter(sectionId, -1);
-  const next = adjacentChapter(sectionId, 1);
+  const prev = adjacentChapter(chapters, sectionId, -1);
+  const next = adjacentChapter(chapters, sectionId, 1);
+
+  useEffect(() => {
+    let cancelled = false;
+    getWorkSections(BIBLE_ID)
+      .then((tree) => {
+        if (!cancelled) setBooks(tree);
+      })
+      .catch(() => {
+        if (!cancelled) setBooks([]);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  useEffect(() => {
+    let cancelled = false;
+    setParagraphs([]);
+    getSectionBlocks(sectionId)
+      .then((rows) => {
+        if (!cancelled) setParagraphs(rows.map(toParagraph));
+      })
+      .catch(() => {
+        if (!cancelled) setParagraphs([]);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [sectionId]);
 
   const hlSet = new Set(
     highlights.filter((h) => h.workId === BIBLE_ID).map((h) => h.paragraphId),
@@ -103,11 +137,11 @@ export function BibleScreen({
     tracking.current = false;
     const dx = dragXRef.current;
     if (dx <= -COMMIT && next) {
-      onSectionChange(next.sectionId);
+      onSectionChange(next.sectionId, next.chapterTitle);
       return;
     }
     if (dx >= COMMIT && prev) {
-      onSectionChange(prev.sectionId);
+      onSectionChange(prev.sectionId, prev.chapterTitle);
       return;
     }
     dragXRef.current = 0;
@@ -190,20 +224,22 @@ export function BibleScreen({
                 key={p.id}
                 role="button"
                 tabIndex={0}
-                onClick={() => onToggleHighlight(p.id)}
+                onClick={() => onToggleHighlight(p)}
                 onKeyDown={(e) => {
                   if (e.key === "Enter" || e.key === " ") {
                     e.preventDefault();
-                    onToggleHighlight(p.id);
+                    onToggleHighlight(p);
                   }
                 }}
                 className={`mb-1 w-full cursor-pointer rounded-lg px-2 py-1.5 text-left ${
                   highlighted ? "bg-accent-soft" : ""
                 }`}
               >
-                <sup className="mr-1.5 align-super font-body text-[0.7em] font-semibold text-muted">
-                  {p.verse ?? p.label}
-                </sup>
+                {p.kind === "heading" ? null : (
+                  <sup className="mr-1.5 align-super font-body text-[0.7em] font-semibold text-muted">
+                    {p.verse ?? p.label}
+                  </sup>
+                )}
                 <span className={bookmarked ? "verse-underline" : undefined}>{p.text}</span>
               </div>
             );
@@ -242,10 +278,11 @@ export function BibleScreen({
 
       <BookPicker
         open={pickerOpen}
+        books={books}
         currentSectionId={sectionId}
         onClose={() => setPickerOpen(false)}
         onPick={(id) => {
-          onSectionChange(id);
+          onSectionChange(id, chapters.find((c) => c.sectionId === id)?.chapterTitle);
           setPickerOpen(false);
         }}
       />
@@ -254,22 +291,24 @@ export function BibleScreen({
 }
 
 function shortChapterLabel(title: string) {
-  return title.replace(/^(Psalm|John|Romans)\s+/, "");
+  const match = title.match(/(\d+)\s*$/);
+  return match ? match[1] : title;
 }
 
 function BookPicker({
   open,
+  books,
   currentSectionId,
   onClose,
   onPick,
 }: {
   open: boolean;
+  books: ApiSection[];
   currentSectionId: string;
   onClose: () => void;
   onPick: (sectionId: string) => void;
 }) {
   const [bookId, setBookId] = useState<string | null>(null);
-  const books = SECTIONS[BIBLE_ID] ?? [];
 
   useEffect(() => {
     if (!open) setBookId(null);

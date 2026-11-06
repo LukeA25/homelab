@@ -1,4 +1,5 @@
-import { PARAGRAPHS, sectionTitle } from "../lib/mockData";
+import { useEffect, useState } from "react";
+import { getSectionBlocks, toParagraph, toTitleCaseHeading } from "../lib/api";
 import type { Bookmark, Highlight, Paragraph } from "../lib/types";
 
 type ReaderScreenProps = {
@@ -7,7 +8,8 @@ type ReaderScreenProps = {
   highlights: Highlight[];
   bookmarks: Bookmark[];
   onBack: () => void;
-  onToggleHighlight: (paragraphId: string) => void;
+  onToggleHighlight: (paragraph: Paragraph) => void;
+  title?: string;
   onBookmark: (paragraphs: Paragraph[]) => void;
   onAskSplit: (paragraphs: Paragraph[]) => void;
   onCopyToNotes: (paragraphs: Paragraph[]) => void;
@@ -25,8 +27,24 @@ export function ReaderScreen({
   onAskSplit,
   onCopyToNotes,
   textSize,
+  title,
 }: ReaderScreenProps) {
-  const paragraphs = PARAGRAPHS[sectionId] ?? [];
+  const [paragraphs, setParagraphs] = useState<Paragraph[]>([]);
+
+  useEffect(() => {
+    let cancelled = false;
+    setParagraphs([]);
+    getSectionBlocks(sectionId)
+      .then((rows) => {
+        if (!cancelled) setParagraphs(rows.map(toParagraph));
+      })
+      .catch(() => {
+        if (!cancelled) setParagraphs([]);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [sectionId]);
   const hlSet = new Set(
     highlights.filter((h) => h.workId === workId).map((h) => h.paragraphId),
   );
@@ -42,7 +60,7 @@ export function ReaderScreen({
           ← Back
         </button>
         <h1 className="truncate font-display text-lg font-semibold">
-          {sectionTitle(workId, sectionId)}
+          {title ? toTitleCaseHeading(title) : sectionId.split("/").pop()}
         </h1>
       </header>
 
@@ -62,11 +80,11 @@ export function ReaderScreen({
                 key={p.id}
                 role="button"
                 tabIndex={0}
-                onClick={() => onToggleHighlight(p.id)}
+                onClick={() => onToggleHighlight(p)}
                 onKeyDown={(e) => {
                   if (e.key === "Enter" || e.key === " ") {
                     e.preventDefault();
-                    onToggleHighlight(p.id);
+                    onToggleHighlight(p);
                   }
                 }}
                 className={`w-full cursor-pointer rounded-xl px-2 py-2 text-left ${

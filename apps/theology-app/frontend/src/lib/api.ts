@@ -9,9 +9,9 @@ import type { Paragraph, SectionNode, Work, WorkKind } from "./types";
 export const BIBLE_ID = "bible-nabre";
 export const DEFAULT_BIBLE_SECTION = "bible-nabre/Ps/23";
 
+/** Empty means same origin (the container serves the UI and /api together). */
 export const API_BASE =
-  (import.meta as ImportMeta & { env?: { VITE_API_BASE?: string } }).env?.VITE_API_BASE ??
-  "http://theology.home.arpa";
+  (import.meta as ImportMeta & { env?: { VITE_API_BASE?: string } }).env?.VITE_API_BASE ?? "";
 
 export type ApiWork = {
   id: string;

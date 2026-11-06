@@ -1,6 +1,6 @@
-import { useState } from "react";
-import { mockAsk } from "../lib/mockData";
-import type { AskMessage } from "../lib/types";
+import { useEffect, useRef, useState } from "react";
+import { askLibrary } from "../lib/api";
+import type { AskMessage, AskResponse } from "../lib/types";
 
 type AskScreenProps = {
   messages: AskMessage[];
@@ -10,23 +10,51 @@ type AskScreenProps = {
 };
 
 export function AskScreen({ messages, seed, onSend, onOpenLocus }: AskScreenProps) {
-  const [draft, setDraft] = useState(seed ?? "");
+  const [draft, setDraft] = useState("");
+  const [busy, setBusy] = useState(false);
+  const seeded = useRef(false);
 
-  function submit(textIn?: string) {
+  async function submit(textIn?: string) {
     const text = (textIn ?? draft).trim();
-    if (!text) return;
+    if (!text || busy) return;
     const now = new Date().toISOString();
-    const response = mockAsk(text);
     onSend({ id: `u-${now}`, role: "user", content: text, createdAt: now });
-    onSend({
-      id: `a-${now}`,
-      role: "assistant",
-      content: response.answer,
-      response,
-      createdAt: now,
-    });
     setDraft("");
+    setBusy(true);
+    try {
+      const res = await askLibrary(text, { seed });
+      const response: AskResponse = {
+        answer: res.answer,
+        resources: res.resources ?? [],
+        citations: res.citations ?? [],
+        bullets: res.bullets ?? [],
+      };
+      onSend({
+        id: `a-${now}`,
+        role: "assistant",
+        content: response.answer,
+        response,
+        createdAt: new Date().toISOString(),
+      });
+    } catch {
+      onSend({
+        id: `a-${now}-err`,
+        role: "assistant",
+        content: "The library could not answer that just now.",
+        createdAt: new Date().toISOString(),
+      });
+    } finally {
+      setBusy(false);
+    }
   }
+
+  useEffect(() => {
+    if (!seed || messages.length > 0 || seeded.current) return;
+    seeded.current = true;
+    void submit(seed);
+    // Run once for a passage handed in from the reader.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [seed]);
 
   return (
     <div className="relative h-full min-h-0 overflow-hidden bg-bg">
@@ -119,9 +147,10 @@ export function AskScreen({ messages, seed, onSend, onOpenLocus }: AskScreenProp
           <button
             type="button"
             onClick={() => submit()}
-            className="btn-accent shrink-0 rounded-pill px-4 py-2.5 text-sm font-semibold"
+            disabled={busy}
+            className="btn-accent shrink-0 rounded-pill px-4 py-2.5 text-sm font-semibold disabled:opacity-60"
           >
-            Send
+            {busy ? "…" : "Send"}
           </button>
         </div>
       </div>

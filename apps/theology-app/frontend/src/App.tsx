@@ -6,18 +6,9 @@ import { LibraryScreen } from "./components/LibraryScreen";
 import { NotesScreen } from "./components/NotesScreen";
 import { ReaderScreen } from "./components/ReaderScreen";
 import { TabBar, newTabId } from "./components/TabBar";
+import { BIBLE_ID, DEFAULT_BIBLE_SECTION, getLocus } from "./lib/api";
 import { UI_CONTRACT_VERSION } from "./lib/contract";
-import {
-  BIBLE_ID,
-  INITIAL_BOOKMARKS,
-  INITIAL_HIGHLIGHTS,
-  INITIAL_NOTES,
-  INITIAL_TOPICS,
-  PARAGRAPHS,
-  findParagraphByLocus,
-  mockAsk,
-  sectionTitle,
-} from "./lib/mockData";
+import { INITIAL_BOOKMARKS, INITIAL_HIGHLIGHTS, INITIAL_NOTES, INITIAL_TOPICS } from "./lib/mockData";
 import type {
   AskMessage,
   Bookmark,
@@ -40,7 +31,15 @@ function readTextSize(): number {
 }
 
 function readBibleSection(): string {
-  return localStorage.getItem(BIBLE_SECTION_KEY) || "ps.23";
+  const saved = localStorage.getItem(BIBLE_SECTION_KEY) || "";
+  if (!saved.includes("/")) return DEFAULT_BIBLE_SECTION;
+  return saved;
+}
+
+function chapterLabel(sectionId: string, title?: string): string {
+  if (title) return title;
+  const parts = sectionId.split("/").filter(Boolean);
+  return parts.slice(-2).join(" ") || "Bible";
 }
 
 function defaultTitle(kind: TabKind): string {
@@ -94,8 +93,8 @@ export default function App() {
       notesDocId: kind === "notes" ? null : undefined,
       ...extras,
     };
-    if (kind === "bible" && tab.bibleSectionId) {
-      tab.title = sectionTitle(BIBLE_ID, tab.bibleSectionId);
+    if (kind === "bible" && tab.bibleSectionId && !extras.title) {
+      tab.title = chapterLabel(tab.bibleSectionId);
     }
     setTabs((prev) => [...prev, tab]);
     setLayout({ mode: "single", focusId: id });
@@ -156,42 +155,41 @@ export default function App() {
       notesDocId: kind === "notes" ? null : undefined,
     };
     if (kind === "bible" && tab.bibleSectionId) {
-      tab.title = sectionTitle(BIBLE_ID, tab.bibleSectionId);
+      tab.title = chapterLabel(tab.bibleSectionId);
     }
     setTabs((prev) => [...prev, tab]);
     setLayout({ mode: "split", leftId, rightId: id, ratio: 0.55 });
   }
 
   function openLocus(workId: string, locusId: string) {
-    const hit = findParagraphByLocus(locusId);
-    if (!hit) return;
-    if (hit.workId === BIBLE_ID || workId === BIBLE_ID) {
-      const existing = tabs.find((t) => t.kind === "bible");
-      if (existing) {
-        updateTab(existing.id, {
-          bibleSectionId: hit.sectionId,
-          title: sectionTitle(BIBLE_ID, hit.sectionId),
-        });
-        focusTab(existing.id);
-        localStorage.setItem(BIBLE_SECTION_KEY, hit.sectionId);
-      } else {
-        addTab("bible", {
-          bibleSectionId: hit.sectionId,
-          title: sectionTitle(BIBLE_ID, hit.sectionId),
-        });
-      }
-      return;
-    }
-    const id = newTabId();
-    const tab: WorkspaceTab = {
-      id,
-      kind: "reader",
-      title: sectionTitle(hit.workId, hit.sectionId),
-      readerWorkId: hit.workId,
-      readerSectionId: hit.sectionId,
-    };
-    setTabs((prev) => [...prev, tab]);
-    setLayout({ mode: "single", focusId: id });
+    void getLocus(workId, locusId)
+      .then((blocks) => {
+        const sectionId = blocks[0]?.sectionId;
+        if (!sectionId) return;
+        const title = blocks[0]?.label || chapterLabel(sectionId);
+        if (workId === BIBLE_ID) {
+          const existing = tabs.find((t) => t.kind === "bible");
+          if (existing) {
+            updateTab(existing.id, { bibleSectionId: sectionId, title });
+            focusTab(existing.id);
+            localStorage.setItem(BIBLE_SECTION_KEY, sectionId);
+          } else {
+            addTab("bible", { bibleSectionId: sectionId, title });
+          }
+          return;
+        }
+        const id = newTabId();
+        const tab: WorkspaceTab = {
+          id,
+          kind: "reader",
+          title,
+          readerWorkId: workId,
+          readerSectionId: sectionId,
+        };
+        setTabs((prev) => [...prev, tab]);
+        setLayout({ mode: "single", focusId: id });
+      })
+      .catch(() => undefined);
   }
 
   function toggleHighlight(workId: string, paragraph: Paragraph) {
@@ -263,29 +261,14 @@ export default function App() {
 
   function askSplit(fromTabId: string, paragraphs: Paragraph[]) {
     const seed = paragraphs.map((p) => `${p.locusId}: ${p.text}`).join("\n");
-    const response = mockAsk(seed);
-    const stamp = new Date().toISOString();
     const askId = newTabId();
     const askTab: WorkspaceTab = {
       id: askId,
       kind: "ask",
       title: "Ask",
-      askSeed: seed.slice(0, 180),
+      askSeed: seed.slice(0, 1800),
     };
     setTabs((prev) => [...prev, askTab]);
-    setAskByTab((prev) => ({
-      ...prev,
-      [askId]: [
-        { id: `u-${stamp}`, role: "user", content: seed.slice(0, 240), createdAt: stamp },
-        {
-          id: `a-${stamp}`,
-          role: "assistant",
-          content: response.answer,
-          response,
-          createdAt: stamp,
-        },
-      ],
-    }));
     setLayout({ mode: "split", leftId: fromTabId, rightId: askId, ratio: 0.55 });
   }
 
@@ -301,14 +284,11 @@ export default function App() {
           highlights={highlights}
           bookmarks={bookmarks}
           textSize={textSize}
-          onSectionChange={(id) => {
-            updateTab(tab.id, { bibleSectionId: id, title: sectionTitle(BIBLE_ID, id) });
+          onSectionChange={(id, title) => {
+            updateTab(tab.id, { bibleSectionId: id, title: chapterLabel(id, title) });
             localStorage.setItem(BIBLE_SECTION_KEY, id);
           }}
-          onToggleHighlight={(paragraphId) => {
-            const para = (PARAGRAPHS[sectionId] ?? []).find((p) => p.id === paragraphId);
-            if (para) toggleHighlight(BIBLE_ID, para);
-          }}
+          onToggleHighlight={(paragraph) => toggleHighlight(BIBLE_ID, paragraph)}
           onBookmark={(paras) => bookmarkParas(BIBLE_ID, paras)}
           onAskSplit={(paras) => askSplit(tab.id, paras)}
           onCopyToNotes={copyToNotes}
@@ -337,12 +317,13 @@ export default function App() {
         <LibraryScreen
           selectedWorkId={tab.libraryWorkId ?? null}
           onOpenWork={(id) => updateTab(tab.id, { libraryWorkId: id })}
-          onOpenSection={(workId, sectionId) => {
+          onOpenSection={(workId, sectionId, title) => {
             if (workId === BIBLE_ID) {
               addTab("bible", {
                 bibleSectionId: sectionId,
-                title: sectionTitle(BIBLE_ID, sectionId),
+                title,
               });
+              localStorage.setItem(BIBLE_SECTION_KEY, sectionId);
               return;
             }
             const id = newTabId();
@@ -351,7 +332,7 @@ export default function App() {
               {
                 id,
                 kind: "reader",
-                title: sectionTitle(workId, sectionId),
+                title,
                 readerWorkId: workId,
                 readerSectionId: sectionId,
               },
@@ -407,10 +388,8 @@ export default function App() {
             closeTab(tab.id);
             addTab("library", { libraryWorkId: workId });
           }}
-          onToggleHighlight={(paragraphId) => {
-            const para = (PARAGRAPHS[sectionId] ?? []).find((p) => p.id === paragraphId);
-            if (para) toggleHighlight(workId, para);
-          }}
+          title={tab.title}
+          onToggleHighlight={(paragraph) => toggleHighlight(workId, paragraph)}
           onBookmark={(paras) => bookmarkParas(workId, paras)}
           onAskSplit={(paras) => askSplit(tab.id, paras)}
           onCopyToNotes={copyToNotes}
