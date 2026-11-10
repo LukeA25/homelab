@@ -3,5 +3,6 @@ frontend/dist/
 frontend_dist/
 data/
 .venv/
+.venv-mcp/
 __pycache__/
 .pytest_cache/
