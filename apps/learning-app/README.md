@@ -1,6 +1,6 @@
 # Learning Grove — first iteration
 
-A self-hosted, mobile-first companion for short learning conversations. Built from `learning_app_brainstorm_and_product_spec.md`. React + TypeScript + Vite frontend; FastAPI and SQLite backend. No AI API key is needed for this iteration.
+A self-hosted, mobile-first companion for short learning conversations. Built from `learning_app_brainstorm_and_product_spec.md`. React + TypeScript + Vite frontend; FastAPI and SQLite backend. Voice lessons use the OpenAI API. Browsing and editing saved learning records do not require an API key.
 
 ## What works
 
@@ -10,7 +10,7 @@ A self-hosted, mobile-first companion for short learning conversations. Built fr
 - Planned, active, paused, and completed path states.
 - Quiet idea capture and deletion.
 - A generated tutor prompt containing path goals, concept IDs, prerequisite context, and a versioned JSON export template.
-- Paste → validate → edit notes/assessment → accept recap flow. Nothing changes on preview. Accepted recaps persist and duplicate imports are rejected.
+- In-app voice → proposed recap → edit notes/assessment → accept recap flow. Nothing changes on preview. Accepted recaps persist and duplicate imports are rejected.
 - Pending sessions resume when you choose the same concept again.
 - Deterministic next-concept selection: review needs first, then unfinished concepts with understood prerequisites, then the first unfinished concept. This is not an AI recommendation engine.
 
@@ -36,7 +36,7 @@ npm install
 npm run dev
 ```
 
-Open http://localhost:5177. Vite proxies `/api` to port 8009. The development database defaults to `apps/learning-app/data/learning.db` when running from that directory. Set `LEARNING_DB` to override it.
+Open http://localhost:5177. Vite proxies `/api` and `/voice` to port 8009. The development database defaults to `apps/learning-app/data/learning.db` when running from that directory. Set `LEARNING_DB` to override it.
 
 ## Run on the homelab
 
@@ -52,12 +52,16 @@ The stack is registered in `scripts/deploy.sh`. A push to the repository’s dep
 ## Try the learning loop
 
 1. Open an active path and select a concept.
-2. Select **Learn this concept**, then copy the tutor prompt.
-3. Paste it into ChatGPT. Start voice manually in your ChatGPT client if supported there. The app does not launch voice or rely on a custom GPT integration.
-4. Ask the tutor for the JSON recap specified by the prompt.
-5. Paste it back into the session dialog and select **Review proposed changes**.
-6. Correct the notes, confidence, evidence, or understanding state, then accept.
-7. Open the concept’s Notes, Evidence, and History tabs to see the saved result.
+2. Select **Learn this concept** or **Start voice lesson** on Today.
+3. In Settings, choose a voice/model (Cedar and GPT-Live are defaults). Enter an API key for this connection, or configure `OPENAI_API_KEY` in the server environment. Keys are not saved by the app. The server key must be passed into the container explicitly if using Docker.
+4. Start the conversation and allow microphone access. The tutor receives the saved session context and can show equations, plots, charts and diagrams.
+5. Choose **Finish and review lesson**, or ask the tutor for a recap. The app validates the proposal without writing it.
+6. Correct notes, confidence, evidence or state, then choose **Accept and save**.
+7. Open the concept’s Notes, Evidence and History tabs to see the result.
+
+Microphone access requires localhost or trusted HTTPS; plain HTTP over a phone’s LAN/Tailscale address will not work. The 15-minute limit requests a recap and allows up to one extra minute before disconnecting. Closing a lesson ends its audio; unfinished live conversations are not stored or replayed. A pending session preserves lesson context, not the unsaved conversation.
+
+The app remains private and unauthenticated. Do not expose the API publicly, especially with a server API key. Audio goes to OpenAI and is billed separately from ChatGPT. Explore planning and quick idea capture retain their existing flows for now.
 
 The strict v0.1 contract uses `schema_version`, `session_id`, `tree_id`, `topics`, and `questions`. Each topic uses `concept_id`, `summary`, `evidence`, `confidence`, and `state`. The generated prompt supplies exact IDs and a full template. Unknown fields, unknown/repeated concept IDs, mismatched sessions, unsupported states, and duplicate accepted sessions are rejected. “Understood” requires nonempty evidence. Original accepted recaps remain in session history when later sessions update the current notes.
 
@@ -66,6 +70,7 @@ The strict v0.1 contract uses `schema_version`, `session_id`, `tree_id`, `topics
 ```sh
 # From apps/learning-app, with requirements installed:
 python -m unittest discover -s tests -v
+node --test voice-ui/*.test.mjs
 # From frontend, with dependencies installed:
 npm run build
 ```

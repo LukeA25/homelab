@@ -1,0 +1,3 @@
+import test from 'node:test';import assert from 'node:assert/strict';import{initial,values,update}from'./model.mjs';
+test('known forward pass and negative-weight ReLU cutoff',()=>{const s=values(initial());assert.ok(Math.abs(s.h1-.62)<1e-12);assert.ok(Math.abs(s.h2-.22)<1e-12);assert.ok(Math.abs(s.y-.584)<1e-12);const n=values(update(initial(),{weight:-1}));assert.equal(n.h1,0);assert.ok(Math.abs(n.y-.088)<1e-12);});
+test('tool rejects bad numeric values and unknown commands atomically',()=>{for(const patch of [{x1:2},{x2:NaN},{weight:'1'},{focus:'execute'},{html:'bad'},{caption:'x'.repeat(181)}])assert.throws(()=>update(initial(),patch));const s=initial();assert.throws(()=>update(s,{x1:.2,weight:9}));assert.equal(s.x1,.6);});

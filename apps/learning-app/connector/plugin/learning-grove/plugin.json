@@ -1,0 +1,19 @@
+{
+  "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
+  "name": "learning-grove",
+  "version": "0.1.0",
+  "description": "Tutor from your saved Learning Grove context and review lesson recaps.",
+  "author": {"name": "Luke Anderson"},
+  "extensions": {
+    "com.openai": {
+      "interface": {
+        "displayName": "Learning Grove",
+        "shortDescription": "Your personal learning tutor",
+        "longDescription": "Load your next lesson from Learning Grove, study through dialogue, and review a structured recap before saving your progress.",
+        "developerName": "Luke Anderson",
+        "category": "Productivity",
+        "defaultPrompt": "Let’s do today’s lesson."
+      }
+    }
+  }
+}

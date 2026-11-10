@@ -1,0 +1,27 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Grove · Lesson</title><link rel="stylesheet" href="/style.css"><script src="/vendor/katex.min.js"></script></head>
+<body>
+<header><span class="brand">◉ grove <small>voice lesson</small></span><button id="settings-toggle" aria-expanded="false" aria-controls="settings">Settings</button></header>
+<main>
+<section class="voice-stage">
+  <div class="orb-wrap" role="img" aria-label="Voice activity. Sage responds to your microphone, violet to the tutor.">
+    <canvas id="orb" aria-hidden="true"></canvas>
+    <canvas id="voice-strip" aria-hidden="true"></canvas>
+  </div>
+  <h1>Your lesson</h1>
+  <p id="status" role="status">A conversation, with room to see.</p>
+  <div class="call-controls"><button id="mute" disabled>Mute mic</button><button id="start" class="primary">Start conversation</button><button id="stop" disabled>End</button></div>
+  <p class="session-meta"><span id="timer">15:00</span> <span>·</span> <span>● Your voice</span> <span class="violet">● Tutor</span></p>
+</section>
+<section id="board" hidden aria-label="Tutor whiteboard"><div class="board-heading"><h2 id="board-title">Whiteboard</h2><button id="clear">Clear</button></div><div id="drawing"></div><div id="math" hidden></div><p id="board-caption"></p><div id="neural" hidden><p id="caption"></p><svg id="network" viewBox="0 0 800 410" role="img" aria-label="Interactive neural network with two inputs, two hidden neurons and one output"></svg><div class="legend"><span>● Positive weight</span><span class="negative">● Negative weight</span><span>Drag neurons to rearrange</span></div><div class="equations"><div><small>HIDDEN NEURON 1 · ReLU</small><p id="eq1"></p></div><div><small>HIDDEN NEURON 2 · ReLU</small><p id="eq2"></p></div><div><small>OUTPUT · LINEAR</small><p id="eq3"></p></div></div><div class="controls"><label>Input x₁ <output id="v1"></output><input id="x1" type="range" min="0" max="1" step="0.01" value="0.6"></label><label>Input x₂ <output id="v2"></output><input id="x2" type="range" min="0" max="1" step="0.01" value="0.4"></label><label>Weight x₁ → h₁ <output id="vw"></output><input id="weight" type="range" min="-2" max="2" step="0.05" value="1.2"></label></div><div class="actions"><button id="pulse">▶ Follow the signal</button><button id="reset" class="quiet">Reset diagram</button></div></div></section>
+<section id="settings" hidden>
+  <h2>Conversation settings</h2>
+  <label for="engine">Voice model</label><select id="engine"><option value="live">GPT-Live 1</option><option value="realtime">GPT-Realtime</option><option value="realtime-2.1">GPT-Realtime 2.1</option></select>
+  <label for="voice">Voice</label><select id="voice"></select>
+  <small>Choose before starting a conversation. GPT-Live uses a backend model for visual commands. API usage is billed to your account.</small>
+  <div id="keybox"><label for="key">OpenAI API key</label><input id="key" type="password" autocomplete="off" placeholder="sk-…"><small>Used for this connection. The key is never saved.</small></div>
+  <p><button id="resume">Resume audio</button></p>
+  <details><summary>Transcript</summary><p id="transcript"></p></details>
+</section>
+<details class="examples"><summary>Explore visuals without a call</summary><div><button data-demo="equation">Equation</button><button data-demo="plot">ReLU plot</button><button data-demo="chart">Bar chart</button><button data-demo="diagram">Diagram</button><button data-demo="neural">Neural network</button></div></details>
+</main><audio id="audio" autoplay></audio><script type="module" src="/app.js"></script></body></html>

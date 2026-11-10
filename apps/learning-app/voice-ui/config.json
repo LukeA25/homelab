@@ -1,0 +1,237 @@
+{
+  "visualTools": [
+    {
+      "type": "function",
+      "name": "show_visual",
+      "description": "Open or replace the whiteboard while continuing the spoken lesson. Use text for a short supplementary note in caption, equation for LaTeX, plot for a mathematical function or x/y point series, chart for bar series, diagram for connected labeled nodes, neural for the interactive neural network, clear to return to the voice orb. Repeat with a revised specification to update a visual. Points must be accurate. Function plots are calculated by the app.",
+      "parameters": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "kind": {
+            "type": "string",
+            "enum": [
+              "text",
+              "equation",
+              "plot",
+              "chart",
+              "diagram",
+              "neural",
+              "clear"
+            ]
+          },
+          "title": {
+            "type": "string"
+          },
+          "caption": {
+            "type": "string"
+          },
+          "equation": {
+            "type": "string",
+            "description": "Optional LaTeX equation displayed below any visual, or as the main visual."
+          },
+          "function": {
+            "type": "string",
+            "enum": [
+              "relu",
+              "sigmoid",
+              "linear",
+              "quadratic",
+              "sin"
+            ]
+          },
+          "a": {
+            "type": "number",
+            "description": "Function scale, default 1"
+          },
+          "b": {
+            "type": "number",
+            "description": "Vertical offset, default 0"
+          },
+          "xMin": {
+            "type": "number"
+          },
+          "xMax": {
+            "type": "number"
+          },
+          "series": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "label": {
+                  "type": "string"
+                },
+                "points": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "x": {
+                        "type": "number"
+                      },
+                      "y": {
+                        "type": "number"
+                      }
+                    },
+                    "required": [
+                      "x",
+                      "y"
+                    ],
+                    "additionalProperties": false
+                  }
+                }
+              },
+              "required": [
+                "label",
+                "points"
+              ],
+              "additionalProperties": false
+            }
+          },
+          "nodes": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "id": {
+                  "type": "string"
+                },
+                "label": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "id",
+                "label"
+              ],
+              "additionalProperties": false
+            }
+          },
+          "edges": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "from": {
+                  "type": "string"
+                },
+                "to": {
+                  "type": "string"
+                },
+                "label": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "from",
+                "to"
+              ],
+              "additionalProperties": false
+            }
+          },
+          "highlight": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Node IDs to emphasize"
+          }
+        },
+        "required": [
+          "kind"
+        ]
+      }
+    },
+    {
+      "type": "function",
+      "name": "update_visual",
+      "description": "Show and control the neural network. Returns exact activations. Omitted fields retain their values.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "x1": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 1
+          },
+          "x2": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 1
+          },
+          "weight": {
+            "type": "number",
+            "minimum": -2,
+            "maximum": 2
+          },
+          "focus": {
+            "type": "string",
+            "enum": [
+              "all",
+              "inputs",
+              "hidden",
+              "output",
+              "weight"
+            ]
+          },
+          "caption": {
+            "type": "string",
+            "maxLength": 180
+          },
+          "animate": {
+            "type": "boolean"
+          }
+        },
+        "additionalProperties": false
+      }
+    }
+  ],
+  "teachingInstructions": "You are Grove, a friendly voice tutor. Follow the saved lesson context. The screen begins with only a voice orb. Keep conversation natural and responsive, vary sentence length, and ask one question at a time only when it helps. Avoid canned praise. Speak your explanation; equations and diagrams supplement the conversation. Bring up visuals when useful or requested by delegating to the visual tools. Do not force a visual every turn. Explain what changes as it changes. Clear the board when requested. Tools support LaTeX equations, calculated plots (ReLU, sigmoid, linear, quadratic, sin), arbitrary numeric series, bar charts, labeled directed graphs, and a small interactive neural network. Backend results are the source of truth for displayed values. Never invent visual capabilities. For the neural visual, x1,x2 range 0..1; h1=ReLU(weight*x1+0.5*x2-0.3), h2=ReLU(-0.6*x1+1.2*x2+0.1), output=0.8*h1+0.4*h2. Hand-picked weights illustrate inference. This is not a trained predictor or a probability. Aim for a 10–15 minute lesson. Use propose_recap to submit the structured recap; never read JSON aloud. For visual changes, delegate the request to the backend when using GPT-Live; then explain the result conversationally.",
+  "defaultVoice": "cedar",
+  "realtimeVoices": [
+    "alloy",
+    "ash",
+    "ballad",
+    "cedar",
+    "coral",
+    "echo",
+    "marin",
+    "sage",
+    "shimmer",
+    "verse"
+  ],
+  "liveVoices": [
+    "alloy",
+    "ash",
+    "ballad",
+    "beacon",
+    "bossa",
+    "brise",
+    "cedar",
+    "cinder",
+    "coral",
+    "delta",
+    "echo",
+    "flitz",
+    "gleam",
+    "harema",
+    "juni",
+    "marin",
+    "meridian",
+    "nira",
+    "noeul",
+    "nuri",
+    "quartz",
+    "ripple",
+    "sage",
+    "shida",
+    "shimmer",
+    "sillage",
+    "stone",
+    "tempo",
+    "verse",
+    "vesper",
+    "willow"
+  ]
+}

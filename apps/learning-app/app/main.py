@@ -9,7 +9,8 @@ from typing import Literal
 
 from fastapi import FastAPI, HTTPException
 from fastapi.staticfiles import StaticFiles
-from pydantic import BaseModel, Field, ConfigDict
+from pydantic import Field
+from .recap import Recap, Strict
 from .seed import seed
 
 app = FastAPI(title='Learning app')
@@ -39,9 +40,6 @@ def tree(data, id):
     if not found: raise HTTPException(404, 'Learning path not found')
     return found
 
-class Strict(BaseModel):
-    model_config = ConfigDict(extra='forbid', str_strip_whitespace=True)
-
 class Idea(Strict):
     text: str = Field(min_length=1, max_length=4000)
 
@@ -56,20 +54,6 @@ class TreeInput(Strict):
 
 class Status(Strict):
     status: Literal['active','paused','planned','completed']
-
-class Topic(Strict):
-    concept_id: str
-    summary: str = Field(max_length=8000)
-    evidence: str = Field(max_length=8000)
-    confidence: str = Field(max_length=100)
-    state: Literal['introduced','developing','understood','needs-review']
-
-class Recap(Strict):
-    schema_version: Literal['0.1']
-    session_id: str
-    tree_id: str
-    topics: list[Topic] = Field(min_length=1,max_length=30)
-    questions: list[str] = Field(default_factory=list,max_length=30)
 
 @app.get('/api/health')
 def health():
@@ -146,6 +130,22 @@ def accept(body: Recap):
             c.update(state=item.state,confidence=item.confidence,evidence=item.evidence,notes=item.summary)
         s.update(status='accepted',recap=body.model_dump()); save(conn,data)
     return {'ok':True}
+
+from .voice import router as voice_router, negotiate
+from fastapi import Request
+
+app.include_router(voice_router)
+
+@app.post('/api/voice/sessions/{session_id}')
+async def voice_session(session_id: str, request: Request):
+    with db() as conn:
+        data = load(conn)
+        session = next((s for s in data['sessions'] if s['id'] == session_id), None)
+        if not session:
+            raise HTTPException(404, 'Session not found')
+        if session['status'] != 'pending':
+            raise HTTPException(409, 'This session has already been imported')
+    return await negotiate(request, session)
 
 static=Path(__file__).resolve().parent.parent/'frontend_dist'
 if static.exists(): app.mount('/',StaticFiles(directory=static,html=True),name='frontend')
