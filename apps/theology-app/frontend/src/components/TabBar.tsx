@@ -9,9 +9,11 @@ const KIND_LABEL: Record<TabKind, string> = {
   ask: "Ask",
   notes: "Notes",
   reader: "Reader",
+  "bible-year": "Bible Year",
 };
 
 const ADD_MENU = [
+  ["bible-year", "Bible in a Year"],
   ["prayers", "Prayers"],
   ["ask", "Ask"],
   ["library", "Library"],
@@ -120,7 +122,7 @@ export function TabBar({
         <Plus className="h-4 w-4" />
       </button>
       {menuOpen && (
-        <div className="anim-sheet absolute right-0 top-10 z-40 w-44 overflow-hidden rounded-2xl border border-border bg-bg-elevated shadow-panel">
+        <div className="anim-sheet absolute right-0 top-10 z-40 w-52 overflow-hidden rounded-2xl border border-border bg-bg-elevated shadow-panel">
           {ADD_MENU.map(([kind, label]) => (
             <button
               key={kind}

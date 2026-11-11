@@ -4,7 +4,7 @@
 
 export type NoteSection = "personal" | "apologetics";
 
-export type TabKind = "prayers" | "bible" | "library" | "ask" | "notes" | "reader";
+export type TabKind = "prayers" | "bible" | "library" | "ask" | "notes" | "reader" | "bible-year";
 
 export type WorkspaceTab = {
   id: string;
@@ -29,6 +29,8 @@ export type WorkspaceTab = {
   askThreadId?: string | null;
   /** prayers hub: null = index; readings | prayer id */
   prayersView?: string | null;
+  /** Bible in a Year day being viewed */
+  bibleYearDay?: number | null;
 };
 
 export type WorkspaceLayout =
