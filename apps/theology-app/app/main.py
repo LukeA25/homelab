@@ -16,7 +16,8 @@ from fastapi.staticfiles import StaticFiles
 
 from .config import ensure_library_tree
 from .db import init_db
-from .routers import ask, bible, catalog, notes, prayers, search, works
+from .bible_in_a_year.feed import start_feed_refresh
+from .routers import ask, bible, bible_in_a_year, catalog, notes, prayers, search, works
 
 app = FastAPI(title="Study Desk", version="0.1.0")
 
@@ -36,12 +37,14 @@ app.include_router(ask.router, prefix="/api")
 app.include_router(prayers.router, prefix="/api")
 app.include_router(catalog.router, prefix="/api")
 app.include_router(notes.router, prefix="/api")
+app.include_router(bible_in_a_year.router, prefix="/api")
 
 
 @app.on_event("startup")
 def on_startup() -> None:
     ensure_library_tree()
     init_db()
+    start_feed_refresh()
 
 
 @app.get("/health")

@@ -190,3 +190,20 @@ class Bookmark(SQLModel, table=True):
     label: str = ""
     note: str = ""
     created_at: datetime = Field(default_factory=_now)
+
+
+class BiyState(SQLModel, table=True):
+    """Where the local listener is in Bible in a Year. One row, id 'local'."""
+
+    __tablename__ = "biy_state"
+    id: str = Field(primary_key=True)
+    current_day: int = 248
+
+
+class BiyDay(SQLModel, table=True):
+    """Finished days and the saved playback position for each episode."""
+
+    __tablename__ = "biy_day"
+    day: int = Field(primary_key=True)
+    completed: bool = False
+    position_seconds: float = 0

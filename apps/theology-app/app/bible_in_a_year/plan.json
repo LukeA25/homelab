@@ -1,0 +1,4687 @@
+{
+  "audio": "Streamed from the public Bible in a Year enclosure URL. The file is not stored.",
+  "plan": "https://stthecla.com/wp-content/uploads/2021/09/Bible-in-a-Year-Reading-Plan.pdf",
+  "feed": "https://feeds.fireside.fm/bibleinayear/rss",
+  "days": [
+    {
+      "day": 1,
+      "period": "Early World",
+      "title": "In the Beginning",
+      "year": 2026,
+      "audioUrl": "https://dts.podtrac.com/redirect.mp3/aphid.fireside.fm/d/1437767933/c6354d0d-bd10-4eed-b811-1bb569d46efd/409047aa-838d-4dbd-8cba-4a8fe412e7c5.mp3",
+      "readings": [
+        "Genesis 1-2",
+        "Psalm 19"
+      ],
+      "readingsSource": "plan"
+    },
+    {
+      "day": 2,
+      "period": "Early World",
+      "title": "The Fall of Adam and Eve",
+      "year": 2026,
+      "audioUrl": "https://dts.podtrac.com/redirect.mp3/aphid.fireside.fm/d/1437767933/c6354d0d-bd10-4eed-b811-1bb569d46efd/af374acf-699b-493e-b67b-fe90fbf3b201.mp3",
+      "readings": [
+        "Genesis 3-4",
+        "Psalm 104"
+      ],
+      "readingsSource": "plan"
+    },
+    {
+      "day": 3,
+      "period": "Early World",
+      "title": "Noah's Ark",
+      "year": 2026,
+      "audioUrl": "https://dts.podtrac.com/redirect.mp3/aphid.fireside.fm/d/1437767933/c6354d0d-bd10-4eed-b811-1bb569d46efd/78c35ecf-9d15-486c-b40a-3a5092ca61c4.mp3",
+      "readings": [
+        "Genesis 5-6",
+        "Psalm 136"
+      ],
+      "readingsSource": "plan"
+    },
+    {
+      "day": 4,
+      "period": "Early World",
+      "title": "The Flood",
+      "year": 2026,
+      "audioUrl": "https://dts.podtrac.com/redirect.mp3/aphid.fireside.fm/d/1437767933/c6354d0d-bd10-4eed-b811-1bb569d46efd/0dbc0053-9f87-4ec5-b62e-8066c2eecae2.mp3",
+      "readings": [
+        "Genesis 7-9",
+        "Psalm 1"
+      ],
+      "readingsSource": "plan"
+    },
+    {
+      "day": 5,
+      "period": "Early World",
+      "title": "Tower of Babel",
+      "year": 2026,
+      "audioUrl": "https://dts.podtrac.com/redirect.mp3/aphid.fireside.fm/d/1437767933/c6354d0d-bd10-4eed-b811-1bb569d46efd/83f1fb7c-a1d7-47ea-8790-8b43c941c523.mp3",
+      "readings": [
+        "Genesis 10-11",
+        "Psalm 2"
+      ],
+      "readingsSource": "plan"
+    },
+    {
+      "day": 6,
+      "period": "Patriarchs",
+      "title": "Trust in the Lord",
+      "year": 2026,
+      "audioUrl": "https://dts.podtrac.com/redirect.mp3/aphid.fireside.fm/d/1437767933/c6354d0d-bd10-4eed-b811-1bb569d46efd/1441eaba-4a07-4af5-8f80-38f05e129468.mp3",
+      "readings": [
+        "Genesis 12-13",
+        "Job 1-2",
+        "Proverbs 1:1-7"
+      ],
+      "readingsSource": "plan"
+    },
+    {
+      "day": 7,
+      "period": "Patriarchs",
+      "title": "God's Covenant with Abram",
+      "year": 2026,
+      "audioUrl": "https://dts.podtrac.com/redirect.mp3/aphid.fireside.fm/d/1437767933/c6354d0d-bd10-4eed-b811-1bb569d46efd/9f7023ff-6bc0-4b49-a234-671c5ccebe74.mp3",
+      "readings": [
+        "Genesis 14-15",
+        "Job 3-4",
+        "Proverbs 1:8-19"
+      ],
+      "readingsSource": "plan"
+    },
+    {
+      "day": 8,
+      "period": "Patriarchs",
+      "title": "The Surrender of Abraham",
+      "year": 2026,
+      "audioUrl": "https://dts.podtrac.com/redirect.mp3/aphid.fireside.fm/d/1437767933/c6354d0d-bd10-4eed-b811-1bb569d46efd/a5ba97a0-4a3b-4c8a-874e-e094865d9ceb.mp3",
+      "readings": [
+        "Genesis 16-17",
+        "Job 5-6",
+        "Proverbs 1:20-33"
+      ],
+      "readingsSource": "plan"
+    },
+    {
+      "day": 9,
+      "period": "Patriarchs",
+      "title": "Sodom and Gomorrah",
+      "year": 2026,
+      "audioUrl": "https://dts.podtrac.com/redirect.mp3/aphid.fireside.fm/d/1437767933/c6354d0d-bd10-4eed-b811-1bb569d46efd/73ce3d56-d970-432c-a9b2-163c075221df.mp3",
+      "readings": [
+        "Genesis 18-19",
+        "Job 7-8",
+        "Proverbs 2:1-5"
+      ],
+      "readingsSource": "plan"
+    },
+    {
+      "day": 10,
+      "period": "Patriarchs",
+      "title": "Hagar and Ishmael",
+      "year": 2026,
+      "audioUrl": "https://dts.podtrac.com/redirect.mp3/aphid.fireside.fm/d/1437767933/c6354d0d-bd10-4eed-b811-1bb569d46efd/e446c94a-2466-4f10-9e28-8f4edc43f319.mp3",
+      "readings": [
+        "Genesis 20-21",
+        "Job 9-10",
+        "Proverbs 2:6-8"
+      ],
+      "readingsSource": "plan"
+    },
+    {
+      "day": 11,
+      "period": "Patriarchs",
+      "title": "The Sacrifice of Isaac",
+      "year": 2026,
+      "audioUrl": "https://dts.podtrac.com/redirect.mp3/aphid.fireside.fm/d/1437767933/c6354d0d-bd10-4eed-b811-1bb569d46efd/7a7da8ec-40e9-4f50-8e1a-ed0ccc847e8d.mp3",
+      "readings": [
+        "Genesis 22-23",
+        "Job 11-12",
+        "Proverbs 2:9-15"
+      ],
+      "readingsSource": "plan"
+    },
+    {
+      "day": 12,
+      "period": "Patriarchs",
+      "title": "Isaac and Rebekah",
+      "year": 2026,
+      "audioUrl": "https://dts.podtrac.com/redirect.mp3/aphid.fireside.fm/d/1437767933/c6354d0d-bd10-4eed-b811-1bb569d46efd/88bf6165-7b80-4aa2-a969-633b012720ba.mp3",
+      "readings": [
+        "Genesis 24",
+        "Job 13-14",
+        "Proverbs 2:16-19"
+      ],
+      "readingsSource": "plan"
+    },
+    {
+      "day": 13,
+      "period": "Patriarchs",
+      "title": "Esau Sells His Birthright",
+      "year": 2026,
+      "audioUrl": "https://dts.podtrac.com/redirect.mp3/aphid.fireside.fm/d/1437767933/c6354d0d-bd10-4eed-b811-1bb569d46efd/da8514a4-5dba-4cbb-a1a2-3fd300aff2bd.mp3",
+      "readings": [
+        "Genesis 25-26",
+        "Job 15-16",
+        "Proverbs 2:20-22"
+      ],
+      "readingsSource": "plan"
+    },
+    {
+      "day": 14,
+      "period": "Patriarchs",
+      "title": "Isaac Blesses Jacob",
+      "year": 2026,
+      "audioUrl": "https://dts.podtrac.com/redirect.mp3/aphid.fireside.fm/d/1437767933/c6354d0d-bd10-4eed-b811-1bb569d46efd/07f7da49-179b-455c-a073-7fd3e4233d55.mp3",
+      "readings": [
+        "Genesis 27-28",
+        "Job 17-18",
+        "Proverbs 3:1-4"
+      ],
+      "readingsSource": "plan"
+    },
+    {
+      "day": 15,
+      "period": "Patriarchs",
+      "title": "Leah Feels Unloved",
+      "year": 2026,
+      "audioUrl": "https://dts.podtrac.com/redirect.mp3/aphid.fireside.fm/d/1437767933/c6354d0d-bd10-4eed-b811-1bb569d46efd/ae74205e-2876-4ced-bf0f-5cd74de34ef6.mp3",
+      "readings": [
+        "Genesis 29-30",
+        "Job 19-20",
+        "Proverbs 3:5-8"
+      ],
+      "readingsSource": "plan"
+    },
+    {
+      "day": 16,
+      "period": "Patriarchs",
+      "title": "The Suffering of Job",
+      "year": 2026,
+      "audioUrl": "https://dts.podtrac.com/redirect.mp3/aphid.fireside.fm/d/1437767933/c6354d0d-bd10-4eed-b811-1bb569d46efd/7bc1f3ca-beda-4049-ab63-3675e4f57a30.mp3",
+      "readings": [
+        "Genesis 31-32",
+        "Job 21-22",
+        "Proverbs 3:9-12"
+      ],
+      "readingsSource": "plan"
+    },
+    {
+      "day": 17,
+      "period": "Patriarchs",
+      "title": "Jacob Meets Esau",
+      "year": 2026,
+      "audioUrl": "https://dts.podtrac.com/redirect.mp3/aphid.fireside.fm/d/1437767933/c6354d0d-bd10-4eed-b811-1bb569d46efd/118326a9-ca0e-441c-8308-c383cd84de4e.mp3",
+      "readings": [
+        "Genesis 33-34",
+        "Job 23-24",
+        "Proverbs 3:13-18"
+      ],
+      "readingsSource": "plan"
+    },
+    {
+      "day": 18,
+      "period": "Patriarchs",
+      "title": "The Heart of Israel",
+      "year": 2026,
+      "audioUrl": "https://dts.podtrac.com/redirect.mp3/aphid.fireside.fm/d/1437767933/c6354d0d-bd10-4eed-b811-1bb569d46efd/26b98009-3e49-4840-a765-32c3318dc74b.mp3",
+      "readings": [
+        "Genesis 35-36",
+        "Job 25-26",
+        "Proverbs 3:19-24"
+      ],
+      "readingsSource": "plan"
+    },
+    {
+      "day": 19,
+      "period": "Patriarchs",
+      "title": "Joseph and His Brothers",
+      "year": 2026,
+      "audioUrl": "https://dts.podtrac.com/redirect.mp3/aphid.fireside.fm/d/1437767933/c6354d0d-bd10-4eed-b811-1bb569d46efd/11e3fadb-b389-44ee-bc47-74f960b673ba.mp3",
+      "readings": [
+        "Genesis 37",
+        "Job 27-28",
+        "Proverbs 3:25-27"
+      ],
+      "readingsSource": "plan"
+    },
+    {
+      "day": 20,
+      "period": "Patriarchs",
+      "title": "Judah and Tamar",
+      "year": 2026,
+      "audioUrl": "https://dts.podtrac.com/redirect.mp3/aphid.fireside.fm/d/1437767933/c6354d0d-bd10-4eed-b811-1bb569d46efd/eb79bb41-a1ae-4ca8-8d12-14990868cc8d.mp3",
+      "readings": [
+        "Genesis 38",
+        "Job 29-30",
+        "Proverbs 3:28-32"
+      ],
+      "readingsSource": "plan"
+    },
+    {
+      "day": 21,
+      "period": "Patriarchs",
+      "title": "Walking with God",
+      "year": 2026,
+      "audioUrl": "https://dts.podtrac.com/redirect.mp3/aphid.fireside.fm/d/1437767933/c6354d0d-bd10-4eed-b811-1bb569d46efd/69c7ce8b-2a8c-45f9-9e2e-5eb9ac12c272.mp3",
+      "readings": [
+        "Genesis 39-40",
+        "Job 31-32",
+        "Proverbs 3:33-35"
+      ],
+      "readingsSource": "plan"
+    },
+    {
+      "day": 22,
+      "period": "Patriarchs",
+      "title": "Go to Joseph",
+      "year": 2026,
+      "audioUrl": "https://dts.podtrac.com/redirect.mp3/aphid.fireside.fm/d/1437767933/c6354d0d-bd10-4eed-b811-1bb569d46efd/e6b616c8-f7c8-470e-8e41-d6d9c590aa6e.mp3",
+      "readings": [
+        "Genesis 41-42",
+        "Job 33-34",
+        "Proverbs 4:1-9"
+      ],
+      "readingsSource": "plan"
+    },
+    {
+      "day": 23,
+      "period": "Patriarchs",
+      "title": "Judah Changes",
+      "year": 2026,
+      "audioUrl": "https://dts.podtrac.com/redirect.mp3/aphid.fireside.fm/d/1437767933/c6354d0d-bd10-4eed-b811-1bb569d46efd/fd8436e0-7ef0-4997-9ebd-a3dac5f0ced6.mp3",
+      "readings": [
+        "Genesis 43-44",
+        "Job 35-36",
+        "Proverbs 4:10-19"
+      ],
+      "readingsSource": "plan"
+    },
+    {
+      "day": 24,
+      "period": "Patriarchs",
+      "title": "Tears of Joy",
+      "year": 2026,
+      "audioUrl": "https://dts.podtrac.com/redirect.mp3/aphid.fireside.fm/d/1437767933/c6354d0d-bd10-4eed-b811-1bb569d46efd/2e32b38c-89e4-4ca9-8215-6fd4cac4ef31.mp3",
+      "readings": [
+        "Genesis 45-46",
+        "Job 37-38",
+        "Proverbs 4:20-27"
+      ],
+      "readingsSource": "plan"
+    },
+    {
+      "day": 25,
+      "period": "Patriarchs",
+      "title": "Job's Questioning",
+      "year": 2026,
+      "audioUrl": "https://dts.podtrac.com/redirect.mp3/aphid.fireside.fm/d/1437767933/c6354d0d-bd10-4eed-b811-1bb569d46efd/ce717b3c-c7c3-4469-bfb2-aa0b0c65be7d.mp3",
+      "readings": [
+        "Genesis 47-48",
+        "Job 39-40",
+        "Psalm 16"
+      ],
+      "readingsSource": "plan"
+    },
+    {
+      "day": 26,
+      "period": "Patriarchs",
+      "title": "God Responds to Job",
+      "year": 2026,
+      "audioUrl": "https://dts.podtrac.com/redirect.mp3/aphid.fireside.fm/d/1437767933/c6354d0d-bd10-4eed-b811-1bb569d46efd/dd771dff-3ed8-4b7d-a85c-b3a9d9278b07.mp3",
+      "readings": [
+        "Genesis 49-50",
+        "Job 41-42",
+        "Psalm 17"
+      ],
+      "readingsSource": "plan"
+    },
+    {
+      "day": 27,
+      "period": "Egypt and Exodus",
+      "title": "The Birth of Moses",
+      "year": 2026,
+      "audioUrl": "https://dts.podtrac.com/redirect.mp3/aphid.fireside.fm/d/1437767933/c6354d0d-bd10-4eed-b811-1bb569d46efd/fcf08215-e571-4cba-8ee9-501f1597240f.mp3",
+      "readings": [
+        "Exodus 1-2",
+        "Leviticus 1",
+        "Psalm 44"
+      ],
+      "readingsSource": "plan"
+    },
+    {
+      "day": 28,
+      "period": "Egypt and Exodus",
+      "title": "The Burning Bush",
+      "year": 2026,
+      "audioUrl": "https://dts.podtrac.com/redirect.mp3/aphid.fireside.fm/d/1437767933/c6354d0d-bd10-4eed-b811-1bb569d46efd/dd9155c4-87f7-4021-80e4-9a863d0b5b72.mp3",
+      "readings": [
+        "Exodus 3",
+        "Leviticus 2-3",
+        "Psalm 45"
+      ],
+      "readingsSource": "plan"
+    },
+    {
+      "day": 29,
+      "period": "Egypt and Exodus",
+      "title": "Moses Returns to Egypt",
+      "year": 2026,
+      "audioUrl": "https://dts.podtrac.com/redirect.mp3/aphid.fireside.fm/d/1437767933/c6354d0d-bd10-4eed-b811-1bb569d46efd/88fabf8c-79ba-4786-8dac-84036d5d38cf.mp3",
+      "readings": [
+        "Exodus 4-5",
+        "Leviticus 4",
+        "Psalm 46"
+      ],
+      "readingsSource": "plan"
+    },
+    {
+      "day": 30,
+      "period": "Egypt and Exodus",
+      "title": "Nile Turned to Blood",
+      "year": 2026,
+      "audioUrl": "https://dts.podtrac.com/redirect.mp3/aphid.fireside.fm/d/1437767933/c6354d0d-bd10-4eed-b811-1bb569d46efd/7fa7ebc9-c3ea-4546-a75c-c38696653c2e.mp3",
+      "readings": [
+        "Exodus 6-7",
+        "Leviticus 5",
+        "Psalm 47"
+      ],
+      "readingsSource": "plan"
+    },
+    {
+      "day": 31,
+      "period": "Egypt and Exodus",
+      "title": "Frogs, Gnats, and Flies",
+      "year": 2026,
+      "audioUrl": "https://dts.podtrac.com/redirect.mp3/aphid.fireside.fm/d/1437767933/c6354d0d-bd10-4eed-b811-1bb569d46efd/9d122268-8d6f-4700-b2d6-bb817ec38722.mp3",
+      "readings": [
+        "Exodus 8",
+        "Leviticus 6",
+        "Psalm 48"
+      ],
+      "readingsSource": "plan"
+    },
+    {
+      "day": 32,
+      "period": "Egypt and Exodus",
+      "title": "Cattle, Boils, and Hail",
+      "year": 2026,
+      "audioUrl": "https://dts.podtrac.com/redirect.mp3/aphid.fireside.fm/d/1437767933/c6354d0d-bd10-4eed-b811-1bb569d46efd/bf6ba548-5ded-490c-a8e2-6e31b40054b0.mp3",
+      "readings": [
+        "Exodus 9",
+        "Leviticus 7",
+        "Psalm 49"
+      ],
+      "readingsSource": "plan"
+    },
+    {
+      "day": 33,
+      "period": "Egypt and Exodus",
+      "title": "Locusts, Darkness, and Death of the Firstborn",
+      "year": 2026,
+      "audioUrl": "https://dts.podtrac.com/redirect.mp3/aphid.fireside.fm/d/1437767933/c6354d0d-bd10-4eed-b811-1bb569d46efd/57e3b9c6-6ac0-4a92-b5fb-d6417a796aa1.mp3",
+      "readings": [
+        "Exodus 10-11",
+        "Leviticus 8",
+        "Psalm 50"
+      ],
+      "readingsSource": "plan"
+    },
+    {
+      "day": 34,
+      "period": "Egypt and Exodus",
+      "title": "The Passover Instituted",
+      "year": 2026,
+      "audioUrl": "https://dts.podtrac.com/redirect.mp3/aphid.fireside.fm/d/1437767933/c6354d0d-bd10-4eed-b811-1bb569d46efd/041773ef-ca6e-4230-a7a5-2e94ba58bbf6.mp3",
+      "readings": [
+        "Exodus 12",
+        "Leviticus 9",
+        "Psalm 114"
+      ],
+      "readingsSource": "plan"
+    },
+    {
+      "day": 35,
+      "period": "Egypt and Exodus",
+      "title": "Crossing the Red Sea",
+      "year": 2026,
+      "audioUrl": "https://dts.podtrac.com/redirect.mp3/aphid.fireside.fm/d/1437767933/c6354d0d-bd10-4eed-b811-1bb569d46efd/1dbccaca-442e-46a0-b2e7-5167041871c2.mp3",
+      "readings": [
+        "Exodus 13-14",
+        "Leviticus 10",
+        "Psalm 53"
+      ],
+      "readingsSource": "plan"
+    },
+    {
+      "day": 36,
+      "period": "Egypt and Exodus",
+      "title": "Manna from Heaven",
+      "year": 2026,
+      "audioUrl": "https://dts.podtrac.com/redirect.mp3/aphid.fireside.fm/d/1437767933/c6354d0d-bd10-4eed-b811-1bb569d46efd/af371587-9857-40f0-b75b-c397e7accf67.mp3",
+      "readings": [
+        "Exodus 15-16",
+        "Leviticus 11",
+        "Psalm 71"
+      ],
+      "readingsSource": "plan"
+    },
+    {
+      "day": 37,
+      "period": "Egypt and Exodus",
+      "title": "The Mystical Works of God",
+      "year": 2026,
+      "audioUrl": "https://dts.podtrac.com/redirect.mp3/aphid.fireside.fm/d/1437767933/c6354d0d-bd10-4eed-b811-1bb569d46efd/b921c1f5-a62b-4f1f-965d-b42372b08221.mp3",
+      "readings": [
+        "Exodus 17-18",
+        "Leviticus 12",
+        "Psalm 73"
+      ],
+      "readingsSource": "plan"
+    },
+    {
+      "day": 38,
+      "period": "Egypt and Exodus",
+      "title": "The Ten Commandments",
+      "year": 2026,
+      "audioUrl": "https://dts.podtrac.com/redirect.mp3/aphid.fireside.fm/d/1437767933/c6354d0d-bd10-4eed-b811-1bb569d46efd/0e857154-f9b4-40aa-92d5-01b654de9644.mp3",
+      "readings": [
+        "Exodus 19-20",
+        "Leviticus 13",
+        "Psalm 74"
+      ],
+      "readingsSource": "plan"
+    },
+    {
+      "day": 39,
+      "period": "Egypt and Exodus",
+      "title": "Slavery in the Old Testament",
+      "year": 2026,
+      "audioUrl": "https://dts.podtrac.com/redirect.mp3/aphid.fireside.fm/d/1437767933/c6354d0d-bd10-4eed-b811-1bb569d46efd/7df35c5b-872e-4d92-9990-45082bb19d39.mp3",
+      "readings": [
+        "Exodus 21",
+        "Leviticus 14",
+        "Psalm 75"
+      ],
+      "readingsSource": "plan"
+    },
+    {
+      "day": 40,
+      "period": "Egypt and Exodus",
+      "title": "Laws of Justice",
+      "year": 2026,
+      "audioUrl": "https://dts.podtrac.com/redirect.mp3/aphid.fireside.fm/d/1437767933/c6354d0d-bd10-4eed-b811-1bb569d46efd/7624843c-87ce-455f-b8e2-cba0770cac6e.mp3",
+      "readings": [
+        "Exodus 22",
+        "Leviticus 15",
+        "Psalm 76"
+      ],
+      "readingsSource": "plan"
+    },
+    {
+      "day": 41,
+      "period": "Egypt and Exodus",
+      "title": "The Day of Atonement",
+      "year": 2026,
+      "audioUrl": "https://dts.podtrac.com/redirect.mp3/aphid.fireside.fm/d/1437767933/c6354d0d-bd10-4eed-b811-1bb569d46efd/3f7c994e-0ff0-4bb3-8930-06d7ae9873ba.mp3",
+      "readings": [
+        "Exodus 23",
+        "Leviticus 16",
+        "Psalm 77"
+      ],
+      "readingsSource": "plan"
+    },
+    {
+      "day": 42,
+      "period": "Egypt and Exodus",
+      "title": "Moral Laws",
+      "year": 2026,
+      "audioUrl": "https://dts.podtrac.com/redirect.mp3/aphid.fireside.fm/d/1437767933/c6354d0d-bd10-4eed-b811-1bb569d46efd/8ab31a48-16ba-47cd-9cf3-7a8880f530a4.mp3",
+      "readings": [
+        "Exodus 24",
+        "Leviticus 17-18",
+        "Psalm 78"
+      ],
+      "readingsSource": "plan"
+    },
+    {
+      "day": 43,
+      "period": "Egypt and Exodus",
+      "title": "The Ark of the Covenant",
+      "year": 2026,
+      "audioUrl": "https://dts.podtrac.com/redirect.mp3/aphid.fireside.fm/d/1437767933/c6354d0d-bd10-4eed-b811-1bb569d46efd/695c0e83-5d94-4f65-bcf5-928c7420b89f.mp3",
+      "readings": [
+        "Exodus 25-26",
+        "Leviticus 19",
+        "Psalm 119:1-56"
+      ],
+      "readingsSource": "episode"
+    },
+    {
+      "day": 44,
+      "period": "Egypt and Exodus",
+      "title": "Priestly Garments",
+      "year": 2026,
+      "audioUrl": "https://dts.podtrac.com/redirect.mp3/aphid.fireside.fm/d/1437767933/c6354d0d-bd10-4eed-b811-1bb569d46efd/719b95c6-9cd0-4e29-ba2f-4545809f8e4b.mp3",
+      "readings": [
+        "Exodus 27-28",
+        "Leviticus 20",
+        "Psalm 119:57-120"
+      ],
+      "readingsSource": "episode"
+    },
+    {
+      "day": 45,
+      "period": "Egypt and Exodus",
+      "title": "Pray for Priests",
+      "year": 2026,
+      "audioUrl": "https://dts.podtrac.com/redirect.mp3/aphid.fireside.fm/d/1437767933/c6354d0d-bd10-4eed-b811-1bb569d46efd/dc1dd312-7900-4a71-a7c3-9f2b91cc25bc.mp3",
+      "readings": [
+        "Exodus 29",
+        "Leviticus 21",
+        "Psalm 119:121-176"
+      ],
+      "readingsSource": "episode"
+    },
+    {
+      "day": 46,
+      "period": "Egypt and Exodus",
+      "title": "Set Apart for God",
+      "year": 2026,
+      "audioUrl": "https://dts.podtrac.com/redirect.mp3/aphid.fireside.fm/d/1437767933/c6354d0d-bd10-4eed-b811-1bb569d46efd/9fa060e9-66d0-48f5-baf1-d9278828df2d.mp3",
+      "readings": [
+        "Exodus 30-31",
+        "Leviticus 22",
+        "Psalm 115"
+      ],
+      "readingsSource": "plan"
+    },
+    {
+      "day": 47,
+      "period": "Egypt and Exodus",
+      "title": "The Golden Calf",
+      "year": 2026,
+      "audioUrl": "https://dts.podtrac.com/redirect.mp3/aphid.fireside.fm/d/1437767933/c6354d0d-bd10-4eed-b811-1bb569d46efd/b890b5ff-5337-414a-9970-8dd8596887fe.mp3",
+      "readings": [
+        "Exodus 32",
+        "Leviticus 23",
+        "Psalm 80"
+      ],
+      "readingsSource": "plan"
+    },
+    {
+      "day": 48,
+      "period": "Egypt and Exodus",
+      "title": "God's Presence",
+      "year": 2026,
+      "audioUrl": "https://dts.podtrac.com/redirect.mp3/aphid.fireside.fm/d/1437767933/c6354d0d-bd10-4eed-b811-1bb569d46efd/c205ce1e-6d1c-465a-ad4c-040c72687321.mp3",
+      "readings": [
+        "Exodus 33-34",
+        "Leviticus 24",
+        "Psalm 80"
+      ],
+      "readingsSource": "episode"
+    },
+    {
+      "day": 49,
+      "period": "Egypt and Exodus",
+      "title": "The Year of Jubilee",
+      "year": 2026,
+      "audioUrl": "https://dts.podtrac.com/redirect.mp3/aphid.fireside.fm/d/1437767933/c6354d0d-bd10-4eed-b811-1bb569d46efd/cf843f01-7374-4c2c-8083-18a747cae28f.mp3",
+      "readings": [
+        "Exodus 35-36",
+        "Leviticus 25",
+        "Psalm 81"
+      ],
+      "readingsSource": "episode"
+    },
+    {
+      "day": 50,
+      "period": "Egypt and Exodus",
+      "title": "Sacrificial Offerings",
+      "year": 2026,
+      "audioUrl": "https://dts.podtrac.com/redirect.mp3/aphid.fireside.fm/d/1437767933/c6354d0d-bd10-4eed-b811-1bb569d46efd/7b5292a1-6c95-47a8-ab8a-c1d54efb8e5e.mp3",
+      "readings": [
+        "Exodus 37-38",
+        "Leviticus 26",
+        "Psalm 83"
+      ],
+      "readingsSource": "plan"
+    },
+    {
+      "day": 51,
+      "period": "Egypt and Exodus",
+      "title": "Israel's Worship of God",
+      "year": 2026,
+      "audioUrl": "https://dts.podtrac.com/redirect.mp3/aphid.fireside.fm/d/1437767933/c6354d0d-bd10-4eed-b811-1bb569d46efd/acdc6e53-e62f-4f5b-8fc8-dc5c4dfbf3fe.mp3",
+      "readings": [
+        "Exodus 39-40",
+        "Leviticus 27",
+        "Psalm 83"
+      ],
+      "readingsSource": "episode"
+    },
+    {
+      "day": 52,
+      "period": "Desert Wanderings",
+      "title": "Israel Continues to Journey",
+      "year": 2026,
+      "audioUrl": "https://dts.podtrac.com/redirect.mp3/aphid.fireside.fm/d/1437767933/c6354d0d-bd10-4eed-b811-1bb569d46efd/d6b11db9-5a71-4555-b773-0b98b1aba76d.mp3",
+      "readings": [
+        "Numbers 1",
+        "Deuteronomy 1",
+        "Psalm 84"
+      ],
+      "readingsSource": "episode"
+    },
+    {
+      "day": 53,
+      "period": "Desert Wanderings",
+      "title": "The Twelve Tribes of Israel",
+      "year": 2026,
+      "audioUrl": "https://dts.podtrac.com/redirect.mp3/aphid.fireside.fm/d/1437767933/c6354d0d-bd10-4eed-b811-1bb569d46efd/b724bc72-6835-44e5-9f98-87851f27abbd.mp3",
+      "readings": [
+        "Numbers 2",
+        "Deuteronomy 2",
+        "Psalm 85"
+      ],
+      "readingsSource": "episode"
+    },
+    {
+      "day": 54,
+      "period": "Desert Wanderings",
+      "title": "The Tribe of Levi",
+      "year": 2026,
+      "audioUrl": "https://dts.podtrac.com/redirect.mp3/aphid.fireside.fm/d/1437767933/c6354d0d-bd10-4eed-b811-1bb569d46efd/f75c8273-dabc-4f71-8e7e-f590c83efa29.mp3",
+      "readings": [
+        "Numbers 3",
+        "Deuteronomy 3",
+        "Psalm 88"
+      ],
+      "readingsSource": "plan"
+    },
+    {
+      "day": 55,
+      "period": "Desert Wanderings",
+      "title": "Obedience to God",
+      "year": 2026,
+      "audioUrl": "https://dts.podtrac.com/redirect.mp3/aphid.fireside.fm/d/1437767933/c6354d0d-bd10-4eed-b811-1bb569d46efd/41b8794b-e527-4c36-907a-6b9b4fc841e9.mp3",
+      "readings": [
+        "Numbers 4",
+        "Deuteronomy 4",
+        "Psalm 89"
+      ],
+      "readingsSource": "plan"
+    },
+    {
+      "day": 56,
+      "period": "Desert Wanderings",
+      "title": "Jealous Husbands",
+      "year": 2026,
+      "audioUrl": "https://dts.podtrac.com/redirect.mp3/aphid.fireside.fm/d/1437767933/c6354d0d-bd10-4eed-b811-1bb569d46efd/2e76e863-2a4f-4937-ad4b-72ad4592fedd.mp3",
+      "readings": [
+        "Numbers 5",
+        "Deuteronomy 5",
+        "Psalm 90"
+      ],
+      "readingsSource": "plan"
+    },
+    {
+      "day": 57,
+      "period": "Desert Wanderings",
+      "title": "Hear, O Israel",
+      "year": 2026,
+      "audioUrl": "https://dts.podtrac.com/redirect.mp3/aphid.fireside.fm/d/1437767933/c6354d0d-bd10-4eed-b811-1bb569d46efd/b9b9dbaa-1466-4ecf-9199-3fa26ae8185c.mp3",
+      "readings": [
+        "Numbers 6",
+        "Deuteronomy 6",
+        "Psalm 91"
+      ],
+      "readingsSource": "plan"
+    },
+    {
+      "day": 58,
+      "period": "Desert Wanderings",
+      "title": "A Chosen People",
+      "year": 2026,
+      "audioUrl": "https://dts.podtrac.com/redirect.mp3/aphid.fireside.fm/d/1437767933/c6354d0d-bd10-4eed-b811-1bb569d46efd/48c0d553-83dd-4e66-a275-df1d17fdbefa.mp3",
+      "readings": [
+        "Numbers 7",
+        "Deuteronomy 7",
+        "Psalm 92"
+      ],
+      "readingsSource": "plan"
+    },
+    {
+      "day": 59,
+      "period": "Desert Wanderings",
+      "title": "Obligations to God",
+      "year": 2026,
+      "audioUrl": "https://dts.podtrac.com/redirect.mp3/aphid.fireside.fm/d/1437767933/c6354d0d-bd10-4eed-b811-1bb569d46efd/c597612c-107b-449f-87fb-75240e480952.mp3",
+      "readings": [
+        "Numbers 8-9",
+        "Deuteronomy 8",
+        "Psalm 93"
+      ],
+      "readingsSource": "plan"
+    },
+    {
+      "day": 60,
+      "period": "Desert Wanderings",
+      "title": "Intercessory Prayer",
+      "year": 2026,
+      "audioUrl": "https://dts.podtrac.com/redirect.mp3/aphid.fireside.fm/d/1437767933/c6354d0d-bd10-4eed-b811-1bb569d46efd/416a2ba5-f09a-4e2c-a256-4e6ae442ddba.mp3",
+      "readings": [
+        "Numbers 10",
+        "Deuteronomy 9",
+        "Psalm 10"
+      ],
+      "readingsSource": "plan"
+    },
+    {
+      "day": 61,
+      "period": "Desert Wanderings",
+      "title": "Complaining in the Desert",
+      "year": 2026,
+      "audioUrl": "https://dts.podtrac.com/redirect.mp3/aphid.fireside.fm/d/1437767933/c6354d0d-bd10-4eed-b811-1bb569d46efd/d295a123-a1c4-4b2b-bcb4-e12f05d69c3a.mp3",
+      "readings": [
+        "Numbers 11",
+        "Deuteronomy 10",
+        "Psalm 33"
+      ],
+      "readingsSource": "plan"
+    },
+    {
+      "day": 62,
+      "period": "Desert Wanderings",
+      "title": "Spies Sent to Canaan",
+      "year": 2026,
+      "audioUrl": "https://dts.podtrac.com/redirect.mp3/aphid.fireside.fm/d/1437767933/c6354d0d-bd10-4eed-b811-1bb569d46efd/f1ec6da3-8e6a-43c5-b2de-90c3ff395932.mp3",
+      "readings": [
+        "Numbers 12, 13",
+        "Deuteronomy 11",
+        "Psalm 94"
+      ],
+      "readingsSource": "episode"
+    },
+    {
+      "day": 63,
+      "period": "Desert Wanderings",
+      "title": "Israel's Rebellion",
+      "year": 2026,
+      "audioUrl": "https://dts.podtrac.com/redirect.mp3/aphid.fireside.fm/d/1437767933/c6354d0d-bd10-4eed-b811-1bb569d46efd/8648dcd1-4491-4f02-9da6-9dd55983e261.mp3",
+      "readings": [
+        "Numbers 14",
+        "Deuteronomy 12",
+        "Psalm 95"
+      ],
+      "readingsSource": "plan"
+    },
+    {
+      "day": 64,
+      "period": "Desert Wanderings",
+      "title": "Consequences of Sin",
+      "year": 2026,
+      "audioUrl": "https://dts.podtrac.com/redirect.mp3/aphid.fireside.fm/d/1437767933/c6354d0d-bd10-4eed-b811-1bb569d46efd/514c7ea8-547c-4042-b188-aed11a4c397b.mp3",
+      "readings": [
+        "Numbers 15",
+        "Deuteronomy 13-14",
+        "Psalm 96"
+      ],
+      "readingsSource": "plan"
+    },
+    {
+      "day": 65,
+      "period": "Desert Wanderings",
+      "title": "Revolt Against Moses",
+      "year": 2026,
+      "audioUrl": "https://dts.podtrac.com/redirect.mp3/aphid.fireside.fm/d/1437767933/c6354d0d-bd10-4eed-b811-1bb569d46efd/79eb7472-86d1-484a-8fbb-e2a8104c89f7.mp3",
+      "readings": [
+        "Numbers 16",
+        "Deuteronomy 15-16",
+        "Psalm 97"
+      ],
+      "readingsSource": "plan"
+    },
+    {
+      "day": 66,
+      "period": "Desert Wanderings",
+      "title": "Forbidden Forms of Worship",
+      "year": 2026,
+      "audioUrl": "https://dts.podtrac.com/redirect.mp3/aphid.fireside.fm/d/1437767933/c6354d0d-bd10-4eed-b811-1bb569d46efd/0d53b91d-5a86-48ab-9fbe-14b020aca45e.mp3",
+      "readings": [
+        "Numbers 17",
+        "Deuteronomy 17-18",
+        "Psalm 98"
+      ],
+      "readingsSource": "plan"
+    },
+    {
+      "day": 67,
+      "period": "Desert Wanderings",
+      "title": "God's Justice and Refuge",
+      "year": 2026,
+      "audioUrl": "https://dts.podtrac.com/redirect.mp3/aphid.fireside.fm/d/1437767933/c6354d0d-bd10-4eed-b811-1bb569d46efd/edefc1a0-5923-4f7d-bb07-49a0a7eba945.mp3",
+      "readings": [
+        "Numbers 18",
+        "Deuteronomy 19-20",
+        "Psalm 99"
+      ],
+      "readingsSource": "plan"
+    },
+    {
+      "day": 68,
+      "period": "Desert Wanderings",
+      "title": "The Waters of Meribah",
+      "year": 2026,
+      "audioUrl": "https://dts.podtrac.com/redirect.mp3/aphid.fireside.fm/d/1437767933/c6354d0d-bd10-4eed-b811-1bb569d46efd/e01b8314-6cc6-4a27-81a0-5db96a42bd59.mp3",
+      "readings": [
+        "Numbers 19-20",
+        "Deuteronomy 21",
+        "Psalm 100"
+      ],
+      "readingsSource": "plan"
+    },
+    {
+      "day": 69,
+      "period": "Desert Wanderings",
+      "title": "The Bronze Serpent",
+      "year": 2026,
+      "audioUrl": "https://dts.podtrac.com/redirect.mp3/aphid.fireside.fm/d/1437767933/c6354d0d-bd10-4eed-b811-1bb569d46efd/66470082-4b1d-46fc-9998-87a5f2b08a12.mp3",
+      "readings": [
+        "Numbers 21",
+        "Deuteronomy 22",
+        "Psalm 102"
+      ],
+      "readingsSource": "plan"
+    },
+    {
+      "day": 70,
+      "period": "Desert Wanderings",
+      "title": "The Offense of Balaam",
+      "year": 2026,
+      "audioUrl": "https://dts.podtrac.com/redirect.mp3/aphid.fireside.fm/d/1437767933/c6354d0d-bd10-4eed-b811-1bb569d46efd/79230b12-bf71-4c84-9eb1-3efb742d0f59.mp3",
+      "readings": [
+        "Numbers 22",
+        "Deuteronomy 23",
+        "Psalm 105"
+      ],
+      "readingsSource": "plan"
+    },
+    {
+      "day": 71,
+      "period": "Desert Wanderings",
+      "title": "The Source of the Law",
+      "year": 2026,
+      "audioUrl": "https://dts.podtrac.com/redirect.mp3/aphid.fireside.fm/d/1437767933/c6354d0d-bd10-4eed-b811-1bb569d46efd/cd1bcf03-d4ad-4f94-b735-46ba7b762be0.mp3",
+      "readings": [
+        "Numbers 23",
+        "Deuteronomy 24-25",
+        "Psalm 106"
+      ],
+      "readingsSource": "plan"
+    },
+    {
+      "day": 72,
+      "period": "Desert Wanderings",
+      "title": "The Plains of Moab",
+      "year": 2026,
+      "audioUrl": "https://dts.podtrac.com/redirect.mp3/aphid.fireside.fm/d/1437767933/c6354d0d-bd10-4eed-b811-1bb569d46efd/81abf725-832d-47c9-a16a-9c8c1302a9a6.mp3",
+      "readings": [
+        "Numbers 24-25",
+        "Deuteronomy 26",
+        "Psalm 107"
+      ],
+      "readingsSource": "plan"
+    },
+    {
+      "day": 73,
+      "period": "Desert Wanderings",
+      "title": "Inheritance of Land",
+      "year": 2026,
+      "audioUrl": "https://dts.podtrac.com/redirect.mp3/aphid.fireside.fm/d/1437767933/c6354d0d-bd10-4eed-b811-1bb569d46efd/80617591-f0d3-4ed6-9bc5-3339522aa56e.mp3",
+      "readings": [
+        "Numbers 26",
+        "Deuteronomy 27",
+        "Psalm 111"
+      ],
+      "readingsSource": "plan"
+    },
+    {
+      "day": 74,
+      "period": "Desert Wanderings",
+      "title": "Joshua Appointed",
+      "year": 2026,
+      "audioUrl": "https://dts.podtrac.com/redirect.mp3/aphid.fireside.fm/d/1437767933/c6354d0d-bd10-4eed-b811-1bb569d46efd/bd780291-452c-462f-b9c1-0115668d944c.mp3",
+      "readings": [
+        "Numbers 27-28",
+        "Deuteronomy 28",
+        "Psalm 112"
+      ],
+      "readingsSource": "plan"
+    },
+    {
+      "day": 75,
+      "period": "Desert Wanderings",
+      "title": "The Keeping of Vows",
+      "year": 2026,
+      "audioUrl": "https://dts.podtrac.com/redirect.mp3/aphid.fireside.fm/d/1437767933/c6354d0d-bd10-4eed-b811-1bb569d46efd/a9e1e628-a374-4f61-b6c2-ed16cd3f649c.mp3",
+      "readings": [
+        "Numbers 29-30",
+        "Deuteronomy 29",
+        "Psalm 113"
+      ],
+      "readingsSource": "plan"
+    },
+    {
+      "day": 76,
+      "period": "Desert Wanderings",
+      "title": "War Against Midian",
+      "year": 2026,
+      "audioUrl": "https://dts.podtrac.com/redirect.mp3/aphid.fireside.fm/d/1437767933/c6354d0d-bd10-4eed-b811-1bb569d46efd/30d979ad-87ed-4bb6-a50c-1ac8055ff892.mp3",
+      "readings": [
+        "Numbers 31",
+        "Deuteronomy 30",
+        "Psalm 116"
+      ],
+      "readingsSource": "plan"
+    },
+    {
+      "day": 77,
+      "period": "Desert Wanderings",
+      "title": "God Is Faithful",
+      "year": 2026,
+      "audioUrl": "https://dts.podtrac.com/redirect.mp3/aphid.fireside.fm/d/1437767933/c6354d0d-bd10-4eed-b811-1bb569d46efd/f0998525-cc41-41a8-b1e0-6d551e3fc4d8.mp3",
+      "readings": [
+        "Numbers 32",
+        "Deuteronomy 31",
+        "Psalm 117"
+      ],
+      "readingsSource": "plan"
+    },
+    {
+      "day": 78,
+      "period": "Desert Wanderings",
+      "title": "The Song of Moses",
+      "year": 2026,
+      "audioUrl": "https://dts.podtrac.com/redirect.mp3/aphid.fireside.fm/d/1437767933/c6354d0d-bd10-4eed-b811-1bb569d46efd/9d6586c3-e1a9-4a66-99cd-cf973311a012.mp3",
+      "readings": [
+        "Numbers 33",
+        "Deuteronomy 32",
+        "Psalm 118"
+      ],
+      "readingsSource": "plan"
+    },
+    {
+      "day": 79,
+      "period": "Desert Wanderings",
+      "title": "Psalms of Ascent",
+      "year": 2026,
+      "audioUrl": "https://dts.podtrac.com/redirect.mp3/aphid.fireside.fm/d/1437767933/c6354d0d-bd10-4eed-b811-1bb569d46efd/c2253209-1676-4293-a922-42fbe652456b.mp3",
+      "readings": [
+        "Numbers 34",
+        "Deuteronomy 33",
+        "Psalm 120"
+      ],
+      "readingsSource": "plan"
+    },
+    {
+      "day": 80,
+      "period": "Desert Wanderings",
+      "title": "Cities of Refuge",
+      "year": 2026,
+      "audioUrl": "https://dts.podtrac.com/redirect.mp3/aphid.fireside.fm/d/1437767933/c6354d0d-bd10-4eed-b811-1bb569d46efd/dc43f583-e111-4d61-9b59-ab69f799ed57.mp3",
+      "readings": [
+        "Numbers 35-36",
+        "Deuteronomy 34",
+        "Psalm 121"
+      ],
+      "readingsSource": "plan"
+    },
+    {
+      "day": 81,
+      "period": "Conquest and Judges",
+      "title": "Israel Crosses the Jordan",
+      "year": 2026,
+      "audioUrl": "https://dts.podtrac.com/redirect.mp3/aphid.fireside.fm/d/1437767933/c6354d0d-bd10-4eed-b811-1bb569d46efd/540419c3-2a10-4a30-a08c-324205675770.mp3",
+      "readings": [
+        "Joshua 1-4",
+        "Psalm 123"
+      ],
+      "readingsSource": "plan"
+    },
+    {
+      "day": 82,
+      "period": "Conquest and Judges",
+      "title": "The Valley of Achor",
+      "year": 2026,
+      "audioUrl": "https://dts.podtrac.com/redirect.mp3/aphid.fireside.fm/d/1437767933/c6354d0d-bd10-4eed-b811-1bb569d46efd/c34b86a4-d5ee-4ad1-861c-e726c83d3e7a.mp3",
+      "readings": [
+        "Joshua 5-7",
+        "Psalm 125"
+      ],
+      "readingsSource": "plan"
+    },
+    {
+      "day": 83,
+      "period": "Conquest and Judges",
+      "title": "The Gibeonite Trickery",
+      "year": 2026,
+      "audioUrl": "https://dts.podtrac.com/redirect.mp3/aphid.fireside.fm/d/1437767933/c6354d0d-bd10-4eed-b811-1bb569d46efd/42bbafa9-34e9-4f4a-b557-641a15b08bd2.mp3",
+      "readings": [
+        "Joshua 8-9",
+        "Psalm 126"
+      ],
+      "readingsSource": "plan"
+    },
+    {
+      "day": 84,
+      "period": "Conquest and Judges",
+      "title": "The Sun Stands Still",
+      "year": 2026,
+      "audioUrl": "https://dts.podtrac.com/redirect.mp3/aphid.fireside.fm/d/1437767933/c6354d0d-bd10-4eed-b811-1bb569d46efd/2b335254-c527-44a0-9e99-fe15cadd5731.mp3",
+      "readings": [
+        "Joshua 10-11",
+        "Psalm 128"
+      ],
+      "readingsSource": "plan"
+    },
+    {
+      "day": 85,
+      "period": "Conquest and Judges",
+      "title": "Fighting for Each Other",
+      "year": 2026,
+      "audioUrl": "https://dts.podtrac.com/redirect.mp3/aphid.fireside.fm/d/1437767933/c6354d0d-bd10-4eed-b811-1bb569d46efd/51b0ac67-f4b4-4019-88f0-8b5111a3897f.mp3",
+      "readings": [
+        "Joshua 12-14",
+        "Psalm 129"
+      ],
+      "readingsSource": "plan"
+    },
+    {
+      "day": 86,
+      "period": "Conquest and Judges",
+      "title": "The Real Presence of God",
+      "year": 2026,
+      "audioUrl": "https://dts.podtrac.com/redirect.mp3/aphid.fireside.fm/d/1437767933/c6354d0d-bd10-4eed-b811-1bb569d46efd/bba4879a-216a-423d-b867-eee327c1e488.mp3",
+      "readings": [
+        "Joshua 15-18",
+        "Psalm 130"
+      ],
+      "readingsSource": "plan"
+    },
+    {
+      "day": 87,
+      "period": "Conquest and Judges",
+      "title": "God Keeps His Promises",
+      "year": 2026,
+      "audioUrl": "https://dts.podtrac.com/redirect.mp3/aphid.fireside.fm/d/1437767933/c6354d0d-bd10-4eed-b811-1bb569d46efd/b268955c-0db9-4b38-b83d-0f6dc90e12f7.mp3",
+      "readings": [
+        "Joshua 19-21",
+        "Psalm 131"
+      ],
+      "readingsSource": "plan"
+    },
+    {
+      "day": 88,
+      "period": "Conquest and Judges",
+      "title": "Joshua's Last Words to Israel",
+      "year": 2026,
+      "audioUrl": "https://dts.podtrac.com/redirect.mp3/aphid.fireside.fm/d/1437767933/c6354d0d-bd10-4eed-b811-1bb569d46efd/03c66d96-f1e7-48b1-b885-16f891bee4b7.mp3",
+      "readings": [
+        "Joshua 22-24",
+        "Psalm 132"
+      ],
+      "readingsSource": "plan"
+    },
+    {
+      "day": 89,
+      "period": "Conquest and Judges",
+      "title": "Israel's Cycle of Disobedience",
+      "year": 2026,
+      "audioUrl": "https://dts.podtrac.com/redirect.mp3/aphid.fireside.fm/d/1437767933/c6354d0d-bd10-4eed-b811-1bb569d46efd/592f9d4e-a20d-4c19-9800-c213b15c14ec.mp3",
+      "readings": [
+        "Judges 1-3",
+        "Ruth 1",
+        "Psalm 133"
+      ],
+      "readingsSource": "plan"
+    },
+    {
+      "day": 90,
+      "period": "Conquest and Judges",
+      "title": "Ruth and Boaz",
+      "year": 2026,
+      "audioUrl": "https://dts.podtrac.com/redirect.mp3/aphid.fireside.fm/d/1437767933/c6354d0d-bd10-4eed-b811-1bb569d46efd/8176b472-a951-4016-b29f-f6f2c629e656.mp3",
+      "readings": [
+        "Judges 4-5",
+        "Ruth 2",
+        "Psalm 134"
+      ],
+      "readingsSource": "plan"
+    },
+    {
+      "day": 91,
+      "period": "Conquest and Judges",
+      "title": "Gideon's Story",
+      "year": 2026,
+      "audioUrl": "https://dts.podtrac.com/redirect.mp3/aphid.fireside.fm/d/1437767933/c6354d0d-bd10-4eed-b811-1bb569d46efd/3560555f-d9ad-46ce-b4fc-fd4d0dc96dfd.mp3",
+      "readings": [
+        "Judges 6-8",
+        "Ruth 3",
+        "Psalm 135"
+      ],
+      "readingsSource": "plan"
+    },
+    {
+      "day": 92,
+      "period": "Conquest and Judges",
+      "title": "Jephthah's Vow",
+      "year": 2026,
+      "audioUrl": "https://dts.podtrac.com/redirect.mp3/aphid.fireside.fm/d/1437767933/c6354d0d-bd10-4eed-b811-1bb569d46efd/49ebcfc4-5920-4959-9417-0cb185a9ffeb.mp3",
+      "readings": [
+        "Judges 9-11",
+        "Ruth 4",
+        "Psalm 137"
+      ],
+      "readingsSource": "plan"
+    },
+    {
+      "day": 93,
+      "period": "Conquest and Judges",
+      "title": "Strengths and Weaknesses",
+      "year": 2026,
+      "audioUrl": "https://dts.podtrac.com/redirect.mp3/aphid.fireside.fm/d/1437767933/c6354d0d-bd10-4eed-b811-1bb569d46efd/23d43d2c-fe29-4a20-beb2-d8b9793c2e09.mp3",
+      "readings": [
+        "Judges 12-15",
+        "Psalm 146"
+      ],
+      "readingsSource": "plan"
+    },
+    {
+      "day": 94,
+      "period": "Conquest and Judges",
+      "title": "Samson and Delilah",
+      "year": 2026,
+      "audioUrl": "https://dts.podtrac.com/redirect.mp3/aphid.fireside.fm/d/1437767933/c6354d0d-bd10-4eed-b811-1bb569d46efd/a747c716-015c-4004-9cc7-94af5c0f4bf6.mp3",
+      "readings": [
+        "Judges 16-18",
+        "Psalm 147"
+      ],
+      "readingsSource": "plan"
+    },
+    {
+      "day": 95,
+      "period": "Conquest and Judges",
+      "title": "The Sin of Benjamin",
+      "year": 2026,
+      "audioUrl": "https://dts.podtrac.com/redirect.mp3/aphid.fireside.fm/d/1437767933/c6354d0d-bd10-4eed-b811-1bb569d46efd/dc5de306-0c4c-4e08-abb1-dc7bc523fce1.mp3",
+      "readings": [
+        "Judges 19-21",
+        "Psalm 148"
+      ],
+      "readingsSource": "plan"
+    },
+    {
+      "day": 96,
+      "period": "Conquest and Judges",
+      "title": "Hannah's Prayer",
+      "year": 2026,
+      "audioUrl": "https://dts.podtrac.com/redirect.mp3/aphid.fireside.fm/d/1437767933/c6354d0d-bd10-4eed-b811-1bb569d46efd/15d59810-4703-49ec-914c-da2ca15d3c48.mp3",
+      "readings": [
+        "1 Samuel 1-2",
+        "Psalm 149"
+      ],
+      "readingsSource": "plan"
+    },
+    {
+      "day": 97,
+      "period": "Conquest and Judges",
+      "title": "Samuel's Prophecy",
+      "year": 2026,
+      "audioUrl": "https://dts.podtrac.com/redirect.mp3/aphid.fireside.fm/d/1437767933/c6354d0d-bd10-4eed-b811-1bb569d46efd/b9051b12-8318-4434-955c-8a41057d7ea0.mp3",
+      "readings": [
+        "1 Samuel 3-5",
+        "Psalm 150"
+      ],
+      "readingsSource": "plan"
+    },
+    {
+      "day": 98,
+      "period": "Conquest and Judges",
+      "title": "Israel Asks for a King",
+      "year": 2026,
+      "audioUrl": "https://dts.podtrac.com/redirect.mp3/aphid.fireside.fm/d/1437767933/c6354d0d-bd10-4eed-b811-1bb569d46efd/45ccb4aa-e463-4cc0-8814-3364775bb455.mp3",
+      "readings": [
+        "1 Samuel 6-8",
+        "Psalm 86"
+      ],
+      "readingsSource": "plan"
+    },
+    {
+      "day": 99,
+      "period": "Messianic Checkpoint",
+      "title": "The Word Became Flesh",
+      "year": 2026,
+      "audioUrl": "https://dts.podtrac.com/redirect.mp3/aphid.fireside.fm/d/1437767933/c6354d0d-bd10-4eed-b811-1bb569d46efd/e5339a41-5512-44e6-bb15-11b32eca0c0c.mp3",
+      "readings": [
+        "John 1-3",
+        "Proverbs 5:1-6"
+      ],
+      "readingsSource": "plan"
+    },
+    {
+      "day": 100,
+      "period": "Messianic Checkpoint",
+      "title": "This Is My Body",
+      "year": 2026,
+      "audioUrl": "https://dts.podtrac.com/redirect.mp3/aphid.fireside.fm/d/1437767933/c6354d0d-bd10-4eed-b811-1bb569d46efd/7280f889-f3c6-4450-8d5c-c40129ea97ac.mp3",
+      "readings": [
+        "John 4-6",
+        "Proverbs 5:7-14"
+      ],
+      "readingsSource": "plan"
+    },
+    {
+      "day": 101,
+      "period": "Messianic Checkpoint",
+      "title": "Signs and Wonders",
+      "year": 2026,
+      "audioUrl": "https://dts.podtrac.com/redirect.mp3/aphid.fireside.fm/d/1437767933/c6354d0d-bd10-4eed-b811-1bb569d46efd/5ac9f6ae-ea50-4a07-9f53-d3a77aca9e93.mp3",
+      "readings": [
+        "John 7-9",
+        "Proverbs 5:15-23"
+      ],
+      "readingsSource": "plan"
+    },
+    {
+      "day": 102,
+      "period": "Messianic Checkpoint",
+      "title": "The Death of Lazarus",
+      "year": 2026,
+      "audioUrl": "https://dts.podtrac.com/redirect.mp3/aphid.fireside.fm/d/1437767933/c6354d0d-bd10-4eed-b811-1bb569d46efd/429224d1-817b-43cb-ba72-8be6eaa7e88a.mp3",
+      "readings": [
+        "John 10-12",
+        "Proverbs 6:1-5"
+      ],
+      "readingsSource": "episode"
+    },
+    {
+      "day": 103,
+      "period": "Messianic Checkpoint",
+      "title": "Judas' Secrecy",
+      "year": 2026,
+      "audioUrl": "https://dts.podtrac.com/redirect.mp3/aphid.fireside.fm/d/1437767933/c6354d0d-bd10-4eed-b811-1bb569d46efd/05d13a83-e84c-4e96-81d7-51527cbe8a90.mp3",
+      "readings": [
+        "John 13-15",
+        "Proverbs 6:6-11"
+      ],
+      "readingsSource": "episode"
+    },
+    {
+      "day": 104,
+      "period": "Messianic Checkpoint",
+      "title": "The Priestly Prayer of Jesus",
+      "year": 2026,
+      "audioUrl": "https://dts.podtrac.com/redirect.mp3/aphid.fireside.fm/d/1437767933/c6354d0d-bd10-4eed-b811-1bb569d46efd/d4e7e194-6eb0-4df8-9879-a663b4fdb6de.mp3",
+      "readings": [
+        "John 16-18",
+        "Proverbs 6:12-15"
+      ],
+      "readingsSource": "episode"
+    },
+    {
+      "day": 105,
+      "period": "Messianic Checkpoint",
+      "title": "It Is Finished",
+      "year": 2026,
+      "audioUrl": "https://dts.podtrac.com/redirect.mp3/aphid.fireside.fm/d/1437767933/c6354d0d-bd10-4eed-b811-1bb569d46efd/9ae8b493-8167-4237-a9e2-829348eb9477.mp3",
+      "readings": [
+        "John 19-21",
+        "Proverbs 6:16-22"
+      ],
+      "readingsSource": "episode"
+    },
+    {
+      "day": 106,
+      "period": "Royal Kingdom",
+      "title": "Saul Is Chosen",
+      "year": 2026,
+      "audioUrl": "https://dts.podtrac.com/redirect.mp3/aphid.fireside.fm/d/1437767933/c6354d0d-bd10-4eed-b811-1bb569d46efd/75b22bcf-0ad3-4a77-8462-e6e2bf90687c.mp3",
+      "readings": [
+        "1 Samuel 9-10",
+        "Proverbs 6:23-35"
+      ],
+      "readingsSource": "episode"
+    },
+    {
+      "day": 107,
+      "period": "Royal Kingdom",
+      "title": "Samuel's Speech",
+      "year": 2026,
+      "audioUrl": "https://dts.podtrac.com/redirect.mp3/aphid.fireside.fm/d/1437767933/c6354d0d-bd10-4eed-b811-1bb569d46efd/f570a74d-283d-4659-aa2e-b079b243eb07.mp3",
+      "readings": [
+        "1 Samuel 11-12",
+        "Psalm 55"
+      ],
+      "readingsSource": "plan"
+    },
+    {
+      "day": 108,
+      "period": "Royal Kingdom",
+      "title": "Saul's Vanity",
+      "year": 2026,
+      "audioUrl": "https://dts.podtrac.com/redirect.mp3/aphid.fireside.fm/d/1437767933/c6354d0d-bd10-4eed-b811-1bb569d46efd/587e43b6-ad29-4d01-8116-855251aec7f2.mp3",
+      "readings": [
+        "1 Samuel 13-14",
+        "Psalm 58"
+      ],
+      "readingsSource": "plan"
+    },
+    {
+      "day": 109,
+      "period": "Royal Kingdom",
+      "title": "A Heart of Obedience",
+      "year": 2026,
+      "audioUrl": "https://dts.podtrac.com/redirect.mp3/aphid.fireside.fm/d/1437767933/c6354d0d-bd10-4eed-b811-1bb569d46efd/b2644ea4-2cb4-47a9-8c72-b3ccc19e9682.mp3",
+      "readings": [
+        "1 Samuel 15-16",
+        "Psalm 61"
+      ],
+      "readingsSource": "plan"
+    },
+    {
+      "day": 110,
+      "period": "Royal Kingdom",
+      "title": "David and Goliath",
+      "year": 2026,
+      "audioUrl": "https://dts.podtrac.com/redirect.mp3/aphid.fireside.fm/d/1437767933/c6354d0d-bd10-4eed-b811-1bb569d46efd/3c2e1605-5b6d-4e08-8bcb-d3064d5961e4.mp3",
+      "readings": [
+        "1 Samuel 17",
+        "Psalm 12"
+      ],
+      "readingsSource": "plan"
+    },
+    {
+      "day": 111,
+      "period": "Royal Kingdom",
+      "title": "Saul Tries to Kill David",
+      "year": 2026,
+      "audioUrl": "https://dts.podtrac.com/redirect.mp3/aphid.fireside.fm/d/1437767933/c6354d0d-bd10-4eed-b811-1bb569d46efd/e0a2e272-3635-436a-94ee-5099855445bc.mp3",
+      "readings": [
+        "1 Samuel 18-19",
+        "Psalm 59"
+      ],
+      "readingsSource": "plan"
+    },
+    {
+      "day": 112,
+      "period": "Royal Kingdom",
+      "title": "True Friendship",
+      "year": 2026,
+      "audioUrl": "https://dts.podtrac.com/redirect.mp3/aphid.fireside.fm/d/1437767933/c6354d0d-bd10-4eed-b811-1bb569d46efd/cfcda353-feea-4dfd-b156-fde776c09449.mp3",
+      "readings": [
+        "1 Samuel 20",
+        "Psalm 142"
+      ],
+      "readingsSource": "plan"
+    },
+    {
+      "day": 113,
+      "period": "Royal Kingdom",
+      "title": "Broken Trust",
+      "year": 2026,
+      "audioUrl": "https://dts.podtrac.com/redirect.mp3/aphid.fireside.fm/d/1437767933/c6354d0d-bd10-4eed-b811-1bb569d46efd/05873eaa-668b-4cb6-90da-d9b6c5c657a1.mp3",
+      "readings": [
+        "1 Samuel 21-22",
+        "Psalm 52"
+      ],
+      "readingsSource": "plan"
+    },
+    {
+      "day": 114,
+      "period": "Royal Kingdom",
+      "title": "David Saves Keilah",
+      "year": 2026,
+      "audioUrl": "https://dts.podtrac.com/redirect.mp3/aphid.fireside.fm/d/1437767933/c6354d0d-bd10-4eed-b811-1bb569d46efd/90fbfd6c-8b36-46af-b293-ed302bc7f1bb.mp3",
+      "readings": [
+        "1 Samuel 23",
+        "Psalm 54"
+      ],
+      "readingsSource": "plan"
+    },
+    {
+      "day": 115,
+      "period": "Royal Kingdom",
+      "title": "King Saul is Spared",
+      "year": 2026,
+      "audioUrl": "https://dts.podtrac.com/redirect.mp3/aphid.fireside.fm/d/1437767933/c6354d0d-bd10-4eed-b811-1bb569d46efd/60f0751a-3c43-4314-aa48-6549a8329511.mp3",
+      "readings": [
+        "1 Samuel 24",
+        "Psalm 57"
+      ],
+      "readingsSource": "plan"
+    },
+    {
+      "day": 116,
+      "period": "Royal Kingdom",
+      "title": "David and Abigail",
+      "year": 2026,
+      "audioUrl": "https://dts.podtrac.com/redirect.mp3/aphid.fireside.fm/d/1437767933/c6354d0d-bd10-4eed-b811-1bb569d46efd/4b5bf6be-2227-4f6d-b126-7e124898a085.mp3",
+      "readings": [
+        "1 Samuel 25",
+        "Psalm 63"
+      ],
+      "readingsSource": "plan"
+    },
+    {
+      "day": 117,
+      "period": "Royal Kingdom",
+      "title": "Reverence and Faithfulness",
+      "year": 2026,
+      "audioUrl": "https://dts.podtrac.com/redirect.mp3/aphid.fireside.fm/d/1437767933/c6354d0d-bd10-4eed-b811-1bb569d46efd/5aa5a63a-0121-46be-9424-ff916a45553a.mp3",
+      "readings": [
+        "1 Samuel 26",
+        "Psalm 56"
+      ],
+      "readingsSource": "plan"
+    },
+    {
+      "day": 118,
+      "period": "Royal Kingdom",
+      "title": "King Saul Despairs",
+      "year": 2026,
+      "audioUrl": "https://dts.podtrac.com/redirect.mp3/aphid.fireside.fm/d/1437767933/c6354d0d-bd10-4eed-b811-1bb569d46efd/9c46f344-1691-4aa3-ae4f-9ea48a4db661.mp3",
+      "readings": [
+        "1 Samuel 27-28",
+        "Psalm 34"
+      ],
+      "readingsSource": "plan"
+    },
+    {
+      "day": 119,
+      "period": "Royal Kingdom",
+      "title": "David's Wisdom",
+      "year": 2026,
+      "audioUrl": "https://dts.podtrac.com/redirect.mp3/aphid.fireside.fm/d/1437767933/c6354d0d-bd10-4eed-b811-1bb569d46efd/f2cc14b1-acad-4cc0-abbe-9dc0686c1ff2.mp3",
+      "readings": [
+        "1 Samuel 29-31",
+        "Psalm 18"
+      ],
+      "readingsSource": "plan"
+    },
+    {
+      "day": 120,
+      "period": "Royal Kingdom",
+      "title": "David Mourns Saul",
+      "year": 2026,
+      "audioUrl": "https://dts.podtrac.com/redirect.mp3/aphid.fireside.fm/d/1437767933/c6354d0d-bd10-4eed-b811-1bb569d46efd/1c676c65-f674-43a6-bb00-3e1c91ad3bed.mp3",
+      "readings": [
+        "2 Samuel 1",
+        "1 Chronicles 1",
+        "Psalm 13"
+      ],
+      "readingsSource": "plan"
+    },
+    {
+      "day": 121,
+      "period": "Royal Kingdom",
+      "title": "Cycle of Violence",
+      "year": 2026,
+      "audioUrl": "https://dts.podtrac.com/redirect.mp3/aphid.fireside.fm/d/1437767933/c6354d0d-bd10-4eed-b811-1bb569d46efd/e0fbc498-7102-4e0d-b66b-02476f200195.mp3",
+      "readings": [
+        "2 Samuel 2",
+        "1 Chronicles 2",
+        "Psalm 24"
+      ],
+      "readingsSource": "plan"
+    },
+    {
+      "day": 122,
+      "period": "Royal Kingdom",
+      "title": "Abner Is Killed",
+      "year": 2026,
+      "audioUrl": "https://dts.podtrac.com/redirect.mp3/aphid.fireside.fm/d/1437767933/c6354d0d-bd10-4eed-b811-1bb569d46efd/9cc84bc5-ad09-4424-9793-4401d16b61ae.mp3",
+      "readings": [
+        "2 Samuel 3",
+        "1 Chronicles 3-4",
+        "Psalm 25"
+      ],
+      "readingsSource": "plan"
+    },
+    {
+      "day": 123,
+      "period": "Royal Kingdom",
+      "title": "The Death of Ish-bosheth",
+      "year": 2026,
+      "audioUrl": "https://dts.podtrac.com/redirect.mp3/aphid.fireside.fm/d/1437767933/c6354d0d-bd10-4eed-b811-1bb569d46efd/f73027f1-26ef-44b2-b813-2e513af1125f.mp3",
+      "readings": [
+        "2 Samuel 4",
+        "1 Chronicles 5-6",
+        "Psalm 26"
+      ],
+      "readingsSource": "plan"
+    },
+    {
+      "day": 124,
+      "period": "Royal Kingdom",
+      "title": "King David Rules",
+      "year": 2026,
+      "audioUrl": "https://dts.podtrac.com/redirect.mp3/aphid.fireside.fm/d/1437767933/c6354d0d-bd10-4eed-b811-1bb569d46efd/6448d7cc-d703-404d-ae6c-1d847b886e89.mp3",
+      "readings": [
+        "2 Samuel 5",
+        "1 Chronicles 7-8",
+        "Psalm 27"
+      ],
+      "readingsSource": "plan"
+    },
+    {
+      "day": 125,
+      "period": "Royal Kingdom",
+      "title": "Covenant with David",
+      "year": 2026,
+      "audioUrl": "https://dts.podtrac.com/redirect.mp3/aphid.fireside.fm/d/1437767933/c6354d0d-bd10-4eed-b811-1bb569d46efd/59ab7124-898e-413a-95be-b81413ace04d.mp3",
+      "readings": [
+        "2 Samuel 6-7",
+        "1 Chronicles 9",
+        "Psalm 89"
+      ],
+      "readingsSource": "plan"
+    },
+    {
+      "day": 126,
+      "period": "Royal Kingdom",
+      "title": "David's Victories",
+      "year": 2026,
+      "audioUrl": "https://dts.podtrac.com/redirect.mp3/aphid.fireside.fm/d/1437767933/c6354d0d-bd10-4eed-b811-1bb569d46efd/7350a183-024c-4e68-82af-54397ce0397d.mp3",
+      "readings": [
+        "2 Samuel 8",
+        "1 Chronicles 10-11",
+        "Psalm 60"
+      ],
+      "readingsSource": "plan"
+    },
+    {
+      "day": 127,
+      "period": "Royal Kingdom",
+      "title": "Kindness for the House of Saul",
+      "year": 2026,
+      "audioUrl": "https://dts.podtrac.com/redirect.mp3/aphid.fireside.fm/d/1437767933/c6354d0d-bd10-4eed-b811-1bb569d46efd/10eca448-a4fe-4974-bb7a-563931ed55e1.mp3",
+      "readings": [
+        "2 Samuel 9",
+        "1 Chronicles 12",
+        "Psalm 28"
+      ],
+      "readingsSource": "plan"
+    },
+    {
+      "day": 128,
+      "period": "Royal Kingdom",
+      "title": "Mighty Men of Valor",
+      "year": 2026,
+      "audioUrl": "https://dts.podtrac.com/redirect.mp3/aphid.fireside.fm/d/1437767933/c6354d0d-bd10-4eed-b811-1bb569d46efd/4ff17b0f-500a-4caa-8dae-14546221a33a.mp3",
+      "readings": [
+        "2 Samuel 10",
+        "1 Chronicles 13",
+        "Psalm 31"
+      ],
+      "readingsSource": "plan"
+    },
+    {
+      "day": 129,
+      "period": "Royal Kingdom",
+      "title": "David Commits Adultery",
+      "year": 2026,
+      "audioUrl": "https://dts.podtrac.com/redirect.mp3/aphid.fireside.fm/d/1437767933/c6354d0d-bd10-4eed-b811-1bb569d46efd/3608b209-6f56-446b-863f-79ee264b48e5.mp3",
+      "readings": [
+        "2 Samuel 11",
+        "1 Chronicles 14-15",
+        "Psalm 32"
+      ],
+      "readingsSource": "plan"
+    },
+    {
+      "day": 130,
+      "period": "Royal Kingdom",
+      "title": "Nathan Condemns David",
+      "year": 2026,
+      "audioUrl": "https://dts.podtrac.com/redirect.mp3/aphid.fireside.fm/d/1437767933/c6354d0d-bd10-4eed-b811-1bb569d46efd/d4ca63d2-8216-4e37-b748-694ff711afbc.mp3",
+      "readings": [
+        "2 Samuel 12",
+        "1 Chronicles 16",
+        "Psalm 51"
+      ],
+      "readingsSource": "plan"
+    },
+    {
+      "day": 131,
+      "period": "Royal Kingdom",
+      "title": "Hope for the Future",
+      "year": 2026,
+      "audioUrl": "https://dts.podtrac.com/redirect.mp3/aphid.fireside.fm/d/1437767933/c6354d0d-bd10-4eed-b811-1bb569d46efd/db833d1e-2268-4aab-b427-174273f74234.mp3",
+      "readings": [
+        "2 Samuel 13",
+        "1 Chronicles 17",
+        "Psalm 35"
+      ],
+      "readingsSource": "plan"
+    },
+    {
+      "day": 132,
+      "period": "Royal Kingdom",
+      "title": "David and Absalom",
+      "year": 2026,
+      "audioUrl": "https://dts.podtrac.com/redirect.mp3/aphid.fireside.fm/d/1437767933/c6354d0d-bd10-4eed-b811-1bb569d46efd/7007c56b-f672-4af8-8d81-d4d4b47280ba.mp3",
+      "readings": [
+        "2 Samuel 14",
+        "1 Chronicles 18",
+        "Psalm 14"
+      ],
+      "readingsSource": "plan"
+    },
+    {
+      "day": 133,
+      "period": "Royal Kingdom",
+      "title": "Persevering in Trust",
+      "year": 2026,
+      "audioUrl": "https://dts.podtrac.com/redirect.mp3/aphid.fireside.fm/d/1437767933/c6354d0d-bd10-4eed-b811-1bb569d46efd/df31f3c1-66d8-4dbe-a052-278c79919c6c.mp3",
+      "readings": [
+        "2 Samuel 15",
+        "1 Chronicles 19-20",
+        "Psalm 3"
+      ],
+      "readingsSource": "plan"
+    },
+    {
+      "day": 134,
+      "period": "Royal Kingdom",
+      "title": "Devastating Effects of Sin",
+      "year": 2026,
+      "audioUrl": "https://dts.podtrac.com/redirect.mp3/aphid.fireside.fm/d/1437767933/c6354d0d-bd10-4eed-b811-1bb569d46efd/9b9d042d-9746-42c5-890b-2faaa26da38d.mp3",
+      "readings": [
+        "2 Samuel 16",
+        "1 Chronicles 21",
+        "Psalm 15"
+      ],
+      "readingsSource": "plan"
+    },
+    {
+      "day": 135,
+      "period": "Royal Kingdom",
+      "title": "The Counsel of Hushai",
+      "year": 2026,
+      "audioUrl": "https://dts.podtrac.com/redirect.mp3/aphid.fireside.fm/d/1437767933/c6354d0d-bd10-4eed-b811-1bb569d46efd/2dacd35a-8cda-41b0-8f2b-6177c02bb6d4.mp3",
+      "readings": [
+        "2 Samuel 17",
+        "1 Chronicles 22",
+        "Psalm 36"
+      ],
+      "readingsSource": "plan"
+    },
+    {
+      "day": 136,
+      "period": "Royal Kingdom",
+      "title": "Absalom Is Defeated",
+      "year": 2026,
+      "audioUrl": "https://dts.podtrac.com/redirect.mp3/aphid.fireside.fm/d/1437767933/c6354d0d-bd10-4eed-b811-1bb569d46efd/2a506b1c-6859-4fc8-90a4-7089c4b6b2fc.mp3",
+      "readings": [
+        "2 Samuel 18",
+        "1 Chronicles 23",
+        "Psalm 37"
+      ],
+      "readingsSource": "plan"
+    },
+    {
+      "day": 137,
+      "period": "Royal Kingdom",
+      "title": "David Mourns Absalom",
+      "year": 2026,
+      "audioUrl": "https://dts.podtrac.com/redirect.mp3/aphid.fireside.fm/d/1437767933/c6354d0d-bd10-4eed-b811-1bb569d46efd/2067f654-5fa8-4325-b5e4-e79fcafba1a5.mp3",
+      "readings": [
+        "2 Samuel 19",
+        "1 Chronicles 24",
+        "Psalm 38"
+      ],
+      "readingsSource": "plan"
+    },
+    {
+      "day": 138,
+      "period": "Royal Kingdom",
+      "title": "The Effect of Sin on Others",
+      "year": 2026,
+      "audioUrl": "https://dts.podtrac.com/redirect.mp3/aphid.fireside.fm/d/1437767933/c6354d0d-bd10-4eed-b811-1bb569d46efd/3c3e4776-a7a6-4722-9596-772aec50a99d.mp3",
+      "readings": [
+        "2 Samuel 20",
+        "1 Chronicles 25",
+        "Psalm 39"
+      ],
+      "readingsSource": "plan"
+    },
+    {
+      "day": 139,
+      "period": "Royal Kingdom",
+      "title": "Reparation to the Gibeonites",
+      "year": 2026,
+      "audioUrl": "https://dts.podtrac.com/redirect.mp3/aphid.fireside.fm/d/1437767933/c6354d0d-bd10-4eed-b811-1bb569d46efd/0916cc4e-f913-4f0a-a98b-cdc55f36a023.mp3",
+      "readings": [
+        "2 Samuel 21",
+        "1 Chronicles 26",
+        "Psalm 40"
+      ],
+      "readingsSource": "plan"
+    },
+    {
+      "day": 140,
+      "period": "Royal Kingdom",
+      "title": "David's Prayer of Thanksgiving",
+      "year": 2026,
+      "audioUrl": "https://dts.podtrac.com/redirect.mp3/aphid.fireside.fm/d/1437767933/c6354d0d-bd10-4eed-b811-1bb569d46efd/6a436a37-0828-4349-b798-13d456194cfd.mp3",
+      "readings": [
+        "2 Samuel 22",
+        "1 Chronicles 28",
+        "Psalm 42"
+      ],
+      "readingsSource": "episode"
+    },
+    {
+      "day": 141,
+      "period": "Royal Kingdom",
+      "title": "The Life of David",
+      "year": 2026,
+      "audioUrl": "https://dts.podtrac.com/redirect.mp3/aphid.fireside.fm/d/1437767933/c6354d0d-bd10-4eed-b811-1bb569d46efd/c6c53823-54d7-46a4-9514-fa1785766769.mp3",
+      "readings": [
+        "2 Samuel 23",
+        "1 Chronicles 28",
+        "Psalm 42"
+      ],
+      "readingsSource": "plan"
+    },
+    {
+      "day": 142,
+      "period": "Royal Kingdom",
+      "title": "Whole and Joyful Hearts",
+      "year": 2026,
+      "audioUrl": "https://dts.podtrac.com/redirect.mp3/aphid.fireside.fm/d/1437767933/c6354d0d-bd10-4eed-b811-1bb569d46efd/b9abf877-c082-406d-838e-511d2a056c49.mp3",
+      "readings": [
+        "2 Samuel 24",
+        "1 Chronicles 29",
+        "Psalm 30"
+      ],
+      "readingsSource": "plan"
+    },
+    {
+      "day": 143,
+      "period": "Royal Kingdom",
+      "title": "Solomon Asks for Wisdom",
+      "year": 2026,
+      "audioUrl": "https://dts.podtrac.com/redirect.mp3/aphid.fireside.fm/d/1437767933/c6354d0d-bd10-4eed-b811-1bb569d46efd/1fb33291-d99b-481d-a176-aaacb04cb206.mp3",
+      "readings": [
+        "1 Kings 1",
+        "2 Chronicles 1",
+        "Psalm 43"
+      ],
+      "readingsSource": "plan"
+    },
+    {
+      "day": 144,
+      "period": "Royal Kingdom",
+      "title": "David's Last Words",
+      "year": 2026,
+      "audioUrl": "https://dts.podtrac.com/redirect.mp3/aphid.fireside.fm/d/1437767933/c6354d0d-bd10-4eed-b811-1bb569d46efd/ed4e911b-0d82-4947-84e9-4833180888fe.mp3",
+      "readings": [
+        "1 Kings 2",
+        "2 Chronicles 2-3",
+        "Psalm 62"
+      ],
+      "readingsSource": "plan"
+    },
+    {
+      "day": 145,
+      "period": "Royal Kingdom",
+      "title": "Solomon Builds the Temple",
+      "year": 2026,
+      "audioUrl": "https://dts.podtrac.com/redirect.mp3/aphid.fireside.fm/d/1437767933/c6354d0d-bd10-4eed-b811-1bb569d46efd/6ab58138-161b-40fe-bb7a-0b5e098534d1.mp3",
+      "readings": [
+        "1 Kings 3",
+        "2 Chronicles 4-5",
+        "Psalm 64"
+      ],
+      "readingsSource": "plan"
+    },
+    {
+      "day": 146,
+      "period": "Royal Kingdom",
+      "title": "The Universal Church",
+      "year": 2026,
+      "audioUrl": "https://dts.podtrac.com/redirect.mp3/aphid.fireside.fm/d/1437767933/c6354d0d-bd10-4eed-b811-1bb569d46efd/e050fb84-2c51-43b2-963b-df2f9e4610e3.mp3",
+      "readings": [
+        "1 Kings 4",
+        "2 Chronicles 6",
+        "Psalm 65"
+      ],
+      "readingsSource": "plan"
+    },
+    {
+      "day": 147,
+      "period": "Royal Kingdom",
+      "title": "Temple Worship",
+      "year": 2026,
+      "audioUrl": "https://dts.podtrac.com/redirect.mp3/aphid.fireside.fm/d/1437767933/c6354d0d-bd10-4eed-b811-1bb569d46efd/c7defa88-05cb-41bc-9ca0-c40d3d41d73b.mp3",
+      "readings": [
+        "1 Kings 5",
+        "2 Chronicles 7-8",
+        "Psalm 66"
+      ],
+      "readingsSource": "plan"
+    },
+    {
+      "day": 148,
+      "period": "Royal Kingdom",
+      "title": "Solomon's Wealth",
+      "year": 2026,
+      "audioUrl": "https://dts.podtrac.com/redirect.mp3/aphid.fireside.fm/d/1437767933/c6354d0d-bd10-4eed-b811-1bb569d46efd/059bd9b4-93d2-4e27-ae89-c69f8fdbea31.mp3",
+      "readings": [
+        "1 Kings 6",
+        "2 Chronicles 9",
+        "Psalm 4"
+      ],
+      "readingsSource": "plan"
+    },
+    {
+      "day": 149,
+      "period": "Royal Kingdom",
+      "title": "All Is Vanity",
+      "year": 2026,
+      "audioUrl": "https://dts.podtrac.com/redirect.mp3/aphid.fireside.fm/d/1437767933/c6354d0d-bd10-4eed-b811-1bb569d46efd/2c962252-ce8e-45eb-a9f4-a21538f5eb2e.mp3",
+      "readings": [
+        "1 Kings 7",
+        "Ecclesiastes 1-2",
+        "Psalm 5"
+      ],
+      "readingsSource": "plan"
+    },
+    {
+      "day": 150,
+      "period": "Royal Kingdom",
+      "title": "The Dedication of the Temple",
+      "year": 2026,
+      "audioUrl": "https://dts.podtrac.com/redirect.mp3/aphid.fireside.fm/d/1437767933/c6354d0d-bd10-4eed-b811-1bb569d46efd/ad45aa65-c3c6-41c2-b973-b914ae286ba9.mp3",
+      "readings": [
+        "1 Kings 8",
+        "Ecclesiastes 3-5",
+        "Psalm 6"
+      ],
+      "readingsSource": "plan"
+    },
+    {
+      "day": 151,
+      "period": "Royal Kingdom",
+      "title": "Wisdom and Folly",
+      "year": 2026,
+      "audioUrl": "https://dts.podtrac.com/redirect.mp3/aphid.fireside.fm/d/1437767933/c6354d0d-bd10-4eed-b811-1bb569d46efd/fa84278c-efaf-4386-90b7-520bc19d1f0f.mp3",
+      "readings": [
+        "1 Kings 9",
+        "Ecclesiastes 6-7",
+        "Psalm 7"
+      ],
+      "readingsSource": "plan"
+    },
+    {
+      "day": 152,
+      "period": "Royal Kingdom",
+      "title": "Being Forgotten",
+      "year": 2026,
+      "audioUrl": "https://dts.podtrac.com/redirect.mp3/aphid.fireside.fm/d/1437767933/c6354d0d-bd10-4eed-b811-1bb569d46efd/4b009015-a66e-47ea-a804-873dc4ae548a.mp3",
+      "readings": [
+        "1 Kings 10",
+        "Ecclesiastes 8-9",
+        "Psalm 8"
+      ],
+      "readingsSource": "plan"
+    },
+    {
+      "day": 153,
+      "period": "Royal Kingdom",
+      "title": "The Decline of Solomon",
+      "year": 2026,
+      "audioUrl": "https://dts.podtrac.com/redirect.mp3/aphid.fireside.fm/d/1437767933/c6354d0d-bd10-4eed-b811-1bb569d46efd/3245f461-99cb-45fe-8818-3ee633bd9548.mp3",
+      "readings": [
+        "1 Kings 11",
+        "Ecclesiastes 10-12",
+        "Psalm 9"
+      ],
+      "readingsSource": "plan"
+    },
+    {
+      "day": 154,
+      "period": "Messianic Checkpoint",
+      "title": "The Baptism of Jesus",
+      "year": 2026,
+      "audioUrl": "https://dts.podtrac.com/redirect.mp3/aphid.fireside.fm/d/1437767933/c6354d0d-bd10-4eed-b811-1bb569d46efd/ed03c609-1dd3-4015-8786-3dd5ef974556.mp3",
+      "readings": [
+        "Mark 1-2",
+        "Psalm 11"
+      ],
+      "readingsSource": "plan"
+    },
+    {
+      "day": 155,
+      "period": "Messianic Checkpoint",
+      "title": "Jesus is Lord",
+      "year": 2026,
+      "audioUrl": "https://dts.podtrac.com/redirect.mp3/aphid.fireside.fm/d/1437767933/c6354d0d-bd10-4eed-b811-1bb569d46efd/f6f2087d-8e0f-4cb7-ab6e-78f1a2507981.mp3",
+      "readings": [
+        "Mark 3-4",
+        "Psalm 20"
+      ],
+      "readingsSource": "plan"
+    },
+    {
+      "day": 156,
+      "period": "Messianic Checkpoint",
+      "title": "Jesus Casts Out Demons",
+      "year": 2026,
+      "audioUrl": "https://dts.podtrac.com/redirect.mp3/aphid.fireside.fm/d/1437767933/c6354d0d-bd10-4eed-b811-1bb569d46efd/27e8d5e9-ce35-4525-99a5-651e8039e363.mp3",
+      "readings": [
+        "Mark 5-6",
+        "Psalm 21"
+      ],
+      "readingsSource": "plan"
+    },
+    {
+      "day": 157,
+      "period": "Messianic Checkpoint",
+      "title": "Following Jesus",
+      "year": 2026,
+      "audioUrl": "https://dts.podtrac.com/redirect.mp3/aphid.fireside.fm/d/1437767933/c6354d0d-bd10-4eed-b811-1bb569d46efd/5add2d07-f8df-49a4-b7c9-cc76e455bae8.mp3",
+      "readings": [
+        "Mark 7-8",
+        "Psalm 23"
+      ],
+      "readingsSource": "plan"
+    },
+    {
+      "day": 158,
+      "period": "Messianic Checkpoint",
+      "title": "The Reality of Sin",
+      "year": 2026,
+      "audioUrl": "https://dts.podtrac.com/redirect.mp3/aphid.fireside.fm/d/1437767933/c6354d0d-bd10-4eed-b811-1bb569d46efd/ea967390-0c85-410b-96c6-b3ae4904e29a.mp3",
+      "readings": [
+        "Mark 9-10",
+        "Psalm 29"
+      ],
+      "readingsSource": "plan"
+    },
+    {
+      "day": 159,
+      "period": "Messianic Checkpoint",
+      "title": "Bearing Fruit",
+      "year": 2026,
+      "audioUrl": "https://dts.podtrac.com/redirect.mp3/aphid.fireside.fm/d/1437767933/c6354d0d-bd10-4eed-b811-1bb569d46efd/a00f6903-9ded-487f-abaa-ffe7b59c06a1.mp3",
+      "readings": [
+        "Mark 11-12",
+        "Psalm 67"
+      ],
+      "readingsSource": "plan"
+    },
+    {
+      "day": 160,
+      "period": "Messianic Checkpoint",
+      "title": "Jesus Warns the People",
+      "year": 2026,
+      "audioUrl": "https://dts.podtrac.com/redirect.mp3/aphid.fireside.fm/d/1437767933/c6354d0d-bd10-4eed-b811-1bb569d46efd/47769638-047b-4570-82ea-20f770b421b9.mp3",
+      "readings": [
+        "Mark 13-14",
+        "Psalm 68"
+      ],
+      "readingsSource": "plan"
+    },
+    {
+      "day": 161,
+      "period": "Messianic Checkpoint",
+      "title": "The Crucifixion of Christ",
+      "year": 2026,
+      "audioUrl": "https://dts.podtrac.com/redirect.mp3/aphid.fireside.fm/d/1437767933/c6354d0d-bd10-4eed-b811-1bb569d46efd/0c9f41a9-463a-4728-814b-028ca2990a43.mp3",
+      "readings": [
+        "Mark 15-16",
+        "Psalm 22"
+      ],
+      "readingsSource": "plan"
+    },
+    {
+      "day": 162,
+      "period": "Divided Kingdom",
+      "title": "Rehoboam Seeks Counsel",
+      "year": 2026,
+      "audioUrl": "https://dts.podtrac.com/redirect.mp3/aphid.fireside.fm/d/1437767933/c6354d0d-bd10-4eed-b811-1bb569d46efd/f017c6b6-a9c4-42a4-93df-c00db0ca47d5.mp3",
+      "readings": [
+        "1 Kings 12",
+        "2 Chronicles 10-11",
+        "Song of Solomon 1"
+      ],
+      "readingsSource": "plan"
+    },
+    {
+      "day": 163,
+      "period": "Divided Kingdom",
+      "title": "Faith Over Success",
+      "year": 2026,
+      "audioUrl": "https://dts.podtrac.com/redirect.mp3/aphid.fireside.fm/d/1437767933/c6354d0d-bd10-4eed-b811-1bb569d46efd/eab2e25b-1a28-413c-9c23-7dee2cd096f0.mp3",
+      "readings": [
+        "1 Kings 13",
+        "2 Chronicles 12-13",
+        "Song of Solomon 2"
+      ],
+      "readingsSource": "plan"
+    },
+    {
+      "day": 164,
+      "period": "Divided Kingdom",
+      "title": "Tearing Down Idols",
+      "year": 2026,
+      "audioUrl": "https://dts.podtrac.com/redirect.mp3/aphid.fireside.fm/d/1437767933/c6354d0d-bd10-4eed-b811-1bb569d46efd/00169f4f-05db-4bc5-ba4c-7bee65b35115.mp3",
+      "readings": [
+        "1 Kings 14",
+        "2 Chronicles 14-15",
+        "Song of Solomon 3"
+      ],
+      "readingsSource": "plan"
+    },
+    {
+      "day": 165,
+      "period": "Divided Kingdom",
+      "title": "The Lover and the Beloved",
+      "year": 2026,
+      "audioUrl": "https://dts.podtrac.com/redirect.mp3/aphid.fireside.fm/d/1437767933/c6354d0d-bd10-4eed-b811-1bb569d46efd/6e2d4509-6a66-4f01-8f5a-da30cbdf8db4.mp3",
+      "readings": [
+        "1 Kings 15-16",
+        "2 Chronicles 16-17",
+        "Song of Solomon 4"
+      ],
+      "readingsSource": "plan"
+    },
+    {
+      "day": 166,
+      "period": "Divided Kingdom",
+      "title": "Responding in Faith",
+      "year": 2026,
+      "audioUrl": "https://dts.podtrac.com/redirect.mp3/aphid.fireside.fm/d/1437767933/c6354d0d-bd10-4eed-b811-1bb569d46efd/3b48938e-7e67-429c-a85d-fa10a2e15d34.mp3",
+      "readings": [
+        "1 Kings 17-18",
+        "2 Chronicles 18-19",
+        "Song of Solomon 5"
+      ],
+      "readingsSource": "plan"
+    },
+    {
+      "day": 167,
+      "period": "Divided Kingdom",
+      "title": "Viaticum",
+      "year": 2026,
+      "audioUrl": "https://dts.podtrac.com/redirect.mp3/aphid.fireside.fm/d/1437767933/c6354d0d-bd10-4eed-b811-1bb569d46efd/ae5c835a-8d4f-4bf0-a1fe-f517eef73ad0.mp3",
+      "readings": [
+        "1 Kings 19-20",
+        "2 Chronicles 20",
+        "Song of Solomon 6"
+      ],
+      "readingsSource": "plan"
+    },
+    {
+      "day": 168,
+      "period": "Divided Kingdom",
+      "title": "Wicked Kinds",
+      "year": 2026,
+      "audioUrl": "https://dts.podtrac.com/redirect.mp3/aphid.fireside.fm/d/1437767933/c6354d0d-bd10-4eed-b811-1bb569d46efd/c816f61c-dfed-4a83-a341-f0a4821acc92.mp3",
+      "readings": [
+        "1 Kings 19-20",
+        "2 Chronicles 20",
+        "Song of Solomon 6"
+      ],
+      "readingsSource": "episode"
+    },
+    {
+      "day": 169,
+      "period": "Divided Kingdom",
+      "title": "Joash Is Crowned",
+      "year": 2026,
+      "audioUrl": "https://dts.podtrac.com/redirect.mp3/aphid.fireside.fm/d/1437767933/c6354d0d-bd10-4eed-b811-1bb569d46efd/9eefcde9-e3f5-4233-aa88-25df24c87cce.mp3",
+      "readings": [
+        "1 Kings 22",
+        "2 Chronicles 23",
+        "Song of Solomon 8"
+      ],
+      "readingsSource": "plan"
+    },
+    {
+      "day": 170,
+      "period": "Divided Kingdom",
+      "title": "Joash's Downfall",
+      "year": 2026,
+      "audioUrl": "https://dts.podtrac.com/redirect.mp3/aphid.fireside.fm/d/1437767933/c6354d0d-bd10-4eed-b811-1bb569d46efd/0a548696-4c8d-44ce-b7ec-324d81c89b8a.mp3",
+      "readings": [
+        "2 Kings 1",
+        "2 Chronicles 24",
+        "Psalm 69"
+      ],
+      "readingsSource": "plan"
+    },
+    {
+      "day": 171,
+      "period": "Divided Kingdom",
+      "title": "Elijah and Elisha",
+      "year": 2026,
+      "audioUrl": "https://dts.podtrac.com/redirect.mp3/aphid.fireside.fm/d/1437767933/c6354d0d-bd10-4eed-b811-1bb569d46efd/93c4810b-aa67-4cee-a498-1f5e385e219f.mp3",
+      "readings": [
+        "2 Kings 2",
+        "2 Chronicles 25",
+        "Psalm 70"
+      ],
+      "readingsSource": "plan"
+    },
+    {
+      "day": 172,
+      "period": "Divided Kingdom",
+      "title": "Uzziah's Pride",
+      "year": 2026,
+      "audioUrl": "https://dts.podtrac.com/redirect.mp3/aphid.fireside.fm/d/1437767933/c6354d0d-bd10-4eed-b811-1bb569d46efd/d5d904b0-80b1-46e0-9ed7-5be517fc582c.mp3",
+      "readings": [
+        "2 Kings 3",
+        "2 Chronicles 26-27",
+        "Psalm 72"
+      ],
+      "readingsSource": "plan"
+    },
+    {
+      "day": 173,
+      "period": "Divided Kingdom",
+      "title": "Confidence in God",
+      "year": 2026,
+      "audioUrl": "https://dts.podtrac.com/redirect.mp3/aphid.fireside.fm/d/1437767933/c6354d0d-bd10-4eed-b811-1bb569d46efd/70cc7ab4-d415-48f7-8c98-77fa4c2a5e66.mp3",
+      "readings": [
+        "2 Kings 4",
+        "2 Chronicles 28",
+        "Psalm 127"
+      ],
+      "readingsSource": "plan"
+    },
+    {
+      "day": 174,
+      "period": "Divided Kingdom",
+      "title": "The Prophet Hosea",
+      "year": 2026,
+      "audioUrl": "https://dts.podtrac.com/redirect.mp3/aphid.fireside.fm/d/1437767933/c6354d0d-bd10-4eed-b811-1bb569d46efd/55f8b622-c36b-4bf9-a4c6-afba63f78517.mp3",
+      "readings": [
+        "2 Kings 5",
+        "Hosea 1-3",
+        "Psalm 101"
+      ],
+      "readingsSource": "plan"
+    },
+    {
+      "day": 175,
+      "period": "Divided Kingdom",
+      "title": "Knowledge of God",
+      "year": 2026,
+      "audioUrl": "https://dts.podtrac.com/redirect.mp3/aphid.fireside.fm/d/1437767933/c6354d0d-bd10-4eed-b811-1bb569d46efd/1f1b6ab6-8993-4e22-9e42-f8bbcb0f17cb.mp3",
+      "readings": [
+        "2 Kings 6-7",
+        "Hosea 4-7",
+        "Psalm 103"
+      ],
+      "readingsSource": "plan"
+    },
+    {
+      "day": 176,
+      "period": "Divided Kingdom",
+      "title": "Choosing Eternal Life",
+      "year": 2026,
+      "audioUrl": "https://dts.podtrac.com/redirect.mp3/aphid.fireside.fm/d/1437767933/c6354d0d-bd10-4eed-b811-1bb569d46efd/6e8845c7-cb90-472d-8a44-97374c284636.mp3",
+      "readings": [
+        "2 Kings 8",
+        "Hosea 8-10",
+        "Psalm 108"
+      ],
+      "readingsSource": "plan"
+    },
+    {
+      "day": 177,
+      "period": "Divided Kingdom",
+      "title": "Return, O Israel",
+      "year": 2026,
+      "audioUrl": "https://dts.podtrac.com/redirect.mp3/aphid.fireside.fm/d/1437767933/c6354d0d-bd10-4eed-b811-1bb569d46efd/e100fd93-6e08-469e-bcc8-e78c6a040599.mp3",
+      "readings": [
+        "2 Kings 9",
+        "Hosea 11-14",
+        "Psalm 109"
+      ],
+      "readingsSource": "plan"
+    },
+    {
+      "day": 178,
+      "period": "Divided Kingdom",
+      "title": "Called Back",
+      "year": 2026,
+      "audioUrl": "https://dts.podtrac.com/redirect.mp3/aphid.fireside.fm/d/1437767933/c6354d0d-bd10-4eed-b811-1bb569d46efd/2c161b90-e5f8-4e4c-bf01-acf1bcc2b3a0.mp3",
+      "readings": [
+        "2 Kings 10",
+        "Amos 1-3",
+        "Psalm 110"
+      ],
+      "readingsSource": "plan"
+    },
+    {
+      "day": 179,
+      "period": "Divided Kingdom",
+      "title": "Blinded by Comfort",
+      "year": 2026,
+      "audioUrl": "https://dts.podtrac.com/redirect.mp3/aphid.fireside.fm/d/1437767933/c6354d0d-bd10-4eed-b811-1bb569d46efd/27ae2eb8-3348-4006-bc56-25bf26f3506b.mp3",
+      "readings": [
+        "2 Kings 11-12",
+        "Amos 4-6",
+        "Psalm 122"
+      ],
+      "readingsSource": "plan"
+    },
+    {
+      "day": 180,
+      "period": "Divided Kingdom",
+      "title": "Giving Time to God",
+      "year": 2026,
+      "audioUrl": "https://dts.podtrac.com/redirect.mp3/aphid.fireside.fm/d/1437767933/c6354d0d-bd10-4eed-b811-1bb569d46efd/8457c61c-f66b-48dc-a47a-3c6517fb6c5c.mp3",
+      "readings": [
+        "2 Kings 13-14",
+        "Amos 7-9",
+        "Psalm 124"
+      ],
+      "readingsSource": "plan"
+    },
+    {
+      "day": 181,
+      "period": "Divided Kingdom",
+      "title": "Jonah and the Whale",
+      "year": 2026,
+      "audioUrl": "https://dts.podtrac.com/redirect.mp3/aphid.fireside.fm/d/1437767933/c6354d0d-bd10-4eed-b811-1bb569d46efd/bfaaa588-0da4-493f-accb-130311a65232.mp3",
+      "readings": [
+        "2 Kings 15",
+        "Jonah 1-4",
+        "Psalm 138"
+      ],
+      "readingsSource": "plan"
+    },
+    {
+      "day": 182,
+      "period": "Divided Kingdom",
+      "title": "The Inescapable God",
+      "year": 2026,
+      "audioUrl": "https://dts.podtrac.com/redirect.mp3/aphid.fireside.fm/d/1437767933/c6354d0d-bd10-4eed-b811-1bb569d46efd/0ef4fd7a-7e44-47e7-b232-25b9942a0dcd.mp3",
+      "readings": [
+        "2 Kings 16",
+        "Micah 1-4",
+        "Psalm 139"
+      ],
+      "readingsSource": "plan"
+    },
+    {
+      "day": 183,
+      "period": "Divided Kingdom",
+      "title": "Israel Falls to Assyria",
+      "year": 2026,
+      "audioUrl": "https://dts.podtrac.com/redirect.mp3/aphid.fireside.fm/d/1437767933/c6354d0d-bd10-4eed-b811-1bb569d46efd/bafa48e3-cce6-4d2b-8499-73400de4a3ea.mp3",
+      "readings": [
+        "2 Kings 17",
+        "Micah 5-7",
+        "Psalm 140"
+      ],
+      "readingsSource": "plan"
+    },
+    {
+      "day": 184,
+      "period": "Exile",
+      "title": "Hezekiah Reigns",
+      "year": 2026,
+      "audioUrl": "https://dts.podtrac.com/redirect.mp3/aphid.fireside.fm/d/1437767933/c6354d0d-bd10-4eed-b811-1bb569d46efd/eaab01ac-ef67-44de-97b5-ce9ebf472680.mp3",
+      "readings": [
+        "2 Kings 18",
+        "2 Chronicles 29",
+        "Psalm 141"
+      ],
+      "readingsSource": "plan"
+    },
+    {
+      "day": 185,
+      "period": "Exile",
+      "title": "Hezekiah's Prayer",
+      "year": 2026,
+      "audioUrl": "https://dts.podtrac.com/redirect.mp3/aphid.fireside.fm/d/1437767933/c6354d0d-bd10-4eed-b811-1bb569d46efd/a476b087-30ad-41cd-887d-2073108c5574.mp3",
+      "readings": [
+        "2 Kings 19",
+        "2 Chronicles 30",
+        "Psalm 143"
+      ],
+      "readingsSource": "plan"
+    },
+    {
+      "day": 186,
+      "period": "Exile",
+      "title": "Struggles with Self-Interest",
+      "year": 2026,
+      "audioUrl": "https://dts.podtrac.com/redirect.mp3/aphid.fireside.fm/d/1437767933/c6354d0d-bd10-4eed-b811-1bb569d46efd/2091bbe5-5635-4687-a6d9-58e3d0dc372f.mp3",
+      "readings": [
+        "2 Kings 20",
+        "2 Chronicles 31",
+        "Psalm 144"
+      ],
+      "readingsSource": "plan"
+    },
+    {
+      "day": 187,
+      "period": "Exile",
+      "title": "Praying for Time",
+      "year": 2026,
+      "audioUrl": "https://dts.podtrac.com/redirect.mp3/aphid.fireside.fm/d/1437767933/c6354d0d-bd10-4eed-b811-1bb569d46efd/a62a07cf-c66f-46b1-ba8f-8609ac687c20.mp3",
+      "readings": [
+        "2 Kings 21",
+        "2 Chronicles 32",
+        "Psalm 145"
+      ],
+      "readingsSource": "plan"
+    },
+    {
+      "day": 188,
+      "period": "Exile",
+      "title": "The Book of the Law",
+      "year": 2026,
+      "audioUrl": "https://dts.podtrac.com/redirect.mp3/aphid.fireside.fm/d/1437767933/c6354d0d-bd10-4eed-b811-1bb569d46efd/5d65dea1-2c8e-4d25-b084-37b5546926d3.mp3",
+      "readings": [
+        "2 Kings 22",
+        "2 Chronicles 33",
+        "Proverbs 7"
+      ],
+      "readingsSource": "plan"
+    },
+    {
+      "day": 189,
+      "period": "Exile",
+      "title": "Follow the Lord",
+      "year": 2026,
+      "audioUrl": "https://dts.podtrac.com/redirect.mp3/aphid.fireside.fm/d/1437767933/c6354d0d-bd10-4eed-b811-1bb569d46efd/bfd3e264-3879-4e43-8e5b-990225d427b1.mp3",
+      "readings": [
+        "2 Kings 23",
+        "2 Chronicles 34",
+        "Proverbs 8:1-21"
+      ],
+      "readingsSource": "plan"
+    },
+    {
+      "day": 190,
+      "period": "Exile",
+      "title": "Judah Is Overrun",
+      "year": 2026,
+      "audioUrl": "https://dts.podtrac.com/redirect.mp3/aphid.fireside.fm/d/1437767933/c6354d0d-bd10-4eed-b811-1bb569d46efd/50266916-ee93-4641-ad43-c519f25ad726.mp3",
+      "readings": [
+        "2 Kings 24",
+        "2 Chronicles 35",
+        "Proverbs 8:22-36"
+      ],
+      "readingsSource": "plan"
+    },
+    {
+      "day": 191,
+      "period": "Exile",
+      "title": "The Babylonian Exile",
+      "year": 2026,
+      "audioUrl": "https://dts.podtrac.com/redirect.mp3/aphid.fireside.fm/d/1437767933/c6354d0d-bd10-4eed-b811-1bb569d46efd/80a95dda-9026-4866-b049-d083452b76a5.mp3",
+      "readings": [
+        "2 Kings 25",
+        "2 Chronicles 36",
+        "Proverbs 9:1-6"
+      ],
+      "readingsSource": "plan"
+    },
+    {
+      "day": 192,
+      "period": "Exile",
+      "title": "The Prophet Isaiah",
+      "year": 2026,
+      "audioUrl": "https://dts.podtrac.com/redirect.mp3/aphid.fireside.fm/d/1437767933/c6354d0d-bd10-4eed-b811-1bb569d46efd/f7db2a7a-b587-4abb-a0c3-13d8dc923b9d.mp3",
+      "readings": [
+        "Isaiah 1-2",
+        "Tobit 1-2",
+        "Proverbs 9:7-12"
+      ],
+      "readingsSource": "plan"
+    },
+    {
+      "day": 193,
+      "period": "Exile",
+      "title": "The Book of Tobit",
+      "year": 2026,
+      "audioUrl": "https://dts.podtrac.com/redirect.mp3/aphid.fireside.fm/d/1437767933/c6354d0d-bd10-4eed-b811-1bb569d46efd/c47fd188-e993-4d51-b123-11e4f087c0d4.mp3",
+      "readings": [
+        "Isaiah 3-4",
+        "Tobit 3-4",
+        "Proverbs 9:13-18"
+      ],
+      "readingsSource": "plan"
+    },
+    {
+      "day": 194,
+      "period": "Exile",
+      "title": "Holy Is the Lord",
+      "year": 2026,
+      "audioUrl": "https://dts.podtrac.com/redirect.mp3/aphid.fireside.fm/d/1437767933/c6354d0d-bd10-4eed-b811-1bb569d46efd/4e3d152b-3326-45aa-a0f0-07243ff6ec1b.mp3",
+      "readings": [
+        "Isaiah 5-6",
+        "Tobit 5-6",
+        "Proverbs 10:1-4"
+      ],
+      "readingsSource": "plan"
+    },
+    {
+      "day": 195,
+      "period": "Exile",
+      "title": "Tobias and Sarah Pray",
+      "year": 2026,
+      "audioUrl": "https://dts.podtrac.com/redirect.mp3/aphid.fireside.fm/d/1437767933/c6354d0d-bd10-4eed-b811-1bb569d46efd/b6872700-70e9-489d-88f6-2a0f78f26e2a.mp3",
+      "readings": [
+        "Isaiah 7-8",
+        "Tobit 7-9",
+        "Proverbs 10:5-8"
+      ],
+      "readingsSource": "plan"
+    },
+    {
+      "day": 196,
+      "period": "Exile",
+      "title": "The Destruction of Israel",
+      "year": 2026,
+      "audioUrl": "https://dts.podtrac.com/redirect.mp3/aphid.fireside.fm/d/1437767933/c6354d0d-bd10-4eed-b811-1bb569d46efd/0e1e7bc9-808a-4f13-9661-82bc023113d4.mp3",
+      "readings": [
+        "Isaiah 9-10",
+        "Tobit 10-12",
+        "Proverbs 10:9-12"
+      ],
+      "readingsSource": "plan"
+    },
+    {
+      "day": 197,
+      "period": "Exile",
+      "title": "Woe and Consolation",
+      "year": 2026,
+      "audioUrl": "https://dts.podtrac.com/redirect.mp3/aphid.fireside.fm/d/1437767933/c6354d0d-bd10-4eed-b811-1bb569d46efd/0dca8e6d-e118-4277-997d-dfc22146dc61.mp3",
+      "readings": [
+        "Isaiah 11-13",
+        "Tobit 13-14",
+        "Proverbs 10:13-16"
+      ],
+      "readingsSource": "plan"
+    },
+    {
+      "day": 198,
+      "period": "Exile",
+      "title": "The Day of the Lord",
+      "year": 2026,
+      "audioUrl": "https://dts.podtrac.com/redirect.mp3/aphid.fireside.fm/d/1437767933/c6354d0d-bd10-4eed-b811-1bb569d46efd/ba3b6b32-768c-4884-b549-a08d1d05f6ff.mp3",
+      "readings": [
+        "Isaiah 14-15",
+        "Joel 1-2",
+        "Proverbs 10:17-20"
+      ],
+      "readingsSource": "plan"
+    },
+    {
+      "day": 199,
+      "period": "Exile",
+      "title": "Times for War",
+      "year": 2026,
+      "audioUrl": "https://dts.podtrac.com/redirect.mp3/aphid.fireside.fm/d/1437767933/c6354d0d-bd10-4eed-b811-1bb569d46efd/f2cdb032-fbe5-48f9-bb05-3c06d15abca0.mp3",
+      "readings": [
+        "Isaiah 16-17",
+        "Joel 3",
+        "Proverbs 10:21-24"
+      ],
+      "readingsSource": "plan"
+    },
+    {
+      "day": 200,
+      "period": "Exile",
+      "title": "Egypt, Assyria, and Israel",
+      "year": 2026,
+      "audioUrl": "https://dts.podtrac.com/redirect.mp3/aphid.fireside.fm/d/1437767933/c6354d0d-bd10-4eed-b811-1bb569d46efd/3059c6d9-5434-4c84-a86a-ba4f04a5387d.mp3",
+      "readings": [
+        "Isaiah 18-20",
+        "Nahum 1-2",
+        "Proverbs 10:25-28"
+      ],
+      "readingsSource": "plan"
+    },
+    {
+      "day": 201,
+      "period": "Exile",
+      "title": "Keys to the Kingdom",
+      "year": 2026,
+      "audioUrl": "https://dts.podtrac.com/redirect.mp3/aphid.fireside.fm/d/1437767933/c6354d0d-bd10-4eed-b811-1bb569d46efd/5e042328-4eef-42c0-b02d-9b20172304ea.mp3",
+      "readings": [
+        "Isaiah 21-22",
+        "Nahum 3",
+        "Proverbs 10:29-32"
+      ],
+      "readingsSource": "plan"
+    },
+    {
+      "day": 202,
+      "period": "Exile",
+      "title": "God's Judgment",
+      "year": 2026,
+      "audioUrl": "https://dts.podtrac.com/redirect.mp3/aphid.fireside.fm/d/1437767933/c6354d0d-bd10-4eed-b811-1bb569d46efd/d823d3b2-22e8-40cd-ac0e-faf7756b3fe8.mp3",
+      "readings": [
+        "Isaiah 23-24",
+        "Habakkuk 1-2",
+        "Proverbs 11:1-4"
+      ],
+      "readingsSource": "plan"
+    },
+    {
+      "day": 203,
+      "period": "Exile",
+      "title": "Rejoice in the Lord",
+      "year": 2026,
+      "audioUrl": "https://dts.podtrac.com/redirect.mp3/aphid.fireside.fm/d/1437767933/c6354d0d-bd10-4eed-b811-1bb569d46efd/6e6858d0-6de4-4c14-84f5-92d7bd7a703e.mp3",
+      "readings": [
+        "Isaiah 25-27",
+        "Habakkuk 3",
+        "Proverbs 11:5-8"
+      ],
+      "readingsSource": "plan"
+    },
+    {
+      "day": 204,
+      "period": "Exile",
+      "title": "Zephaniah's Warnings",
+      "year": 2026,
+      "audioUrl": "https://dts.podtrac.com/redirect.mp3/aphid.fireside.fm/d/1437767933/c6354d0d-bd10-4eed-b811-1bb569d46efd/4339015b-0ff0-4bd3-85f4-c68f7bbf685c.mp3",
+      "readings": [
+        "Isaiah 28-29",
+        "Zephaniah 1-2",
+        "Proverbs 11:9-12"
+      ],
+      "readingsSource": "plan"
+    },
+    {
+      "day": 205,
+      "period": "Exile",
+      "title": "Promise to Zion",
+      "year": 2026,
+      "audioUrl": "https://dts.podtrac.com/redirect.mp3/aphid.fireside.fm/d/1437767933/c6354d0d-bd10-4eed-b811-1bb569d46efd/1fac1306-103f-49a7-a39c-99b723c230a0.mp3",
+      "readings": [
+        "Isaiah 30-31",
+        "Zephaniah 3",
+        "Proverbs 11:13-16"
+      ],
+      "readingsSource": "plan"
+    },
+    {
+      "day": 206,
+      "period": "Exile",
+      "title": "The Book of Baruch",
+      "year": 2026,
+      "audioUrl": "https://dts.podtrac.com/redirect.mp3/aphid.fireside.fm/d/1437767933/c6354d0d-bd10-4eed-b811-1bb569d46efd/d717137a-f115-47fb-a9c3-dbbc5aa46a73.mp3",
+      "readings": [
+        "Isaiah 32-33",
+        "Baruch 1-2",
+        "Proverbs 11:17-20"
+      ],
+      "readingsSource": "plan"
+    },
+    {
+      "day": 207,
+      "period": "Exile",
+      "title": "The Lord Will Come",
+      "year": 2026,
+      "audioUrl": "https://dts.podtrac.com/redirect.mp3/aphid.fireside.fm/d/1437767933/c6354d0d-bd10-4eed-b811-1bb569d46efd/4238e747-26d3-40f0-b74a-f24e839dd9c1.mp3",
+      "readings": [
+        "Isaiah 34-36",
+        "Baruch 3-4",
+        "Proverbs 11:21-24"
+      ],
+      "readingsSource": "plan"
+    },
+    {
+      "day": 208,
+      "period": "Exile",
+      "title": "The Futility of Idols",
+      "year": 2026,
+      "audioUrl": "https://dts.podtrac.com/redirect.mp3/aphid.fireside.fm/d/1437767933/c6354d0d-bd10-4eed-b811-1bb569d46efd/94e82ef3-7356-489d-8bdd-84dffbc87a08.mp3",
+      "readings": [
+        "Isaiah 37-38",
+        "Baruch 5-6",
+        "Proverbs 11:25-28"
+      ],
+      "readingsSource": "plan"
+    },
+    {
+      "day": 209,
+      "period": "Exile",
+      "title": "God Comforts His People",
+      "year": 2026,
+      "audioUrl": "https://dts.podtrac.com/redirect.mp3/aphid.fireside.fm/d/1437767933/c6354d0d-bd10-4eed-b811-1bb569d46efd/5d011560-5954-4649-aa53-0be68a693559.mp3",
+      "readings": [
+        "Isaiah 39-40",
+        "Ezekiel 1",
+        "Proverbs 11:29-31"
+      ],
+      "readingsSource": "plan"
+    },
+    {
+      "day": 210,
+      "period": "Exile",
+      "title": "Speaking God's Word",
+      "year": 2026,
+      "audioUrl": "https://dts.podtrac.com/redirect.mp3/aphid.fireside.fm/d/1437767933/c6354d0d-bd10-4eed-b811-1bb569d46efd/6ae14f5d-aec8-459d-9a78-223fc2f773f8.mp3",
+      "readings": [
+        "Isaiah 41-42",
+        "Ezekiel 2-3",
+        "Proverbs 12:1-4"
+      ],
+      "readingsSource": "plan"
+    },
+    {
+      "day": 211,
+      "period": "Exile",
+      "title": "Called by Name",
+      "year": 2026,
+      "audioUrl": "https://dts.podtrac.com/redirect.mp3/aphid.fireside.fm/d/1437767933/c6354d0d-bd10-4eed-b811-1bb569d46efd/67cab502-d693-4393-a3d9-029e891373be.mp3",
+      "readings": [
+        "Isaiah 43-44",
+        "Ezekiel 4-5",
+        "Proverbs 12:5-8"
+      ],
+      "readingsSource": "plan"
+    },
+    {
+      "day": 212,
+      "period": "Exile",
+      "title": "God's Instrument",
+      "year": 2026,
+      "audioUrl": "https://dts.podtrac.com/redirect.mp3/aphid.fireside.fm/d/1437767933/c6354d0d-bd10-4eed-b811-1bb569d46efd/bb0e7a28-e3f8-41cb-917c-3dc8254eeb32.mp3",
+      "readings": [
+        "Isaiah 45-46",
+        "Ezekiel 6-7",
+        "Proverbs 12:9-12"
+      ],
+      "readingsSource": "plan"
+    },
+    {
+      "day": 213,
+      "period": "Exile",
+      "title": "The Redeemer",
+      "year": 2026,
+      "audioUrl": "https://dts.podtrac.com/redirect.mp3/aphid.fireside.fm/d/1437767933/c6354d0d-bd10-4eed-b811-1bb569d46efd/cd794396-e704-497f-bd99-67d44057273a.mp3",
+      "readings": [
+        "Isaiah 47-48",
+        "Ezekiel 8-9",
+        "Proverbs 12:13-16"
+      ],
+      "readingsSource": "plan"
+    },
+    {
+      "day": 214,
+      "period": "Exile",
+      "title": "The Hidden Glory of God",
+      "year": 2026,
+      "audioUrl": "https://dts.podtrac.com/redirect.mp3/aphid.fireside.fm/d/1437767933/c6354d0d-bd10-4eed-b811-1bb569d46efd/b0c53dd8-8475-48ee-b448-ec8b87730b40.mp3",
+      "readings": [
+        "Isaiah 49-50",
+        "Ezekiel 10-11",
+        "Proverbs 12:17-20"
+      ],
+      "readingsSource": "plan"
+    },
+    {
+      "day": 215,
+      "period": "Exile",
+      "title": "False Prophets",
+      "year": 2026,
+      "audioUrl": "https://dts.podtrac.com/redirect.mp3/aphid.fireside.fm/d/1437767933/c6354d0d-bd10-4eed-b811-1bb569d46efd/2364c160-9b30-4f35-b355-0b9357fe345e.mp3",
+      "readings": [
+        "Isaiah 51-52",
+        "Ezekiel 12-13",
+        "Proverbs 12:21-24"
+      ],
+      "readingsSource": "plan"
+    },
+    {
+      "day": 216,
+      "period": "Exile",
+      "title": "The Suffering Servant",
+      "year": 2026,
+      "audioUrl": "https://dts.podtrac.com/redirect.mp3/aphid.fireside.fm/d/1437767933/c6354d0d-bd10-4eed-b811-1bb569d46efd/c6f77337-c758-4c3a-91d6-40b7669c40b4.mp3",
+      "readings": [
+        "Isaiah 53-54",
+        "Ezekiel 14-15",
+        "Proverbs 12:25-28"
+      ],
+      "readingsSource": "plan"
+    },
+    {
+      "day": 217,
+      "period": "Exile",
+      "title": "The Everlasting Covenant",
+      "year": 2026,
+      "audioUrl": "https://dts.podtrac.com/redirect.mp3/aphid.fireside.fm/d/1437767933/c6354d0d-bd10-4eed-b811-1bb569d46efd/31dd29e6-90ac-4d8e-9187-1de955d9c6a8.mp3",
+      "readings": [
+        "Isaiah 55-56",
+        "Ezekiel 16",
+        "Proverbs 13:1-4"
+      ],
+      "readingsSource": "plan"
+    },
+    {
+      "day": 218,
+      "period": "Exile",
+      "title": "Each Will Be Judged",
+      "year": 2026,
+      "audioUrl": "https://dts.podtrac.com/redirect.mp3/aphid.fireside.fm/d/1437767933/c6354d0d-bd10-4eed-b811-1bb569d46efd/e2d9d6b7-6ed6-4b51-8b6c-4f5380191b70.mp3",
+      "readings": [
+        "Isaiah 57-58",
+        "Ezekiel 17-18",
+        "Proverbs 13:5-8"
+      ],
+      "readingsSource": "plan"
+    },
+    {
+      "day": 219,
+      "period": "Exile",
+      "title": "Separation from God",
+      "year": 2026,
+      "audioUrl": "https://dts.podtrac.com/redirect.mp3/aphid.fireside.fm/d/1437767933/c6354d0d-bd10-4eed-b811-1bb569d46efd/f405f033-931b-49a1-86a9-ba14720b51c7.mp3",
+      "readings": [
+        "Isaiah 59-60",
+        "Ezekiel 19",
+        "Proverbs 13:9-12"
+      ],
+      "readingsSource": "plan"
+    },
+    {
+      "day": 220,
+      "period": "Exile",
+      "title": "Prophecy Fulfilled",
+      "year": 2026,
+      "audioUrl": "https://dts.podtrac.com/redirect.mp3/aphid.fireside.fm/d/1437767933/c6354d0d-bd10-4eed-b811-1bb569d46efd/1e397483-4aaa-4f23-a8ef-d556757584e1.mp3",
+      "readings": [
+        "Isaiah 61-62",
+        "Ezekiel 20",
+        "Proverbs 13:13-16"
+      ],
+      "readingsSource": "plan"
+    },
+    {
+      "day": 221,
+      "period": "Exile",
+      "title": "Walking with Wise Men",
+      "year": 2026,
+      "audioUrl": "https://dts.podtrac.com/redirect.mp3/aphid.fireside.fm/d/1437767933/c6354d0d-bd10-4eed-b811-1bb569d46efd/3da52941-bf1d-443c-a1ed-d2918c2ee18d.mp3",
+      "readings": [
+        "Isaiah 63-64",
+        "Ezekiel 21-22",
+        "Proverbs 13:17-20"
+      ],
+      "readingsSource": "plan"
+    },
+    {
+      "day": 222,
+      "period": "Exile",
+      "title": "Idolatry and Adultery",
+      "year": 2026,
+      "audioUrl": "https://dts.podtrac.com/redirect.mp3/aphid.fireside.fm/d/1437767933/c6354d0d-bd10-4eed-b811-1bb569d46efd/facfc22a-a8fd-4e5a-8b7e-6ba55bb1f6dc.mp3",
+      "readings": [
+        "Isaiah 65",
+        "Ezekiel 23-24",
+        "Proverbs 13:21-25"
+      ],
+      "readingsSource": "plan"
+    },
+    {
+      "day": 223,
+      "period": "Exile",
+      "title": "Responding Well",
+      "year": 2026,
+      "audioUrl": "https://dts.podtrac.com/redirect.mp3/aphid.fireside.fm/d/1437767933/c6354d0d-bd10-4eed-b811-1bb569d46efd/96599c59-944c-4d36-9142-129e69fddac5.mp3",
+      "readings": [
+        "Isaiah 66",
+        "Ezekiel 25-26",
+        "Proverbs 14:1-4"
+      ],
+      "readingsSource": "plan"
+    },
+    {
+      "day": 224,
+      "period": "Exile",
+      "title": "The Weeping Prophet",
+      "year": 2026,
+      "audioUrl": "https://dts.podtrac.com/redirect.mp3/aphid.fireside.fm/d/1437767933/c6354d0d-bd10-4eed-b811-1bb569d46efd/0bbb1b22-e574-4d41-91e8-5c850c3b569e.mp3",
+      "readings": [
+        "Jeremiah 1",
+        "Ezekiel 27",
+        "Proverbs 14:5-8"
+      ],
+      "readingsSource": "plan"
+    },
+    {
+      "day": 225,
+      "period": "Exile",
+      "title": "Our Will Versus God's Will",
+      "year": 2026,
+      "audioUrl": "https://dts.podtrac.com/redirect.mp3/aphid.fireside.fm/d/1437767933/c6354d0d-bd10-4eed-b811-1bb569d46efd/5fcc4d64-da59-45f0-b818-5ccae8804e0a.mp3",
+      "readings": [
+        "Jeremiah 2",
+        "Ezekiel 28",
+        "Proverbs 14:9-12"
+      ],
+      "readingsSource": "plan"
+    },
+    {
+      "day": 226,
+      "period": "Exile",
+      "title": "Unfaithful Israel",
+      "year": 2026,
+      "audioUrl": "https://dts.podtrac.com/redirect.mp3/aphid.fireside.fm/d/1437767933/c6354d0d-bd10-4eed-b811-1bb569d46efd/917f99cc-3fb9-4370-a1e2-13e34242c747.mp3",
+      "readings": [
+        "Jeremiah 3",
+        "Ezekiel 29-30",
+        "Proverbs 14:13-16"
+      ],
+      "readingsSource": "plan"
+    },
+    {
+      "day": 227,
+      "period": "Exile",
+      "title": "The Towering Cedar",
+      "year": 2024,
+      "audioUrl": "https://dts.podtrac.com/redirect.mp3/aphid.fireside.fm/d/1437767933/c6354d0d-bd10-4eed-b811-1bb569d46efd/bb5038b4-54b4-4896-8e4f-b1cf0eadc24b.mp3",
+      "readings": [
+        "Jeremiah 4",
+        "Ezekiel 31-32",
+        "Proverbs 14:17-20"
+      ],
+      "readingsSource": "plan"
+    },
+    {
+      "day": 228,
+      "period": "Exile",
+      "title": "The Watchman's Duty",
+      "year": 2026,
+      "audioUrl": "https://dts.podtrac.com/redirect.mp3/aphid.fireside.fm/d/1437767933/c6354d0d-bd10-4eed-b811-1bb569d46efd/96ca29fb-b0fc-4210-b254-03176fd6eee6.mp3",
+      "readings": [
+        "Jeremiah 5",
+        "Ezekiel 33",
+        "Proverbs 14:21-24"
+      ],
+      "readingsSource": "plan"
+    },
+    {
+      "day": 229,
+      "period": "Exile",
+      "title": "Shepherds of Israel",
+      "year": 2026,
+      "audioUrl": "https://dts.podtrac.com/redirect.mp3/aphid.fireside.fm/d/1437767933/c6354d0d-bd10-4eed-b811-1bb569d46efd/091c627c-6ab7-40d6-a7c9-0485a3f2439c.mp3",
+      "readings": [
+        "Jeremiah 6",
+        "Ezekiel 34-35",
+        "Proverbs 14:25-28"
+      ],
+      "readingsSource": "plan"
+    },
+    {
+      "day": 230,
+      "period": "Exile",
+      "title": "A New Heart",
+      "year": 2026,
+      "audioUrl": "https://dts.podtrac.com/redirect.mp3/aphid.fireside.fm/d/1437767933/c6354d0d-bd10-4eed-b811-1bb569d46efd/29294423-d6f9-4985-bb70-58d2f8b1b560.mp3",
+      "readings": [
+        "Jeremiah 7",
+        "Ezekiel 36",
+        "Proverbs 14:29-32"
+      ],
+      "readingsSource": "plan"
+    },
+    {
+      "day": 231,
+      "period": "Exile",
+      "title": "The Valley of Dry Bones",
+      "year": 2026,
+      "audioUrl": "https://dts.podtrac.com/redirect.mp3/aphid.fireside.fm/d/1437767933/c6354d0d-bd10-4eed-b811-1bb569d46efd/71e2fbf1-3931-4d27-be8c-0d1f85a1b629.mp3",
+      "readings": [
+        "Jeremiah 8",
+        "Ezekiel 37-38",
+        "Proverbs 14:33-35"
+      ],
+      "readingsSource": "plan"
+    },
+    {
+      "day": 232,
+      "period": "Exile",
+      "title": "Glory in Knowing God",
+      "year": 2026,
+      "audioUrl": "https://dts.podtrac.com/redirect.mp3/aphid.fireside.fm/d/1437767933/c6354d0d-bd10-4eed-b811-1bb569d46efd/2cb58d0c-c6c1-4409-bac2-d019b5c2b9c3.mp3",
+      "readings": [
+        "Jeremiah 9",
+        "Ezekiel 39",
+        "Proverbs 15:1-4"
+      ],
+      "readingsSource": "plan"
+    },
+    {
+      "day": 233,
+      "period": "Exile",
+      "title": "Correct me, O Lord",
+      "year": 2026,
+      "audioUrl": "https://dts.podtrac.com/redirect.mp3/aphid.fireside.fm/d/1437767933/c6354d0d-bd10-4eed-b811-1bb569d46efd/3533bc02-adf2-4d33-a96e-2c60b919993d.mp3",
+      "readings": [
+        "Jeremiah 10-11",
+        "Ezekiel 40",
+        "Proverbs 15:5-8"
+      ],
+      "readingsSource": "plan"
+    },
+    {
+      "day": 234,
+      "period": "Exile",
+      "title": "Jeremiah Complains",
+      "year": 2026,
+      "audioUrl": "https://dts.podtrac.com/redirect.mp3/aphid.fireside.fm/d/1437767933/c6354d0d-bd10-4eed-b811-1bb569d46efd/db9b7754-7401-4a73-a649-1b19aea38518.mp3",
+      "readings": [
+        "Jeremiah 12-13",
+        "Ezekiel 41-42",
+        "Proverbs 15:9-12"
+      ],
+      "readingsSource": "plan"
+    },
+    {
+      "day": 235,
+      "period": "Exile",
+      "title": "Lying Prophets",
+      "year": 2026,
+      "audioUrl": "https://dts.podtrac.com/redirect.mp3/aphid.fireside.fm/d/1437767933/c6354d0d-bd10-4eed-b811-1bb569d46efd/878e54cb-1185-4b69-8b2c-1c3f0ab18cc3.mp3",
+      "readings": [
+        "Jeremiah 14-15",
+        "Ezekiel 43-44",
+        "Proverbs 15:13-16"
+      ],
+      "readingsSource": "plan"
+    },
+    {
+      "day": 236,
+      "period": "Exile",
+      "title": "Rich in Love",
+      "year": 2026,
+      "audioUrl": "https://dts.podtrac.com/redirect.mp3/aphid.fireside.fm/d/1437767933/c6354d0d-bd10-4eed-b811-1bb569d46efd/f3b0ab94-b0d5-4744-bc24-54dd1655261c.mp3",
+      "readings": [
+        "Jeremiah 16-17",
+        "Ezekiel 45-46",
+        "Proverbs 15:17-20"
+      ],
+      "readingsSource": "plan"
+    },
+    {
+      "day": 237,
+      "period": "Exile",
+      "title": "Water from the Temple",
+      "year": 2026,
+      "audioUrl": "https://dts.podtrac.com/redirect.mp3/aphid.fireside.fm/d/1437767933/c6354d0d-bd10-4eed-b811-1bb569d46efd/650cf5d1-26df-4044-a790-ad19b92cca59.mp3",
+      "readings": [
+        "Jeremiah 18-19",
+        "Ezekiel 47-48",
+        "Proverbs 15:21-24"
+      ],
+      "readingsSource": "plan"
+    },
+    {
+      "day": 238,
+      "period": "Exile",
+      "title": "Fall of Jerusalem",
+      "year": 2026,
+      "audioUrl": "https://dts.podtrac.com/redirect.mp3/aphid.fireside.fm/d/1437767933/c6354d0d-bd10-4eed-b811-1bb569d46efd/5b6b2118-90e8-48ed-baf9-7009250c05fe.mp3",
+      "readings": [
+        "Jeremiah 20-21",
+        "Daniel 1-2",
+        "Proverbs 15:25-28"
+      ],
+      "readingsSource": "plan"
+    },
+    {
+      "day": 239,
+      "period": "Exile",
+      "title": "Hananiah, Mishael, and Azariah",
+      "year": 2026,
+      "audioUrl": "https://dts.podtrac.com/redirect.mp3/aphid.fireside.fm/d/1437767933/c6354d0d-bd10-4eed-b811-1bb569d46efd/a3417986-2a85-41e5-a142-c283854328d0.mp3",
+      "readings": [
+        "Jeremiah 22",
+        "Daniel 3",
+        "Proverbs 15:29-33"
+      ],
+      "readingsSource": "plan"
+    },
+    {
+      "day": 240,
+      "period": "Exile",
+      "title": "Remaining Humble",
+      "year": 2026,
+      "audioUrl": "https://dts.podtrac.com/redirect.mp3/aphid.fireside.fm/d/1437767933/c6354d0d-bd10-4eed-b811-1bb569d46efd/608df6a4-994b-4fff-9dbc-e631d20b4de1.mp3",
+      "readings": [
+        "Jeremiah 23",
+        "Daniel 4-5",
+        "Proverbs 16:1-4"
+      ],
+      "readingsSource": "plan"
+    },
+    {
+      "day": 241,
+      "period": "Exile",
+      "title": "Daniel and the Den of Lions",
+      "year": 2026,
+      "audioUrl": "https://dts.podtrac.com/redirect.mp3/aphid.fireside.fm/d/1437767933/c6354d0d-bd10-4eed-b811-1bb569d46efd/e7583372-9c48-42a4-b9f7-7f0102a731d4.mp3",
+      "readings": [
+        "Jeremiah 24-25",
+        "Daniel 6-7",
+        "Proverbs 16:5-8"
+      ],
+      "readingsSource": "plan"
+    },
+    {
+      "day": 242,
+      "period": "Exile",
+      "title": "The Role of King Nebuchadnezzar",
+      "year": 2026,
+      "audioUrl": "https://dts.podtrac.com/redirect.mp3/aphid.fireside.fm/d/1437767933/c6354d0d-bd10-4eed-b811-1bb569d46efd/af04fb08-99a7-46b7-af93-a9511a77e855.mp3",
+      "readings": [
+        "Jeremiah 26-27",
+        "Daniel 8-9",
+        "Proverbs 16:9-12"
+      ],
+      "readingsSource": "plan"
+    },
+    {
+      "day": 243,
+      "period": "Exile",
+      "title": "The Lord's Plans",
+      "year": 2026,
+      "audioUrl": "https://dts.podtrac.com/redirect.mp3/aphid.fireside.fm/d/1437767933/c6354d0d-bd10-4eed-b811-1bb569d46efd/e6106629-ba61-4c77-bff4-fb4ff8df3919.mp3",
+      "readings": [
+        "Jeremiah 28-29",
+        "Daniel 10-11",
+        "Proverbs 16:13-16"
+      ],
+      "readingsSource": "plan"
+    },
+    {
+      "day": 244,
+      "period": "Exile",
+      "title": "Susanna's Righteousness",
+      "year": 2026,
+      "audioUrl": "https://dts.podtrac.com/redirect.mp3/aphid.fireside.fm/d/1437767933/c6354d0d-bd10-4eed-b811-1bb569d46efd/a8616778-78cf-4b5e-9cc1-b468c6bafb18.mp3",
+      "readings": [
+        "Jeremiah 30",
+        "Daniel 12-13",
+        "Proverbs 16:17-20"
+      ],
+      "readingsSource": "plan"
+    },
+    {
+      "day": 245,
+      "period": "Exile",
+      "title": "The Faithfulness of Daniel",
+      "year": 2026,
+      "audioUrl": "https://dts.podtrac.com/redirect.mp3/aphid.fireside.fm/d/1437767933/c6354d0d-bd10-4eed-b811-1bb569d46efd/20d925fe-f7cd-4828-ada9-a2753a3e9e79.mp3",
+      "readings": [
+        "Jeremiah 31",
+        "Daniel 14",
+        "Proverbs 16:21-24"
+      ],
+      "readingsSource": "plan"
+    },
+    {
+      "day": 246,
+      "period": "Exile",
+      "title": "Rejoice in Doing Good",
+      "year": 2026,
+      "audioUrl": "https://dts.podtrac.com/redirect.mp3/aphid.fireside.fm/d/1437767933/c6354d0d-bd10-4eed-b811-1bb569d46efd/ca341d89-e4a7-4125-978d-e369994f29ec.mp3",
+      "readings": [
+        "Jeremiah 32",
+        "Judith 1-2",
+        "Proverbs 16:25-28"
+      ],
+      "readingsSource": "plan"
+    },
+    {
+      "day": 247,
+      "period": "Exile",
+      "title": "True Repentance",
+      "year": 2026,
+      "audioUrl": "https://dts.podtrac.com/redirect.mp3/aphid.fireside.fm/d/1437767933/c6354d0d-bd10-4eed-b811-1bb569d46efd/b2968efb-04b9-446a-b000-beaa2c9bb0b7.mp3",
+      "readings": [
+        "Jeremiah 33-34",
+        "Judith 3-5",
+        "Proverbs 16:29-33"
+      ],
+      "readingsSource": "plan"
+    },
+    {
+      "day": 248,
+      "period": "Exile",
+      "title": "Cut to the Heart",
+      "year": 2026,
+      "audioUrl": "https://dts.podtrac.com/redirect.mp3/aphid.fireside.fm/d/1437767933/c6354d0d-bd10-4eed-b811-1bb569d46efd/cdbb6d92-a115-44a9-8ac1-65ddcbcf6b02.mp3",
+      "readings": [
+        "Jeremiah 35-36",
+        "Judith 6-7",
+        "Proverbs 17:1-4"
+      ],
+      "readingsSource": "plan"
+    },
+    {
+      "day": 249,
+      "period": "Exile",
+      "title": "Prayer of Judith",
+      "year": 2026,
+      "audioUrl": "https://dts.podtrac.com/redirect.mp3/aphid.fireside.fm/d/1437767933/c6354d0d-bd10-4eed-b811-1bb569d46efd/c81bff95-9b79-4c46-bb00-10901a2cc56b.mp3",
+      "readings": [
+        "Jeremiah 37-38",
+        "Judith 8-9",
+        "Proverbs 17:5-8"
+      ],
+      "readingsSource": "plan"
+    },
+    {
+      "day": 250,
+      "period": "Exile",
+      "title": "Final Wave of Exile",
+      "year": 2026,
+      "audioUrl": "https://dts.podtrac.com/redirect.mp3/aphid.fireside.fm/d/1437767933/c6354d0d-bd10-4eed-b811-1bb569d46efd/d15af53a-fce7-4e9d-aca3-cab1d21edb47.mp3",
+      "readings": [
+        "Jeremiah 39-40",
+        "Judith 10-11",
+        "Proverbs 17:9-12"
+      ],
+      "readingsSource": "plan"
+    },
+    {
+      "day": 251,
+      "period": "Exile",
+      "title": "Judith and Holofernes",
+      "year": 2026,
+      "audioUrl": "https://dts.podtrac.com/redirect.mp3/aphid.fireside.fm/d/1437767933/c6354d0d-bd10-4eed-b811-1bb569d46efd/ee695e05-637e-45d0-82c1-2d39ea1c7c68.mp3",
+      "readings": [
+        "Jeremiah 41-42",
+        "Judith 12-14",
+        "Proverbs 17:13-16"
+      ],
+      "readingsSource": "plan"
+    },
+    {
+      "day": 252,
+      "period": "Exile",
+      "title": "Queen of Heaven",
+      "year": 2026,
+      "audioUrl": "https://dts.podtrac.com/redirect.mp3/aphid.fireside.fm/d/1437767933/c6354d0d-bd10-4eed-b811-1bb569d46efd/0cf2c879-ad09-44e8-a680-1bd0dfe283a3.mp3",
+      "readings": [
+        "Jeremiah 43-44",
+        "Judith 15-16",
+        "Proverbs 17:17-20"
+      ],
+      "readingsSource": "plan"
+    },
+    {
+      "day": 253,
+      "period": "Exile",
+      "title": "Lamentations of Jeremiah",
+      "year": 2026,
+      "audioUrl": "https://dts.podtrac.com/redirect.mp3/aphid.fireside.fm/d/1437767933/c6354d0d-bd10-4eed-b811-1bb569d46efd/7d522775-00dc-4463-a2c0-867f18b0e50a.mp3",
+      "readings": [
+        "Jeremiah 45-46",
+        "Lamentations 1",
+        "Proverbs 17:21-28"
+      ],
+      "readingsSource": "episode"
+    },
+    {
+      "day": 254,
+      "period": "Exile",
+      "title": "Judgment of Nations",
+      "year": 2026,
+      "audioUrl": "https://dts.podtrac.com/redirect.mp3/aphid.fireside.fm/d/1437767933/c6354d0d-bd10-4eed-b811-1bb569d46efd/7171890b-730d-4ad9-9e22-c20b2a50a383.mp3",
+      "readings": [
+        "Jeremiah 47-48",
+        "Lamentations 2",
+        "Proverbs 18:1-4"
+      ],
+      "readingsSource": "plan"
+    },
+    {
+      "day": 255,
+      "period": "Exile",
+      "title": "God Is Good",
+      "year": 2026,
+      "audioUrl": "https://dts.podtrac.com/redirect.mp3/aphid.fireside.fm/d/1437767933/c6354d0d-bd10-4eed-b811-1bb569d46efd/80467046-180a-4e9a-bb72-157163c5ea75.mp3",
+      "readings": [
+        "Jeremiah 49-50",
+        "Lamentations 3",
+        "Proverbs 18:5-8"
+      ],
+      "readingsSource": "plan"
+    },
+    {
+      "day": 256,
+      "period": "Exile",
+      "title": "Hard Seasons",
+      "year": 2026,
+      "audioUrl": "https://dts.podtrac.com/redirect.mp3/aphid.fireside.fm/d/1437767933/c6354d0d-bd10-4eed-b811-1bb569d46efd/49a2b35e-1d72-4832-97f2-10f751b869c0.mp3",
+      "readings": [
+        "Jeremiah 51",
+        "Lamentations 4-5",
+        "Proverbs 18:9-12"
+      ],
+      "readingsSource": "plan"
+    },
+    {
+      "day": 257,
+      "period": "Exile",
+      "title": "Choose to Love",
+      "year": 2026,
+      "audioUrl": "https://dts.podtrac.com/redirect.mp3/aphid.fireside.fm/d/1437767933/c6354d0d-bd10-4eed-b811-1bb569d46efd/86631e35-262e-45dc-bde7-a18b8b0e4050.mp3",
+      "readings": [
+        "Jeremiah 52",
+        "Obadiah 1",
+        "Proverbs 18:13-16"
+      ],
+      "readingsSource": "plan"
+    },
+    {
+      "day": 258,
+      "period": "Messianic Checkpoint",
+      "title": "The Kingdom Is Here",
+      "year": 2026,
+      "audioUrl": "https://dts.podtrac.com/redirect.mp3/aphid.fireside.fm/d/1437767933/c6354d0d-bd10-4eed-b811-1bb569d46efd/30632e4f-f5ce-4a88-8b66-16d3e1d3c092.mp3",
+      "readings": [
+        "Matthew 1-4",
+        "Proverbs 18:17-20"
+      ],
+      "readingsSource": "plan"
+    },
+    {
+      "day": 259,
+      "period": "Messianic Checkpoint",
+      "title": "The Sermon on the Mount",
+      "year": 2026,
+      "audioUrl": "https://dts.podtrac.com/redirect.mp3/aphid.fireside.fm/d/1437767933/c6354d0d-bd10-4eed-b811-1bb569d46efd/22e182b0-222f-4ff1-8e81-e1fd0a0cdc91.mp3",
+      "readings": [
+        "Matthew 5-7",
+        "Proverbs 18:21-24"
+      ],
+      "readingsSource": "plan"
+    },
+    {
+      "day": 260,
+      "period": "Messianic Checkpoint",
+      "title": "Carrying the Cross",
+      "year": 2026,
+      "audioUrl": "https://dts.podtrac.com/redirect.mp3/aphid.fireside.fm/d/1437767933/c6354d0d-bd10-4eed-b811-1bb569d46efd/70c7512c-20a0-4d71-8ab2-88516965b3b2.mp3",
+      "readings": [
+        "Matthew 8-10",
+        "Proverbs 19:1-4"
+      ],
+      "readingsSource": "plan"
+    },
+    {
+      "day": 261,
+      "period": "Messianic Checkpoint",
+      "title": "Ornate Souls",
+      "year": 2026,
+      "audioUrl": "https://dts.podtrac.com/redirect.mp3/aphid.fireside.fm/d/1437767933/c6354d0d-bd10-4eed-b811-1bb569d46efd/209a0598-550e-4044-bfec-f33d5616e3a5.mp3",
+      "readings": [
+        "Matthew 11-13",
+        "Proverbs 19:5-8"
+      ],
+      "readingsSource": "plan"
+    },
+    {
+      "day": 262,
+      "period": "Messianic Checkpoint",
+      "title": "Miracle Worker",
+      "year": 2026,
+      "audioUrl": "https://dts.podtrac.com/redirect.mp3/aphid.fireside.fm/d/1437767933/c6354d0d-bd10-4eed-b811-1bb569d46efd/ce5d9fce-e774-4d38-8be7-ad8e14b5b7e4.mp3",
+      "readings": [
+        "Matthew 14-17",
+        "Proverbs 19:9-12"
+      ],
+      "readingsSource": "plan"
+    },
+    {
+      "day": 263,
+      "period": "Messianic Checkpoint",
+      "title": "The Father's Generosity",
+      "year": 2026,
+      "audioUrl": "https://dts.podtrac.com/redirect.mp3/aphid.fireside.fm/d/1437767933/c6354d0d-bd10-4eed-b811-1bb569d46efd/ce93d91e-5a15-4e29-ba90-caf6797a1fdc.mp3",
+      "readings": [
+        "Matthew 18-21",
+        "Proverbs 19:13-16"
+      ],
+      "readingsSource": "plan"
+    },
+    {
+      "day": 264,
+      "period": "Messianic Checkpoint",
+      "title": "Preaching Without Practice",
+      "year": 2026,
+      "audioUrl": "https://dts.podtrac.com/redirect.mp3/aphid.fireside.fm/d/1437767933/c6354d0d-bd10-4eed-b811-1bb569d46efd/7b8d0ded-674c-426b-94b3-ed63279d069e.mp3",
+      "readings": [
+        "Matthew 22-24",
+        "Proverbs 19:17-20"
+      ],
+      "readingsSource": "plan"
+    },
+    {
+      "day": 265,
+      "period": "Messianic Checkpoint",
+      "title": "Sins of Omission",
+      "year": 2026,
+      "audioUrl": "https://dts.podtrac.com/redirect.mp3/aphid.fireside.fm/d/1437767933/c6354d0d-bd10-4eed-b811-1bb569d46efd/5d492f72-5382-4110-95d8-6b5d0b52ea61.mp3",
+      "readings": [
+        "Matthew 25-26",
+        "Proverbs 19:21-24"
+      ],
+      "readingsSource": "plan"
+    },
+    {
+      "day": 266,
+      "period": "Messianic Checkpoint",
+      "title": "Son of the Father",
+      "year": 2026,
+      "audioUrl": "https://dts.podtrac.com/redirect.mp3/aphid.fireside.fm/d/1437767933/c6354d0d-bd10-4eed-b811-1bb569d46efd/78d667be-9473-472e-9de9-5a3234ce093a.mp3",
+      "readings": [
+        "Matthew 27-28",
+        "Proverbs 19:25-29"
+      ],
+      "readingsSource": "plan"
+    },
+    {
+      "day": 267,
+      "period": "Return",
+      "title": "Indifference and Apathy",
+      "year": 2026,
+      "audioUrl": "https://dts.podtrac.com/redirect.mp3/aphid.fireside.fm/d/1437767933/c6354d0d-bd10-4eed-b811-1bb569d46efd/79b03ff8-08a2-451b-8604-ad723ccbeba7.mp3",
+      "readings": [
+        "Ezra 1-2",
+        "Haggai 1-2",
+        "Proverbs 20:1-3"
+      ],
+      "readingsSource": "plan"
+    },
+    {
+      "day": 268,
+      "period": "Return",
+      "title": "Rebuilding the Temple",
+      "year": 2026,
+      "audioUrl": "https://dts.podtrac.com/redirect.mp3/aphid.fireside.fm/d/1437767933/c6354d0d-bd10-4eed-b811-1bb569d46efd/08d35da7-f8e1-4166-a187-7edc12b5fd11.mp3",
+      "readings": [
+        "Ezra 3-4",
+        "Zechariah 1-3",
+        "Proverbs 20:4-7"
+      ],
+      "readingsSource": "plan"
+    },
+    {
+      "day": 269,
+      "period": "Return",
+      "title": "The Day of Small Things",
+      "year": 2026,
+      "audioUrl": "https://dts.podtrac.com/redirect.mp3/aphid.fireside.fm/d/1437767933/c6354d0d-bd10-4eed-b811-1bb569d46efd/79b11d02-f0c1-4351-b8cb-79e412f8cc83.mp3",
+      "readings": [
+        "Ezra 5-6",
+        "Zechariah 4-6",
+        "Proverbs 20:8-11"
+      ],
+      "readingsSource": "plan"
+    },
+    {
+      "day": 270,
+      "period": "Return",
+      "title": "God's Favor with Ezra",
+      "year": 2026,
+      "audioUrl": "https://dts.podtrac.com/redirect.mp3/aphid.fireside.fm/d/1437767933/c6354d0d-bd10-4eed-b811-1bb569d46efd/3e6f9c72-b02d-433f-a291-5a9324a44808.mp3",
+      "readings": [
+        "Ezra 7-8",
+        "Zechariah 7-8",
+        "Proverbs 20:12-15"
+      ],
+      "readingsSource": "plan"
+    },
+    {
+      "day": 271,
+      "period": "Return",
+      "title": "Israel's Foreign Wives",
+      "year": 2026,
+      "audioUrl": "https://dts.podtrac.com/redirect.mp3/aphid.fireside.fm/d/1437767933/c6354d0d-bd10-4eed-b811-1bb569d46efd/4258e4e7-7f25-4bdd-8b65-a340838135a0.mp3",
+      "readings": [
+        "Ezra 9-10",
+        "Zechariah 9-11",
+        "Proverbs 20:16-19"
+      ],
+      "readingsSource": "plan"
+    },
+    {
+      "day": 272,
+      "period": "Return",
+      "title": "The Call of Nehemiah",
+      "year": 2026,
+      "audioUrl": "https://dts.podtrac.com/redirect.mp3/aphid.fireside.fm/d/1437767933/c6354d0d-bd10-4eed-b811-1bb569d46efd/69e3e2be-97f8-48d1-bbd6-32d29e4d8cc9.mp3",
+      "readings": [
+        "Nehemiah 1-2",
+        "Zechariah 12-13",
+        "Proverbs 20:20-22"
+      ],
+      "readingsSource": "plan"
+    },
+    {
+      "day": 273,
+      "period": "Return",
+      "title": "The Lord's Work",
+      "year": 2026,
+      "audioUrl": "https://dts.podtrac.com/redirect.mp3/aphid.fireside.fm/d/1437767933/c6354d0d-bd10-4eed-b811-1bb569d46efd/816d6d8c-3834-4dfb-99a7-1dccf6a7f48f.mp3",
+      "readings": [
+        "Nehemiah 3",
+        "Zechariah 14",
+        "Proverbs 20:23-26"
+      ],
+      "readingsSource": "plan"
+    },
+    {
+      "day": 274,
+      "period": "Return",
+      "title": "Perseverance in Opposition",
+      "year": 2026,
+      "audioUrl": "https://dts.podtrac.com/redirect.mp3/aphid.fireside.fm/d/1437767933/c6354d0d-bd10-4eed-b811-1bb569d46efd/9574e5fd-e65c-4612-a799-980ce5453b86.mp3",
+      "readings": [
+        "Nehemiah 4-5",
+        "Esther 11-12",
+        "Proverbs 20:27-30"
+      ],
+      "readingsSource": "episode"
+    },
+    {
+      "day": 275,
+      "period": "Return",
+      "title": "Esther Becomes Queen",
+      "year": 2026,
+      "audioUrl": "https://dts.podtrac.com/redirect.mp3/aphid.fireside.fm/d/1437767933/c6354d0d-bd10-4eed-b811-1bb569d46efd/69dcc95b-4382-47bc-af17-4984b28bf198.mp3",
+      "readings": [
+        "Nehemiah 6-7",
+        "Esther 1-2",
+        "Proverbs 21:1-4"
+      ],
+      "readingsSource": "episode"
+    },
+    {
+      "day": 276,
+      "period": "Return",
+      "title": "Haman's Plan",
+      "year": 2026,
+      "audioUrl": "https://dts.podtrac.com/redirect.mp3/aphid.fireside.fm/d/1437767933/c6354d0d-bd10-4eed-b811-1bb569d46efd/d6f5624b-efc5-43dd-aaad-028a06dda59c.mp3",
+      "readings": [
+        "Nehemiah 8",
+        "Esther 3, 13",
+        "Proverbs 21:5-8"
+      ],
+      "readingsSource": "episode"
+    },
+    {
+      "day": 277,
+      "period": "Return",
+      "title": "Such a Time as This",
+      "year": 2026,
+      "audioUrl": "https://dts.podtrac.com/redirect.mp3/aphid.fireside.fm/d/1437767933/c6354d0d-bd10-4eed-b811-1bb569d46efd/62134813-8b6c-4dd1-a5e5-28192fd61bf4.mp3",
+      "readings": [
+        "Nehemiah 9",
+        "Esther 4, 14",
+        "Proverbs 21:9-12"
+      ],
+      "readingsSource": "episode"
+    },
+    {
+      "day": 278,
+      "period": "Return",
+      "title": "Power in Weakness",
+      "year": 2026,
+      "audioUrl": "https://dts.podtrac.com/redirect.mp3/aphid.fireside.fm/d/1437767933/c6354d0d-bd10-4eed-b811-1bb569d46efd/f2c06bf5-1bfd-4528-830e-a362807e047d.mp3",
+      "readings": [
+        "Nehemiah 10",
+        "Esther 15, 6-7",
+        "Proverbs 21:13-16"
+      ],
+      "readingsSource": "episode"
+    },
+    {
+      "day": 279,
+      "period": "Return",
+      "title": "Blessings and Burdens",
+      "year": 2026,
+      "audioUrl": "https://dts.podtrac.com/redirect.mp3/aphid.fireside.fm/d/1437767933/c6354d0d-bd10-4eed-b811-1bb569d46efd/ad0178c5-6e4c-4416-87d6-77154a6c34e8.mp3",
+      "readings": [
+        "Nehemiah 11",
+        "Esther 8, 16",
+        "Proverbs 21:17-20"
+      ],
+      "readingsSource": "episode"
+    },
+    {
+      "day": 280,
+      "period": "Return",
+      "title": "The People of the Covenant",
+      "year": 2026,
+      "audioUrl": "https://dts.podtrac.com/redirect.mp3/aphid.fireside.fm/d/1437767933/c6354d0d-bd10-4eed-b811-1bb569d46efd/e9bb6fcb-95af-4442-be1e-7253600771e4.mp3",
+      "readings": [
+        "Nehemiah 12",
+        "Esther 9-11",
+        "Proverbs 21:21-24"
+      ],
+      "readingsSource": "episode"
+    },
+    {
+      "day": 281,
+      "period": "Return",
+      "title": "Good and Evil",
+      "year": 2026,
+      "audioUrl": "https://dts.podtrac.com/redirect.mp3/aphid.fireside.fm/d/1437767933/c6354d0d-bd10-4eed-b811-1bb569d46efd/6cf8c8b7-f866-4cee-8424-fcc955a09b73.mp3",
+      "readings": [
+        "Nehemiah 13",
+        "Malachi 1-4",
+        "Proverbs 21:25-28"
+      ],
+      "readingsSource": "plan"
+    },
+    {
+      "day": 282,
+      "period": "Maccabean Revolt",
+      "title": "Antiochus Desecrates the Temple",
+      "year": 2026,
+      "audioUrl": "https://dts.podtrac.com/redirect.mp3/aphid.fireside.fm/d/1437767933/c6354d0d-bd10-4eed-b811-1bb569d46efd/f1b9711b-29ce-4513-be02-f102ff412fe9.mp3",
+      "readings": [
+        "1 Maccabees 1",
+        "Sirach 1-3",
+        "Proverbs 21:29-31"
+      ],
+      "readingsSource": "plan"
+    },
+    {
+      "day": 283,
+      "period": "Maccabean Revolt",
+      "title": "Mattathias Attacks",
+      "year": 2026,
+      "audioUrl": "https://dts.podtrac.com/redirect.mp3/aphid.fireside.fm/d/1437767933/c6354d0d-bd10-4eed-b811-1bb569d46efd/949b5858-80ff-43fb-a199-5e13e64c63fd.mp3",
+      "readings": [
+        "1 Maccabees 2",
+        "Sirach 4-6",
+        "Proverbs 22:1-4"
+      ],
+      "readingsSource": "plan"
+    },
+    {
+      "day": 284,
+      "period": "Maccabean Revolt",
+      "title": "Near Occasion of Sin",
+      "year": 2026,
+      "audioUrl": "https://dts.podtrac.com/redirect.mp3/aphid.fireside.fm/d/1437767933/c6354d0d-bd10-4eed-b811-1bb569d46efd/1dd9e784-9601-40bf-b3e2-cdd46aba95b3.mp3",
+      "readings": [
+        "1 Maccabees 3",
+        "Sirach 7-9",
+        "Proverbs 22:5-8"
+      ],
+      "readingsSource": "plan"
+    },
+    {
+      "day": 285,
+      "period": "Maccabean Revolt",
+      "title": "Story of Hanukkah",
+      "year": 2026,
+      "audioUrl": "https://dts.podtrac.com/redirect.mp3/aphid.fireside.fm/d/1437767933/c6354d0d-bd10-4eed-b811-1bb569d46efd/f5fcfbf7-e92d-41df-abcd-9c13396d576a.mp3",
+      "readings": [
+        "1 Maccabees 4",
+        "Sirach 10-12",
+        "Proverbs 22:9-12"
+      ],
+      "readingsSource": "plan"
+    },
+    {
+      "day": 286,
+      "period": "Maccabean Revolt",
+      "title": "The Battle to Choose God",
+      "year": 2026,
+      "audioUrl": "https://dts.podtrac.com/redirect.mp3/aphid.fireside.fm/d/1437767933/c6354d0d-bd10-4eed-b811-1bb569d46efd/925169cb-6cb9-4671-b036-ecbf36498c5b.mp3",
+      "readings": [
+        "1 Maccabees 5",
+        "Sirach 13-15",
+        "Proverbs 22:13-16"
+      ],
+      "readingsSource": "plan"
+    },
+    {
+      "day": 287,
+      "period": "Maccabean Revolt",
+      "title": "Eleazar's Sacrifice",
+      "year": 2026,
+      "audioUrl": "https://dts.podtrac.com/redirect.mp3/aphid.fireside.fm/d/1437767933/c6354d0d-bd10-4eed-b811-1bb569d46efd/9e345194-346f-4abf-b9ea-c4c09fcfdffc.mp3",
+      "readings": [
+        "1 Maccabees 6",
+        "Sirach 16-18",
+        "Proverbs 22:17-21"
+      ],
+      "readingsSource": "plan"
+    },
+    {
+      "day": 288,
+      "period": "Maccabean Revolt",
+      "title": "Battling Against Gossip",
+      "year": 2026,
+      "audioUrl": "https://dts.podtrac.com/redirect.mp3/aphid.fireside.fm/d/1437767933/c6354d0d-bd10-4eed-b811-1bb569d46efd/8b736719-59c5-40d7-bff5-83bf81905e7b.mp3",
+      "readings": [
+        "1 Maccabees 7",
+        "Sirach 19-21",
+        "Proverbs 22:22-25"
+      ],
+      "readingsSource": "plan"
+    },
+    {
+      "day": 289,
+      "period": "Maccabean Revolt",
+      "title": "Wise Influences",
+      "year": 2026,
+      "audioUrl": "https://dts.podtrac.com/redirect.mp3/aphid.fireside.fm/d/1437767933/c6354d0d-bd10-4eed-b811-1bb569d46efd/8aec1620-4233-4be3-b913-f9e0578de014.mp3",
+      "readings": [
+        "1 Maccabees 8",
+        "Sirach 22-23",
+        "Proverbs 22:26-29"
+      ],
+      "readingsSource": "plan"
+    },
+    {
+      "day": 290,
+      "period": "Maccabean Revolt",
+      "title": "Judas Maccabeus Dies",
+      "year": 2026,
+      "audioUrl": "https://dts.podtrac.com/redirect.mp3/aphid.fireside.fm/d/1437767933/c6354d0d-bd10-4eed-b811-1bb569d46efd/1ced44f9-5134-4337-b46f-c69e7b4c83ff.mp3",
+      "readings": [
+        "1 Maccabees 9",
+        "Sirach 24-25",
+        "Proverbs 23:1-4"
+      ],
+      "readingsSource": "plan"
+    },
+    {
+      "day": 291,
+      "period": "Maccabean Revolt",
+      "title": "The Rise of King Alexander",
+      "year": 2026,
+      "audioUrl": "https://dts.podtrac.com/redirect.mp3/aphid.fireside.fm/d/1437767933/c6354d0d-bd10-4eed-b811-1bb569d46efd/6f527bb1-bd83-429b-abd2-e17684481079.mp3",
+      "readings": [
+        "1 Maccabees 10",
+        "Sirach 26-27",
+        "Proverbs 23:5-8"
+      ],
+      "readingsSource": "plan"
+    },
+    {
+      "day": 292,
+      "period": "Maccabean Revolt",
+      "title": "The Power of Words",
+      "year": 2026,
+      "audioUrl": "https://dts.podtrac.com/redirect.mp3/aphid.fireside.fm/d/1437767933/c6354d0d-bd10-4eed-b811-1bb569d46efd/ddb1001d-a9ac-45ed-bd60-9da133e8ac4a.mp3",
+      "readings": [
+        "1 Maccabees 11",
+        "Sirach 28-29",
+        "Proverbs 23:9-12"
+      ],
+      "readingsSource": "plan"
+    },
+    {
+      "day": 293,
+      "period": "Maccabean Revolt",
+      "title": "Discipline Grounded in Love",
+      "year": 2026,
+      "audioUrl": "https://dts.podtrac.com/redirect.mp3/aphid.fireside.fm/d/1437767933/c6354d0d-bd10-4eed-b811-1bb569d46efd/1c99589d-1a0b-41b8-8a06-82f38b36a25b.mp3",
+      "readings": [
+        "1 Maccabees 12",
+        "Sirach 30-31",
+        "Proverbs 23:13-16"
+      ],
+      "readingsSource": "plan"
+    },
+    {
+      "day": 294,
+      "period": "Maccabean Revolt",
+      "title": "Judea Gains Independence",
+      "year": 2026,
+      "audioUrl": "https://dts.podtrac.com/redirect.mp3/aphid.fireside.fm/d/1437767933/c6354d0d-bd10-4eed-b811-1bb569d46efd/6f26be5e-94dd-4030-8707-d91dd1d9102d.mp3",
+      "readings": [
+        "1 Maccabees 13",
+        "Sirach 32-33",
+        "Proverbs 23:17-21"
+      ],
+      "readingsSource": "plan"
+    },
+    {
+      "day": 295,
+      "period": "Maccabean Revolt",
+      "title": "Israel's Expectations",
+      "year": 2026,
+      "audioUrl": "https://dts.podtrac.com/redirect.mp3/aphid.fireside.fm/d/1437767933/c6354d0d-bd10-4eed-b811-1bb569d46efd/aed8a68a-5ca3-4998-8fae-b8bee55c26d9.mp3",
+      "readings": [
+        "1 Maccabees 14",
+        "Sirach 34-35",
+        "Proverbs 23:22-25"
+      ],
+      "readingsSource": "plan"
+    },
+    {
+      "day": 296,
+      "period": "Maccabean Revolt",
+      "title": "Know Your Heart",
+      "year": 2026,
+      "audioUrl": "https://dts.podtrac.com/redirect.mp3/aphid.fireside.fm/d/1437767933/c6354d0d-bd10-4eed-b811-1bb569d46efd/e5742770-e068-4c7c-9780-206b27d7b803.mp3",
+      "readings": [
+        "1 Maccabees 15",
+        "Sirach 36-37",
+        "Proverbs 23:26-28"
+      ],
+      "readingsSource": "plan"
+    },
+    {
+      "day": 297,
+      "period": "Maccabean Revolt",
+      "title": "Using Good Things for Evil",
+      "year": 2026,
+      "audioUrl": "https://dts.podtrac.com/redirect.mp3/aphid.fireside.fm/d/1437767933/c6354d0d-bd10-4eed-b811-1bb569d46efd/c1c21fae-4dab-4861-afc4-779c08e80377.mp3",
+      "readings": [
+        "1 Maccabees 16",
+        "Sirach 38-39",
+        "Proverbs 23:29-35"
+      ],
+      "readingsSource": "plan"
+    },
+    {
+      "day": 298,
+      "period": "Maccabean Revolt",
+      "title": "The Gift of Life",
+      "year": 2026,
+      "audioUrl": "https://dts.podtrac.com/redirect.mp3/aphid.fireside.fm/d/1437767933/c6354d0d-bd10-4eed-b811-1bb569d46efd/eada7646-99c6-405d-a6fa-51de0a4da915.mp3",
+      "readings": [
+        "2 Maccabees 1",
+        "Sirach 40-41",
+        "Proverbs 24:1-7"
+      ],
+      "readingsSource": "plan"
+    },
+    {
+      "day": 299,
+      "period": "Maccabean Revolt",
+      "title": "Jeremiah Hides the Ark",
+      "year": 2026,
+      "audioUrl": "https://dts.podtrac.com/redirect.mp3/aphid.fireside.fm/d/1437767933/c6354d0d-bd10-4eed-b811-1bb569d46efd/ee46f763-1ab1-4090-8144-04f0a6d4a24c.mp3",
+      "readings": [
+        "2 Maccabees 2",
+        "Sirach 42-44",
+        "Proverbs 24:8-9"
+      ],
+      "readingsSource": "plan"
+    },
+    {
+      "day": 300,
+      "period": "Maccabean Revolt",
+      "title": "Conversion of Heart",
+      "year": 2026,
+      "audioUrl": "https://dts.podtrac.com/redirect.mp3/aphid.fireside.fm/d/1437767933/c6354d0d-bd10-4eed-b811-1bb569d46efd/1a28ec1d-84df-411d-a1da-dbc0aa6612b4.mp3",
+      "readings": [
+        "2 Maccabees 3",
+        "Sirach 45-46",
+        "Proverbs 24:10-12"
+      ],
+      "readingsSource": "plan"
+    },
+    {
+      "day": 301,
+      "period": "Maccabean Revolt",
+      "title": "Rising Again",
+      "year": 2026,
+      "audioUrl": "https://dts.podtrac.com/redirect.mp3/aphid.fireside.fm/d/1437767933/c6354d0d-bd10-4eed-b811-1bb569d46efd/29cae658-534a-47b8-bdfb-ffd4bde185ad.mp3",
+      "readings": [
+        "2 Maccabees 4",
+        "Sirach 47-49",
+        "Proverbs 24:13-16"
+      ],
+      "readingsSource": "plan"
+    },
+    {
+      "day": 302,
+      "period": "Maccabean Revolt",
+      "title": "The Pursuit of Wisdom",
+      "year": 2026,
+      "audioUrl": "https://dts.podtrac.com/redirect.mp3/aphid.fireside.fm/d/1437767933/c6354d0d-bd10-4eed-b811-1bb569d46efd/c6195108-f3c5-4f31-a76a-b43d15c04973.mp3",
+      "readings": [
+        "2 Maccabees 5",
+        "Sirach 50-51",
+        "Proverbs 24:17-20"
+      ],
+      "readingsSource": "plan"
+    },
+    {
+      "day": 303,
+      "period": "Maccabean Revolt",
+      "title": "Eleazar's Martyrdom",
+      "year": 2026,
+      "audioUrl": "https://dts.podtrac.com/redirect.mp3/aphid.fireside.fm/d/1437767933/c6354d0d-bd10-4eed-b811-1bb569d46efd/795ea147-2ab0-4559-b606-2819d09cdd5d.mp3",
+      "readings": [
+        "2 Maccabees 6",
+        "Wisdom 1-2",
+        "Proverbs 24:21-26"
+      ],
+      "readingsSource": "plan"
+    },
+    {
+      "day": 304,
+      "period": "Maccabean Revolt",
+      "title": "Life Beyond Death",
+      "year": 2026,
+      "audioUrl": "https://dts.podtrac.com/redirect.mp3/aphid.fireside.fm/d/1437767933/c6354d0d-bd10-4eed-b811-1bb569d46efd/ce80bcf8-96a5-4f23-9416-95dc0bf061b6.mp3",
+      "readings": [
+        "2 Maccabees 7",
+        "Wisdom 3-4",
+        "Proverbs 24:27-29"
+      ],
+      "readingsSource": "plan"
+    },
+    {
+      "day": 305,
+      "period": "Maccabean Revolt",
+      "title": "The Defender",
+      "year": 2026,
+      "audioUrl": "https://dts.podtrac.com/redirect.mp3/aphid.fireside.fm/d/1437767933/c6354d0d-bd10-4eed-b811-1bb569d46efd/24892b91-0802-4d4e-9803-bd85e1542d6a.mp3",
+      "readings": [
+        "2 Maccabees 8",
+        "Wisdom 5-6",
+        "Proverbs 24:30-34"
+      ],
+      "readingsSource": "plan"
+    },
+    {
+      "day": 306,
+      "period": "Maccabean Revolt",
+      "title": "Wisdom Is Beautiful",
+      "year": 2026,
+      "audioUrl": "https://dts.podtrac.com/redirect.mp3/aphid.fireside.fm/d/1437767933/c6354d0d-bd10-4eed-b811-1bb569d46efd/121c8b40-1084-4d18-b1bc-ff45a6da6f04.mp3",
+      "readings": [
+        "2 Maccabees 9",
+        "Wisdom 7-8",
+        "Proverbs 25:1-3"
+      ],
+      "readingsSource": "plan"
+    },
+    {
+      "day": 307,
+      "period": "Maccabean Revolt",
+      "title": "Courage in Battle",
+      "year": 2026,
+      "audioUrl": "https://dts.podtrac.com/redirect.mp3/aphid.fireside.fm/d/1437767933/c6354d0d-bd10-4eed-b811-1bb569d46efd/f9b6ae9e-8413-408c-9712-2f75d50cd712.mp3",
+      "readings": [
+        "2 Maccabees 10",
+        "Wisdom 9-10",
+        "Proverbs 25:4-7"
+      ],
+      "readingsSource": "plan"
+    },
+    {
+      "day": 308,
+      "period": "Maccabean Revolt",
+      "title": "Little by Little",
+      "year": 2026,
+      "audioUrl": "https://dts.podtrac.com/redirect.mp3/aphid.fireside.fm/d/1437767933/c6354d0d-bd10-4eed-b811-1bb569d46efd/f2797296-4cd1-43a9-ab40-f6b56996cf78.mp3",
+      "readings": [
+        "2 Maccabees 11",
+        "Wisdom 11-12",
+        "Proverbs 25:8-10"
+      ],
+      "readingsSource": "plan"
+    },
+    {
+      "day": 309,
+      "period": "Maccabean Revolt",
+      "title": "Praying for the Dead",
+      "year": 2026,
+      "audioUrl": "https://dts.podtrac.com/redirect.mp3/aphid.fireside.fm/d/1437767933/c6354d0d-bd10-4eed-b811-1bb569d46efd/84c120ea-3a2a-4711-bdfb-66b869707a0b.mp3",
+      "readings": [
+        "2 Maccabees 12",
+        "Wisdom 13-14",
+        "Proverbs 25:11-14"
+      ],
+      "readingsSource": "plan"
+    },
+    {
+      "day": 310,
+      "period": "Maccabean Revolt",
+      "title": "Rivals for the Heart",
+      "year": 2026,
+      "audioUrl": "https://dts.podtrac.com/redirect.mp3/aphid.fireside.fm/d/1437767933/c6354d0d-bd10-4eed-b811-1bb569d46efd/24e25d58-c0f5-49db-9379-6f542aa72b81.mp3",
+      "readings": [
+        "2 Maccabees 13",
+        "Wisdom 15-16",
+        "Proverbs 25:15-17"
+      ],
+      "readingsSource": "plan"
+    },
+    {
+      "day": 311,
+      "period": "Maccabean Revolt",
+      "title": "God Fights for You",
+      "year": 2026,
+      "audioUrl": "https://dts.podtrac.com/redirect.mp3/aphid.fireside.fm/d/1437767933/c6354d0d-bd10-4eed-b811-1bb569d46efd/2dcae2d0-46ca-4b0a-81c7-004d95507628.mp3",
+      "readings": [
+        "2 Maccabees 14",
+        "Wisdom 17-18",
+        "Proverbs 25:18-20"
+      ],
+      "readingsSource": "plan"
+    },
+    {
+      "day": 312,
+      "period": "Maccabean Revolt",
+      "title": "Conclusion to the Old Testament",
+      "year": 2026,
+      "audioUrl": "https://dts.podtrac.com/redirect.mp3/aphid.fireside.fm/d/1437767933/c6354d0d-bd10-4eed-b811-1bb569d46efd/4d9299e9-97dc-42f3-9aaf-d1230fb16210.mp3",
+      "readings": [
+        "2 Maccabees 15",
+        "Wisdom 19",
+        "Proverbs 25:21-23"
+      ],
+      "readingsSource": "plan"
+    },
+    {
+      "day": 313,
+      "period": "Messianic Fulfillment",
+      "title": "The Ark of the New Covenant",
+      "year": 2026,
+      "audioUrl": "https://dts.podtrac.com/redirect.mp3/aphid.fireside.fm/d/1437767933/c6354d0d-bd10-4eed-b811-1bb569d46efd/5f6f1714-781b-462f-994c-ad324b18935f.mp3",
+      "readings": [
+        "Luke 1-2",
+        "Proverbs 25:24-26"
+      ],
+      "readingsSource": "plan"
+    },
+    {
+      "day": 314,
+      "period": "Messianic Fulfillment",
+      "title": "My Beloved Son",
+      "year": 2026,
+      "audioUrl": "https://dts.podtrac.com/redirect.mp3/aphid.fireside.fm/d/1437767933/c6354d0d-bd10-4eed-b811-1bb569d46efd/6e9c4afe-e2f6-4f74-9010-a627fd2644ac.mp3",
+      "readings": [
+        "Luke 3-5",
+        "Proverbs 25:27-28"
+      ],
+      "readingsSource": "plan"
+    },
+    {
+      "day": 315,
+      "period": "Messianic Fulfillment",
+      "title": "The Virtue of Mercy",
+      "year": 2026,
+      "audioUrl": "https://dts.podtrac.com/redirect.mp3/aphid.fireside.fm/d/1437767933/c6354d0d-bd10-4eed-b811-1bb569d46efd/3b455fab-d2e4-44c6-8cd2-ae1fd2849dec.mp3",
+      "readings": [
+        "Luke 6-8",
+        "Proverbs 26:1-3"
+      ],
+      "readingsSource": "plan"
+    },
+    {
+      "day": 316,
+      "period": "Messianic Fulfillment",
+      "title": "Absolute Surrender",
+      "year": 2025,
+      "audioUrl": "https://dts.podtrac.com/redirect.mp3/aphid.fireside.fm/d/1437767933/c6354d0d-bd10-4eed-b811-1bb569d46efd/5547bea5-e405-4dc4-ac30-d817435300f6.mp3",
+      "readings": [
+        "Luke 9-10",
+        "Proverbs 26:4-6"
+      ],
+      "readingsSource": "plan"
+    },
+    {
+      "day": 317,
+      "period": "Messianic Fulfillment",
+      "title": "Persistence in Prayer",
+      "year": 2025,
+      "audioUrl": "https://dts.podtrac.com/redirect.mp3/aphid.fireside.fm/d/1437767933/c6354d0d-bd10-4eed-b811-1bb569d46efd/b6070ec7-d238-442a-9093-c723cb5fb945.mp3",
+      "readings": [
+        "Luke 11-12",
+        "Proverbs 26:7-9"
+      ],
+      "readingsSource": "plan"
+    },
+    {
+      "day": 318,
+      "period": "Messianic Fulfillment",
+      "title": "The Narrow Gate, the Lost Sheep, and the Prodigal Son",
+      "year": 2025,
+      "audioUrl": "https://dts.podtrac.com/redirect.mp3/aphid.fireside.fm/d/1437767933/c6354d0d-bd10-4eed-b811-1bb569d46efd/448df606-f3c2-4c2f-86fb-2b7a5c86ca27.mp3",
+      "readings": [
+        "Luke 13-16",
+        "Proverbs 26:10-12"
+      ],
+      "readingsSource": "plan"
+    },
+    {
+      "day": 319,
+      "period": "Messianic Fulfillment",
+      "title": "Come, Follow Me",
+      "year": 2025,
+      "audioUrl": "https://dts.podtrac.com/redirect.mp3/aphid.fireside.fm/d/1437767933/c6354d0d-bd10-4eed-b811-1bb569d46efd/d737ca63-6549-46f1-a4c1-c5f44ae1f024.mp3",
+      "readings": [
+        "Luke 17-19",
+        "Proverbs 26:13-16"
+      ],
+      "readingsSource": "plan"
+    },
+    {
+      "day": 320,
+      "period": "Messianic Fulfillment",
+      "title": "Peter's Denial Foretold",
+      "year": 2025,
+      "audioUrl": "https://dts.podtrac.com/redirect.mp3/aphid.fireside.fm/d/1437767933/c6354d0d-bd10-4eed-b811-1bb569d46efd/3e4320a5-4fee-4802-9e85-a7337195190c.mp3",
+      "readings": [
+        "Luke 20-22:38",
+        "Proverbs 26:17-19"
+      ],
+      "readingsSource": "plan"
+    },
+    {
+      "day": 321,
+      "period": "Messianic Fulfillment",
+      "title": "Jesus' Prayer in the Garden",
+      "year": 2025,
+      "audioUrl": "https://dts.podtrac.com/redirect.mp3/aphid.fireside.fm/d/1437767933/c6354d0d-bd10-4eed-b811-1bb569d46efd/2a67a40f-ba96-4362-8730-2366465b4db7.mp3",
+      "readings": [
+        "Luke 22:39-24:53",
+        "Proverbs 26:20-23"
+      ],
+      "readingsSource": "episode"
+    },
+    {
+      "day": 322,
+      "period": "The Church",
+      "title": "The Ascension",
+      "year": 2025,
+      "audioUrl": "https://dts.podtrac.com/redirect.mp3/aphid.fireside.fm/d/1437767933/c6354d0d-bd10-4eed-b811-1bb569d46efd/62970ec4-107f-41a0-a54f-190d6f32227d.mp3",
+      "readings": [
+        "Acts 1",
+        "Romans 1",
+        "Proverbs 26:24-26"
+      ],
+      "readingsSource": "plan"
+    },
+    {
+      "day": 323,
+      "period": "The Church",
+      "title": "Pentecost",
+      "year": 2025,
+      "audioUrl": "https://dts.podtrac.com/redirect.mp3/aphid.fireside.fm/d/1437767933/c6354d0d-bd10-4eed-b811-1bb569d46efd/0b0ee4d0-fff1-4825-af45-5e1a514b2b49.mp3",
+      "readings": [
+        "Acts 2",
+        "Romans 2-3",
+        "Proverbs 26:27-28"
+      ],
+      "readingsSource": "plan"
+    },
+    {
+      "day": 324,
+      "period": "The Church",
+      "title": "The Name of Jesus",
+      "year": 2025,
+      "audioUrl": "https://dts.podtrac.com/redirect.mp3/aphid.fireside.fm/d/1437767933/c6354d0d-bd10-4eed-b811-1bb569d46efd/03532f12-8f39-4fa1-be13-c8c7a6a95940.mp3",
+      "readings": [
+        "Acts 3",
+        "Romans 4-5",
+        "Proverbs 27:1-3"
+      ],
+      "readingsSource": "plan"
+    },
+    {
+      "day": 325,
+      "period": "The Church",
+      "title": "Boldness in Faith",
+      "year": 2025,
+      "audioUrl": "https://dts.podtrac.com/redirect.mp3/aphid.fireside.fm/d/1437767933/c6354d0d-bd10-4eed-b811-1bb569d46efd/d0bef7f0-b683-4252-b3ef-d0e5a8c0fb49.mp3",
+      "readings": [
+        "Acts 4",
+        "Romans 6-7",
+        "Proverbs 27:4-6"
+      ],
+      "readingsSource": "plan"
+    },
+    {
+      "day": 326,
+      "period": "The Church",
+      "title": "Life in the Spirit",
+      "year": 2025,
+      "audioUrl": "https://dts.podtrac.com/redirect.mp3/aphid.fireside.fm/d/1437767933/c6354d0d-bd10-4eed-b811-1bb569d46efd/49d5a826-fe03-46ea-9e4f-505763983ecd.mp3",
+      "readings": [
+        "Acts 5",
+        "Romans 8",
+        "Proverbs 27:7-9"
+      ],
+      "readingsSource": "plan"
+    },
+    {
+      "day": 327,
+      "period": "The Church",
+      "title": "Origin of the Diaconate",
+      "year": 2025,
+      "audioUrl": "https://dts.podtrac.com/redirect.mp3/aphid.fireside.fm/d/1437767933/c6354d0d-bd10-4eed-b811-1bb569d46efd/3b09fd6f-86bb-4f1d-a9ea-0c8d779cb00d.mp3",
+      "readings": [
+        "Acts 6",
+        "Romans 9-10",
+        "Proverbs 27:10-12"
+      ],
+      "readingsSource": "plan"
+    },
+    {
+      "day": 328,
+      "period": "The Church",
+      "title": "Stephen Is Martyred",
+      "year": 2025,
+      "audioUrl": "https://dts.podtrac.com/redirect.mp3/aphid.fireside.fm/d/1437767933/c6354d0d-bd10-4eed-b811-1bb569d46efd/f964771f-f601-47eb-9980-cc0ca29fde56.mp3",
+      "readings": [
+        "Acts 7",
+        "Romans 11-12",
+        "Proverbs 27:13-14"
+      ],
+      "readingsSource": "plan"
+    },
+    {
+      "day": 329,
+      "period": "The Church",
+      "title": "The Ethiopian Eunuch",
+      "year": 2025,
+      "audioUrl": "https://dts.podtrac.com/redirect.mp3/aphid.fireside.fm/d/1437767933/c6354d0d-bd10-4eed-b811-1bb569d46efd/490676d8-eb15-4e65-aebc-01dbf3d63b37.mp3",
+      "readings": [
+        "Acts 8",
+        "Romans 13-14",
+        "Proverbs 27:15-17"
+      ],
+      "readingsSource": "plan"
+    },
+    {
+      "day": 330,
+      "period": "The Church",
+      "title": "Saul's Conversion",
+      "year": 2025,
+      "audioUrl": "https://dts.podtrac.com/redirect.mp3/aphid.fireside.fm/d/1437767933/c6354d0d-bd10-4eed-b811-1bb569d46efd/0991cbd9-0a73-4cc2-b86b-ec93568064c1.mp3",
+      "readings": [
+        "Acts 9",
+        "Romans 15-16",
+        "Proverbs 27:18-20"
+      ],
+      "readingsSource": "plan"
+    },
+    {
+      "day": 331,
+      "period": "The Church",
+      "title": "Peter Preaches to the Gentiles",
+      "year": 2025,
+      "audioUrl": "https://dts.podtrac.com/redirect.mp3/aphid.fireside.fm/d/1437767933/c6354d0d-bd10-4eed-b811-1bb569d46efd/fb2822bd-7049-4207-be6b-3a19d03721b5.mp3",
+      "readings": [
+        "Acts 10",
+        "1 Corinthians 1-2",
+        "Proverbs 27:21-22"
+      ],
+      "readingsSource": "plan"
+    },
+    {
+      "day": 332,
+      "period": "The Church",
+      "title": "Barnabas and Paul On Mission",
+      "year": 2025,
+      "audioUrl": "https://dts.podtrac.com/redirect.mp3/aphid.fireside.fm/d/1437767933/c6354d0d-bd10-4eed-b811-1bb569d46efd/8ad0e130-512e-4679-bc45-b2314e2cfe55.mp3",
+      "readings": [
+        "Acts 11",
+        "1 Corinthians 3-4",
+        "Proverbs 27:23-27"
+      ],
+      "readingsSource": "plan"
+    },
+    {
+      "day": 333,
+      "period": "The Church",
+      "title": "Peter Is Rescued from Prison",
+      "year": 2025,
+      "audioUrl": "https://dts.podtrac.com/redirect.mp3/aphid.fireside.fm/d/1437767933/c6354d0d-bd10-4eed-b811-1bb569d46efd/847429cf-d733-4825-acaf-18e76bc39b10.mp3",
+      "readings": [
+        "Acts 12",
+        "1 Corinthians 5-6",
+        "Proverbs 28:1-3"
+      ],
+      "readingsSource": "plan"
+    },
+    {
+      "day": 334,
+      "period": "The Church",
+      "title": "The Meaning of Fasting",
+      "year": 2025,
+      "audioUrl": "https://dts.podtrac.com/redirect.mp3/aphid.fireside.fm/d/1437767933/c6354d0d-bd10-4eed-b811-1bb569d46efd/f4337c11-768e-4ff3-93ce-97d08cdfe7c6.mp3",
+      "readings": [
+        "Acts 13",
+        "1 Corinthians 7-8",
+        "Proverbs 28:4-6"
+      ],
+      "readingsSource": "plan"
+    },
+    {
+      "day": 335,
+      "period": "The Church",
+      "title": "Run the Race",
+      "year": 2025,
+      "audioUrl": "https://dts.podtrac.com/redirect.mp3/aphid.fireside.fm/d/1437767933/c6354d0d-bd10-4eed-b811-1bb569d46efd/c232d7d0-5676-4f44-ba08-ac292a86f1fe.mp3",
+      "readings": [
+        "Acts 14",
+        "1 Corinthians 9-10",
+        "Proverbs 28:7-9"
+      ],
+      "readingsSource": "plan"
+    },
+    {
+      "day": 336,
+      "period": "The Church",
+      "title": "The Council at Jerusalem",
+      "year": 2025,
+      "audioUrl": "https://dts.podtrac.com/redirect.mp3/aphid.fireside.fm/d/1437767933/c6354d0d-bd10-4eed-b811-1bb569d46efd/ebc6798b-a730-4268-b07e-3b8695bf76a2.mp3",
+      "readings": [
+        "Acts 15",
+        "1 Corinthians 11-12",
+        "Proverbs 28:10-12"
+      ],
+      "readingsSource": "plan"
+    },
+    {
+      "day": 337,
+      "period": "The Church",
+      "title": "The Importance of Love",
+      "year": 2025,
+      "audioUrl": "https://dts.podtrac.com/redirect.mp3/aphid.fireside.fm/d/1437767933/c6354d0d-bd10-4eed-b811-1bb569d46efd/6b3f2a7c-b0c3-49d8-9bdf-018ae09d8326.mp3",
+      "readings": [
+        "Acts 16",
+        "1 Corinthians 13-14",
+        "Proverbs 28:13-15"
+      ],
+      "readingsSource": "plan"
+    },
+    {
+      "day": 338,
+      "period": "The Church",
+      "title": "Death Defeated",
+      "year": 2025,
+      "audioUrl": "https://dts.podtrac.com/redirect.mp3/aphid.fireside.fm/d/1437767933/c6354d0d-bd10-4eed-b811-1bb569d46efd/d285ea3a-c472-4a04-aa7f-9d58eb864f1d.mp3",
+      "readings": [
+        "Acts 17",
+        "1 Corinthians 15",
+        "Proverbs 28:16-18"
+      ],
+      "readingsSource": "plan"
+    },
+    {
+      "day": 339,
+      "period": "The Church",
+      "title": "Priscilla and Aquila",
+      "year": 2025,
+      "audioUrl": "https://dts.podtrac.com/redirect.mp3/aphid.fireside.fm/d/1437767933/c6354d0d-bd10-4eed-b811-1bb569d46efd/ccad31b6-d220-433d-b82f-3f9a389ce05d.mp3",
+      "readings": [
+        "Acts 18",
+        "1 Corinthians 16",
+        "Proverbs 28:19-21"
+      ],
+      "readingsSource": "plan"
+    },
+    {
+      "day": 340,
+      "period": "The Church",
+      "title": "The Power of the Holy Spirit",
+      "year": 2025,
+      "audioUrl": "https://dts.podtrac.com/redirect.mp3/aphid.fireside.fm/d/1437767933/c6354d0d-bd10-4eed-b811-1bb569d46efd/c1244117-f3a5-45ed-9a38-2ed9e5d0dda3.mp3",
+      "readings": [
+        "Acts 19",
+        "2 Corinthians 1-2",
+        "Proverbs 28:22-24"
+      ],
+      "readingsSource": "plan"
+    },
+    {
+      "day": 341,
+      "period": "The Church",
+      "title": "Eternal Weight of Glory",
+      "year": 2025,
+      "audioUrl": "https://dts.podtrac.com/redirect.mp3/aphid.fireside.fm/d/1437767933/c6354d0d-bd10-4eed-b811-1bb569d46efd/fd1b58bf-02f2-4572-8523-ab86189b8df4.mp3",
+      "readings": [
+        "Acts 20",
+        "2 Corinthians 3-5",
+        "Proverbs 28:25-28"
+      ],
+      "readingsSource": "plan"
+    },
+    {
+      "day": 342,
+      "period": "The Church",
+      "title": "Generous Hearts",
+      "year": 2025,
+      "audioUrl": "https://dts.podtrac.com/redirect.mp3/aphid.fireside.fm/d/1437767933/c6354d0d-bd10-4eed-b811-1bb569d46efd/bad92bcb-7463-42a8-8d28-b0695a4efbb0.mp3",
+      "readings": [
+        "Acts 21",
+        "2 Corinthians 6-8",
+        "Proverbs 29:1-4"
+      ],
+      "readingsSource": "plan"
+    },
+    {
+      "day": 343,
+      "period": "The Church",
+      "title": "God Uses Paul's Past",
+      "year": 2025,
+      "audioUrl": "https://dts.podtrac.com/redirect.mp3/aphid.fireside.fm/d/1437767933/c6354d0d-bd10-4eed-b811-1bb569d46efd/010caf3e-50e1-44c5-bc7b-529853e963ff.mp3",
+      "readings": [
+        "Acts 22",
+        "2 Corinthians 9-11",
+        "Proverbs 29:5-7"
+      ],
+      "readingsSource": "plan"
+    },
+    {
+      "day": 344,
+      "period": "The Church",
+      "title": "The Thorn in Paul's Side",
+      "year": 2025,
+      "audioUrl": "https://dts.podtrac.com/redirect.mp3/aphid.fireside.fm/d/1437767933/c6354d0d-bd10-4eed-b811-1bb569d46efd/0eab4795-ee45-41a0-9daa-d4dfa74d69a4.mp3",
+      "readings": [
+        "Acts 23",
+        "2 Corinthians 12-13",
+        "Proverbs 29:8-11"
+      ],
+      "readingsSource": "plan"
+    },
+    {
+      "day": 345,
+      "period": "The Church",
+      "title": "One in Christ",
+      "year": 2025,
+      "audioUrl": "https://dts.podtrac.com/redirect.mp3/aphid.fireside.fm/d/1437767933/c6354d0d-bd10-4eed-b811-1bb569d46efd/24e7f36f-bb80-44ff-81c7-117065985d95.mp3",
+      "readings": [
+        "Acts 24",
+        "Galatians 1-3",
+        "Proverbs 29:12-14"
+      ],
+      "readingsSource": "plan"
+    },
+    {
+      "day": 346,
+      "period": "The Church",
+      "title": "Fruits of the Spirit",
+      "year": 2025,
+      "audioUrl": "https://dts.podtrac.com/redirect.mp3/aphid.fireside.fm/d/1437767933/c6354d0d-bd10-4eed-b811-1bb569d46efd/a86e14af-8839-423a-a1f9-5ceb42a5b53e.mp3",
+      "readings": [
+        "Acts 25",
+        "Galatians 4-6",
+        "Proverbs 29:15-17"
+      ],
+      "readingsSource": "plan"
+    },
+    {
+      "day": 347,
+      "period": "The Church",
+      "title": "Witness to Unbelievers",
+      "year": 2025,
+      "audioUrl": "https://dts.podtrac.com/redirect.mp3/aphid.fireside.fm/d/1437767933/c6354d0d-bd10-4eed-b811-1bb569d46efd/d1c09f8d-de0c-4a78-a910-aa735bae2695.mp3",
+      "readings": [
+        "Acts 26",
+        "Ephesians 1-3",
+        "Proverbs 29:18-21"
+      ],
+      "readingsSource": "plan"
+    },
+    {
+      "day": 348,
+      "period": "The Church",
+      "title": "Rules for the New Life",
+      "year": 2025,
+      "audioUrl": "https://dts.podtrac.com/redirect.mp3/aphid.fireside.fm/d/1437767933/c6354d0d-bd10-4eed-b811-1bb569d46efd/aca57e40-7bdb-41d8-8697-de9bee5891f9.mp3",
+      "readings": [
+        "Acts 27",
+        "Ephesians 4-6",
+        "Proverbs 29:22-24"
+      ],
+      "readingsSource": "plan"
+    },
+    {
+      "day": 349,
+      "period": "The Church",
+      "title": "Holy Indifference",
+      "year": 2025,
+      "audioUrl": "https://dts.podtrac.com/redirect.mp3/aphid.fireside.fm/d/1437767933/c6354d0d-bd10-4eed-b811-1bb569d46efd/68391e80-79a1-4304-b292-ccb4d2accbba.mp3",
+      "readings": [
+        "Acts 28",
+        "Philippians 1-2",
+        "Proverbs 29:25-27"
+      ],
+      "readingsSource": "plan"
+    },
+    {
+      "day": 350,
+      "period": "The Church",
+      "title": "Faith and Works",
+      "year": 2025,
+      "audioUrl": "https://dts.podtrac.com/redirect.mp3/aphid.fireside.fm/d/1437767933/c6354d0d-bd10-4eed-b811-1bb569d46efd/42a7153e-07c9-4b2b-998a-3312563945cf.mp3",
+      "readings": [
+        "James 1-2",
+        "Philippians 3-4",
+        "Proverbs 30:1-6"
+      ],
+      "readingsSource": "plan"
+    },
+    {
+      "day": 351,
+      "period": "The Church",
+      "title": "Draw Near to God",
+      "year": 2025,
+      "audioUrl": "https://dts.podtrac.com/redirect.mp3/aphid.fireside.fm/d/1437767933/c6354d0d-bd10-4eed-b811-1bb569d46efd/d711c39e-8870-4151-b759-6d6d0a9d1198.mp3",
+      "readings": [
+        "James 3-5",
+        "Colossians 1-2",
+        "Proverbs 30:7-9"
+      ],
+      "readingsSource": "plan"
+    },
+    {
+      "day": 352,
+      "period": "The Church",
+      "title": "Purified by Fire",
+      "year": 2025,
+      "audioUrl": "https://dts.podtrac.com/redirect.mp3/aphid.fireside.fm/d/1437767933/c6354d0d-bd10-4eed-b811-1bb569d46efd/f931e87f-1341-4f58-86ff-09610c9bb6e8.mp3",
+      "readings": [
+        "1 Peter 1-2",
+        "Colossians 3-4",
+        "Proverbs 30:10-14"
+      ],
+      "readingsSource": "plan"
+    },
+    {
+      "day": 353,
+      "period": "The Church",
+      "title": "Sharing the Gospel",
+      "year": 2025,
+      "audioUrl": "https://dts.podtrac.com/redirect.mp3/aphid.fireside.fm/d/1437767933/c6354d0d-bd10-4eed-b811-1bb569d46efd/6fed9de5-bfa9-4708-9712-897af77058af.mp3",
+      "readings": [
+        "1 Peter 3-5",
+        "1 Thessalonians 1-3",
+        "Proverbs 30:15-16"
+      ],
+      "readingsSource": "plan"
+    },
+    {
+      "day": 354,
+      "period": "The Church",
+      "title": "Partakers of the Divine Nature",
+      "year": 2025,
+      "audioUrl": "https://dts.podtrac.com/redirect.mp3/aphid.fireside.fm/d/1437767933/c6354d0d-bd10-4eed-b811-1bb569d46efd/352f26b0-4529-4401-abed-72fe84de7c1b.mp3",
+      "readings": [
+        "2 Peter 1-3",
+        "1 Thessalonians 4-5",
+        "Proverbs 30:17-19"
+      ],
+      "readingsSource": "plan"
+    },
+    {
+      "day": 355,
+      "period": "The Church",
+      "title": "The Things of This World",
+      "year": 2025,
+      "audioUrl": "https://dts.podtrac.com/redirect.mp3/aphid.fireside.fm/d/1437767933/c6354d0d-bd10-4eed-b811-1bb569d46efd/3483d7fc-e3c4-4953-bd9b-b263875798ad.mp3",
+      "readings": [
+        "1 John 1-3",
+        "2 Thessalonians 1-3",
+        "Proverbs 30:20-23"
+      ],
+      "readingsSource": "plan"
+    },
+    {
+      "day": 356,
+      "period": "The Church",
+      "title": "God Is Love",
+      "year": 2025,
+      "audioUrl": "https://dts.podtrac.com/redirect.mp3/aphid.fireside.fm/d/1437767933/c6354d0d-bd10-4eed-b811-1bb569d46efd/f17d8465-d320-486e-8be3-b9a5fb2a5fad.mp3",
+      "readings": [
+        "1 John 4-5",
+        "1 Timothy 1-3",
+        "Proverbs 30:24-28"
+      ],
+      "readingsSource": "plan"
+    },
+    {
+      "day": 357,
+      "period": "The Church",
+      "title": "Truth and Love",
+      "year": 2025,
+      "audioUrl": "https://dts.podtrac.com/redirect.mp3/aphid.fireside.fm/d/1437767933/c6354d0d-bd10-4eed-b811-1bb569d46efd/dab577f7-0102-4553-a1d5-4fe3e518d69c.mp3",
+      "readings": [
+        "2 John",
+        "3 John",
+        "1 Timothy 4-6",
+        "Proverbs 30:29-33"
+      ],
+      "readingsSource": "plan"
+    },
+    {
+      "day": 358,
+      "period": "The Church",
+      "title": "From Rebellion to Faithfulness",
+      "year": 2025,
+      "audioUrl": "https://dts.podtrac.com/redirect.mp3/aphid.fireside.fm/d/1437767933/c6354d0d-bd10-4eed-b811-1bb569d46efd/20529e99-9b55-43e1-a882-34fac5296c4a.mp3",
+      "readings": [
+        "Jude",
+        "2 Timothy 1-2",
+        "Proverbs 31:1-7"
+      ],
+      "readingsSource": "plan"
+    },
+    {
+      "day": 359,
+      "period": "The Church",
+      "title": "John's Apocalypse",
+      "year": 2025,
+      "audioUrl": "https://dts.podtrac.com/redirect.mp3/aphid.fireside.fm/d/1437767933/c6354d0d-bd10-4eed-b811-1bb569d46efd/f6762b28-86d4-43e3-ac6e-18fa94879900.mp3",
+      "readings": [
+        "Revelation 1-3",
+        "2 Timothy 3-4",
+        "Proverbs 31:8-9"
+      ],
+      "readingsSource": "plan"
+    },
+    {
+      "day": 360,
+      "period": "The Church",
+      "title": "Heavenly Worship",
+      "year": 2025,
+      "audioUrl": "https://dts.podtrac.com/redirect.mp3/aphid.fireside.fm/d/1437767933/c6354d0d-bd10-4eed-b811-1bb569d46efd/9bd94188-142f-467b-9567-b3765542b520.mp3",
+      "readings": [
+        "Revelation 4-7",
+        "Titus 1-3",
+        "Proverbs 31:10-15"
+      ],
+      "readingsSource": "plan"
+    },
+    {
+      "day": 361,
+      "period": "The Church",
+      "title": "Judgment and Repentance",
+      "year": 2025,
+      "audioUrl": "https://dts.podtrac.com/redirect.mp3/aphid.fireside.fm/d/1437767933/c6354d0d-bd10-4eed-b811-1bb569d46efd/eabebd71-ac62-4624-b1a2-4575ade9d56f.mp3",
+      "readings": [
+        "Revelation 8-11",
+        "Philemon",
+        "Proverbs 31:16-18"
+      ],
+      "readingsSource": "plan"
+    },
+    {
+      "day": 362,
+      "period": "The Church",
+      "title": "The Woman Clothed with the Sun",
+      "year": 2025,
+      "audioUrl": "https://dts.podtrac.com/redirect.mp3/aphid.fireside.fm/d/1437767933/c6354d0d-bd10-4eed-b811-1bb569d46efd/ce4daa83-3bd1-4bb5-9087-9f1cbf9799cb.mp3",
+      "readings": [
+        "Revelation 12-14",
+        "Hebrews 1-4",
+        "Proverbs 31:16-18"
+      ],
+      "readingsSource": "episode"
+    },
+    {
+      "day": 363,
+      "period": "The Church",
+      "title": "The New Covenant Priesthood",
+      "year": 2025,
+      "audioUrl": "https://dts.podtrac.com/redirect.mp3/aphid.fireside.fm/d/1437767933/c6354d0d-bd10-4eed-b811-1bb569d46efd/301a6e25-3316-4ef8-a3d9-751caf670023.mp3",
+      "readings": [
+        "Revelation 15-17",
+        "Hebrews 5-8",
+        "Proverbs 31:23-25"
+      ],
+      "readingsSource": "plan"
+    },
+    {
+      "day": 364,
+      "period": "The Church",
+      "title": "Christ's Sacrifice Once for All",
+      "year": 2025,
+      "audioUrl": "https://dts.podtrac.com/redirect.mp3/aphid.fireside.fm/d/1437767933/c6354d0d-bd10-4eed-b811-1bb569d46efd/9d95b35e-3215-4f06-81ac-f78054fd037b.mp3",
+      "readings": [
+        "Revelation 18-20",
+        "Hebrews 9-10",
+        "Proverbs 31:26-29"
+      ],
+      "readingsSource": "plan"
+    },
+    {
+      "day": 365,
+      "period": "The Church",
+      "title": "The Beginning and the End",
+      "year": 2025,
+      "audioUrl": "https://dts.podtrac.com/redirect.mp3/aphid.fireside.fm/d/1437767933/c6354d0d-bd10-4eed-b811-1bb569d46efd/be1ce0e2-eb65-44ef-8b22-22ff46e54b15.mp3",
+      "readings": [
+        "Revelation 21-22",
+        "Hebrews 11-13",
+        "Proverbs 31:30-31"
+      ],
+      "readingsSource": "plan"
+    }
+  ]
+}

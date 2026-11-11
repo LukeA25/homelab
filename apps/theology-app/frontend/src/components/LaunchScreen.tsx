@@ -1,4 +1,4 @@
-import { Church, Library, MessageSquareText, NotebookPen } from "lucide-react";
+import { Church, Headphones, Library, NotebookPen } from "lucide-react";
 import type { TabKind } from "../lib/types";
 
 type LaunchScreenProps = {
@@ -7,7 +7,7 @@ type LaunchScreenProps = {
 
 const OPTIONS = [
   { id: "prayers" as const, label: "Prayers", hint: "Readings & fixed prayers", icon: Church },
-  { id: "ask" as const, label: "Ask", hint: "Find sources", icon: MessageSquareText },
+  { id: "bible-year" as const, label: "Bible in a Year", hint: "Listen and read along", icon: Headphones },
   { id: "library" as const, label: "Library", hint: "Books, CCC & Bible", icon: Library },
   { id: "notes" as const, label: "Notes", hint: "Personal & study", icon: NotebookPen },
 ];
@@ -27,7 +27,7 @@ export function LaunchScreen({ onOpen }: LaunchScreenProps) {
               <Icon className="h-5 w-5" />
             </span>
             <div>
-              <p className="font-display text-xl font-semibold">{label}</p>
+              <p className="font-display text-xl font-semibold leading-tight">{label}</p>
               <p className="mt-1 text-sm text-muted">{hint}</p>
             </div>
           </button>

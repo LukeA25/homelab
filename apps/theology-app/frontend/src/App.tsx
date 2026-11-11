@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { AskScreen } from "./components/AskScreen";
 import { BibleScreen } from "./components/BibleScreen";
+import { BibleYearMiniPlayer, BibleYearScreen } from "./components/BibleYearScreen";
 import { LaunchScreen } from "./components/LaunchScreen";
 import { LibraryScreen } from "./components/LibraryScreen";
 import { NotesScreen } from "./components/NotesScreen";
@@ -63,6 +64,7 @@ function defaultTitle(kind: TabKind): string {
   if (kind === "ask") return "Ask";
   if (kind === "library") return "Library";
   if (kind === "notes") return "Notes";
+  if (kind === "bible-year") return "Bible Year";
   return "Reader";
 }
 
@@ -528,7 +530,7 @@ export default function App() {
     const focusPatch = focus
       ? {
           focusLocusId: focus.focusLocusId ?? null,
-          focusNonce: focus.focusLocusId ? Date.now() : undefined,
+          focusNonce: Date.now(),
           readingVerseStart: focus.readingVerseStart ?? null,
           readingVerseEnd: focus.readingVerseEnd ?? null,
           readingVerses: focus.readingVerses?.length ? [...focus.readingVerses] : null,
@@ -829,6 +831,16 @@ export default function App() {
       );
     }
 
+    if (tab.kind === "bible-year") {
+      return (
+        <BibleYearScreen
+          day={tab.bibleYearDay ?? null}
+          onDayChange={(next) => updateTab(tab.id, { bibleYearDay: next })}
+          onOpenBibleSection={openBibleSection}
+        />
+      );
+    }
+
     if (tab.kind === "ask") {
       return (
         <AskScreen
@@ -1014,10 +1026,25 @@ export default function App() {
 
   void topics;
 
+  const bibleYearVisible =
+    !!layout &&
+    (layout.mode === "single"
+      ? tabs.some((tab) => tab.id === layout.focusId && tab.kind === "bible-year")
+      : tabs.some(
+          (tab) =>
+            (tab.id === layout.leftId || tab.id === layout.rightId) && tab.kind === "bible-year",
+        ));
+
   if (tabs.length === 0 || !layout) {
     return (
       <div className="app-shell bg-bg text-text">
-        <LaunchScreen onOpen={(kind) => addTab(kind)} />
+        <div className="min-h-0 flex-1">
+          <LaunchScreen onOpen={(kind) => addTab(kind)} />
+        </div>
+        <BibleYearMiniPlayer
+          hidden={false}
+          onOpen={(day) => addTab("bible-year", { bibleYearDay: day })}
+        />
         <span className="sr-only" data-ui-contract={UI_CONTRACT_VERSION} />
       </div>
     );
@@ -1058,6 +1085,11 @@ export default function App() {
           </div>
         )}
       </div>
+
+      <BibleYearMiniPlayer
+        hidden={bibleYearVisible}
+        onOpen={(day) => addTab("bible-year", { bibleYearDay: day })}
+      />
 
       {toast && (
         <div className="pointer-events-none fixed inset-x-0 top-[max(3.5rem,calc(env(safe-area-inset-top)+2.5rem))] z-[60] flex justify-center px-4">

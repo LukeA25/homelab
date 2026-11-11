@@ -579,6 +579,52 @@ export function adjacentChapter(
   return chapters[idx + delta] ?? null;
 }
 
+export type BibleYearLink = {
+  label: string;
+  sectionId: string | null;
+  verseStart: number | null;
+  verseEnd: number | null;
+  note: string | null;
+};
+
+export type BibleYearReading = {
+  reference: string;
+  links: BibleYearLink[];
+};
+
+export type BibleYearDay = {
+  day: number;
+  period: string;
+  title: string;
+  year: number | null;
+  audioUrl: string | null;
+  readings: BibleYearReading[];
+};
+
+export type BibleYearProgress = {
+  currentDay: number;
+  completedDays: number[];
+  positions: Record<string, number>;
+};
+
+export type BibleYearPlan = BibleYearProgress & {
+  totalDays: number;
+  days: BibleYearDay[];
+};
+
+export function getBibleYear(): Promise<BibleYearPlan> {
+  return apiGet("/api/bible-in-a-year");
+}
+
+export function updateBibleYear(body: {
+  currentDay?: number;
+  day?: number;
+  completed?: boolean;
+  positionSeconds?: number;
+}): Promise<BibleYearProgress> {
+  return apiPatch("/api/bible-in-a-year", body);
+}
+
 export function sectionTitleFromChapters(
   chapters: ChapterRef[],
   sectionId: string,

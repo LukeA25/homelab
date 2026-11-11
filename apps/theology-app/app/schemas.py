@@ -322,4 +322,44 @@ class BookmarkIn(BaseModel):
     note: str = ""
 
 
+class BiyLinkOut(BaseModel):
+    label: str
+    sectionId: Optional[str] = None
+    verseStart: Optional[int] = None
+    verseEnd: Optional[int] = None
+    note: Optional[str] = None
+
+
+class BiyReadingOut(BaseModel):
+    reference: str
+    links: list[BiyLinkOut] = []
+
+
+class BiyDayOut(BaseModel):
+    day: int
+    period: str = ""
+    title: str = ""
+    year: Optional[int] = None
+    audioUrl: Optional[str] = None
+    readings: list[BiyReadingOut] = []
+
+
+class BiyProgressOut(BaseModel):
+    currentDay: int
+    completedDays: list[int] = []
+    positions: dict[str, float] = {}
+
+
+class BiyPlanOut(BiyProgressOut):
+    totalDays: int = 365
+    days: list[BiyDayOut] = []
+
+
+class BiyProgressUpdate(BaseModel):
+    currentDay: Optional[int] = None
+    day: Optional[int] = None
+    completed: Optional[bool] = None
+    positionSeconds: Optional[float] = None
+
+
 SectionOut.model_rebuild()
