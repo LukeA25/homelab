@@ -17,5 +17,9 @@ test('visual validation rejects invalid data before replacing the board', () => 
     {kind:'diagram',nodes:[{id:'a',label:'A'}],edges:[{from:'a',to:'missing'}]},
     {kind:'diagram',nodes:[{id:'a',label:'A'},{id:'a',label:'B'}],edges:[]},
     {kind:'equation'},
+    {kind:'neural', layers:[{nodes:[{id:'only'}]}]},
+    {kind:'neural', layers:[{nodes:[{id:'x'}]},{nodes:[{id:'y'}]}], connections:[{from:'x', to:'missing'}]},
   ]) assert.throws(()=>validateVisual(spec));
+  const network = validateVisual({kind:'neural', layers:[{label:'Inputs', nodes:[{id:'a', label:'Email length'}]},{label:'Output', nodes:[{id:'b', label:'Spam'}]}]});
+  assert.equal(network.layers[0].nodes[0].label, 'Email length');
 });

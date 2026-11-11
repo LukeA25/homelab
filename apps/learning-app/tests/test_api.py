@@ -29,6 +29,7 @@ class LearningAPI(unittest.IsolatedAsyncioTestCase):
         code,s=await self.request('POST','/api/trees/ml/sessions',{'concept_id':'models'})
         self.assertEqual(code,200)
         self.assertIn(s['id'],s['prompt'])
+        self.assertIn('Do not suggest stopping', s['prompt'])
         return {'schema_version':'0.1','session_id':s['id'],'tree_id':'ml','topics':[{'concept_id':'models','summary':'Models use patterns from training examples.','evidence':'Explained how held-out examples differ from training data.','confidence':'Comfortable','state':'developing'}],'questions':[]}
 
     async def test_preview_does_not_mutate_then_accept_persists_and_deduplicates(self):
@@ -64,6 +65,38 @@ class LearningAPI(unittest.IsolatedAsyncioTestCase):
     async def test_duplicate_concepts(self):
         body=await self.recap();body['topics']*=2
         self.assertEqual((await self.request('POST','/api/import/preview',body))[0],422)
+
+    async def test_structured_ideas_preview_then_save_and_plan(self):
+        draft={'title':'DNS','idea':'How names become addresses','why':'The homelab','direction':'Explain a lookup','starting_point':'I use it daily','source':'How names become addresses','suggestion':''}
+        self.assertEqual((await self.request('POST','/api/ideas/preview',{'ideas':[draft, {**draft,'title':'Proxies','idea':'What a reverse proxy does'}]}))[0],200)
+        self.assertEqual((await self.request('GET','/api/workspace'))[1]['ideas'],[])
+        code,saved=await self.request('POST','/api/ideas/batch',{'ideas':[draft]})
+        self.assertEqual(code,200)
+        self.assertEqual(saved['ideas'][0]['suggestion'],'')
+        self.assertEqual((await self.request('POST','/api/ideas',{'text':'   '}))[0],422)
+        idea_id=saved['ideas'][0]['id']
+        code,stored=await self.request('POST','/api/drafts',{'title':'Names','category':'Networking','goal':'Explain resolution','depth':'Conversational fluency','outcomes':['Explain a lookup'],'concepts':['Names'],'idea_id':idea_id})
+        self.assertEqual(code,200)
+        self.assertEqual((await self.request('GET','/api/workspace'))[1]['drafts'][0]['id'],stored['id'])
+        code,tree=await self.request('POST','/api/trees',{'title':'Names','category':'Networking','goal':'Explain resolution','depth':'Conversational fluency','excludes':'','outcomes':['Explain a lookup'],'concepts':['Names'],'idea_id':idea_id})
+        self.assertEqual(code,200)
+        self.assertEqual(tree['idea_id'],idea_id)
+        self.assertEqual((await self.request('GET','/api/workspace'))[1]['drafts'],[])
+        self.assertEqual((await self.request('POST','/api/trees',{'title':'Names','category':'Networking','goal':'Explain resolution','depth':'Conversational fluency','excludes':'','outcomes':['Explain a lookup'],'concepts':['Names'],'idea_id':'missing'}))[0],422)
+
+    async def test_previous_notes_and_preferences_reach_the_next_lesson(self):
+        body=await self.recap()
+        self.assertEqual((await self.request('POST','/api/import/accept',body))[0],200)
+        self.assertEqual((await self.request('POST','/api/preferences',{'text':'Use homelab examples'}))[0],200)
+        code,session=await self.request('POST','/api/trees/ml/sessions',{'concept_id':'models'})
+        self.assertEqual(code,200)
+        self.assertIn('held-out examples', session['prompt'])
+        context=main.pending_session(session['id'])
+        self.assertIn('Use homelab examples', context['prompt'])
+        self.assertEqual((await self.request('POST','/api/preferences',{'text':'   '}))[0],422)
+        pref=(await self.request('GET','/api/workspace'))[1]['preferences'][0]
+        self.assertEqual((await self.request('DELETE','/api/preferences/'+pref['id']))[0],200)
+        self.assertEqual(main.pending_session(session['id'])['prompt'].count('Use homelab examples'),0)
 
     async def test_ideas_persist_and_delete(self):
         self.assertEqual((await self.request('POST','/api/ideas',{'text':'   '}))[0],422)

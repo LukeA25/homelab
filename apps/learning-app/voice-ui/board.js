@@ -15,6 +15,9 @@ export function createBoard(network, onVisibilityChange) {
     const spec = validateVisual(input);
     current = spec;
     board.hidden = spec.kind === 'clear';
+    document.getElementById('recap-card').hidden = true;
+    document.getElementById('save-lesson').hidden = true;
+    document.getElementById('clear').hidden = false;
     document.body.classList.toggle('with-visual', !board.hidden);
     onVisibilityChange?.(!board.hidden);
     document.getElementById('board-title').textContent = spec.title || 'Whiteboard';
@@ -24,6 +27,7 @@ export function createBoard(network, onVisibilityChange) {
     drawing.replaceChildren();
     if (['plot','chart'].includes(spec.kind)) drawChart(spec);
     if (spec.kind === 'diagram') drawDiagram(spec);
+    if (spec.kind === 'neural') network.load(spec);
     const math = document.getElementById('math');
     math.replaceChildren();
     math.hidden = !spec.equation;
@@ -64,23 +68,112 @@ export function createBoard(network, onVisibilityChange) {
       svg.append(element('text',{x:80+index*140,y:365,fill:color,'font-size':12},s.label));
     }
   }
-  function drawDiagram(spec) {
-    const svg = canvas();
-    const defs=element('defs',{}), marker=element('marker',{id:'arrow',viewBox:'0 0 10 10',refX:9,refY:5,markerWidth:6,markerHeight:6,orient:'auto-start-reverse'});
-    marker.append(element('path',{d:'M 0 0 L 10 5 L 0 10 z',fill:'#90a798'}));defs.append(marker);svg.append(defs);
-    const columns=Math.min(4,spec.nodes.length), rows=Math.ceil(spec.nodes.length/columns);
-    const positions=new Map(spec.nodes.map((n,i)=>[n.id,{x:100+(i%columns)*600/Math.max(1,columns-1),y:80+Math.floor(i/columns)*230/Math.max(1,rows-1)}]));
-    for (const edge of spec.edges) {
-      const a=positions.get(edge.from), b=positions.get(edge.to), length=Math.hypot(b.x-a.x,b.y-a.y)||1;
-      svg.append(element('line',{x1:a.x,y1:a.y,x2:b.x-(b.x-a.x)*46/length,y2:b.y-(b.y-a.y)*46/length,stroke:'#90a798','stroke-width':2,'marker-end':'url(#arrow)'}));
-      if (edge.label) svg.append(element('text',{x:(a.x+b.x)/2,y:(a.y+b.y)/2-9,'text-anchor':'middle',fill:'#64776c','font-size':12},edge.label));
+  function wrapped(label) {
+    const words = label.split(/\s+/);
+    const lines = [];
+    let line = '';
+    for (const word of words) {
+      const parts = word.length > 22 ? word.match(/.{1,22}/g) : [word];
+      for (const part of parts) {
+        if (!line) line = part;
+        else if (`${line} ${part}`.length <= 22) line += ` ${part}`;
+        else { lines.push(line); line = part; }
+      }
     }
+    if (line) lines.push(line);
+    return lines.slice(0, 4);
+  }
+  function drawDiagram(spec) {
+    const boxes = new Map(spec.nodes.map(node => {
+      const lines = wrapped(node.label);
+      const width = Math.max(120, Math.min(230, Math.max(...lines.map(line => line.length)) * 7.6 + 28));
+      return [node.id, {lines, width, height: Math.max(52, lines.length * 16 + 24)}];
+    }));
+    const incoming = new Map(spec.nodes.map(node => [node.id, 0]));
+    const outgoing = new Map(spec.nodes.map(node => [node.id, []]));
+    for (const edge of spec.edges) { incoming.set(edge.to, incoming.get(edge.to) + 1); outgoing.get(edge.from).push(edge.to); }
+    const queue = [...incoming].filter(([, count]) => count === 0).map(([id]) => id);
+    let seen = 0;
+    const pending = new Map(incoming);
+    while (queue.length) {
+      const id = queue.shift();
+      seen += 1;
+      for (const next of outgoing.get(id)) {
+        pending.set(next, pending.get(next) - 1);
+        if (pending.get(next) === 0) queue.push(next);
+      }
+    }
+    const flow = seen === spec.nodes.length && spec.edges.length > 0;
+    const rank = new Map(spec.nodes.map(node => [node.id, 0]));
+    if (flow) {
+      const sources = new Map(spec.nodes.map(node => [node.id, []]));
+      for (const edge of spec.edges) sources.get(edge.to).push(edge.from);
+      let changed = true;
+      while (changed) {
+        changed = false;
+        for (const node of spec.nodes) {
+          const next = sources.get(node.id).reduce((max, id) => Math.max(max, rank.get(id) + 1), 0);
+          if (next !== rank.get(node.id)) { rank.set(node.id, next); changed = true; }
+        }
+      }
+    }
+    const columns = new Map();
+    if (flow) {
+      for (const node of spec.nodes) {
+        const list = columns.get(rank.get(node.id)) || [];
+        list.push(node.id);
+        columns.set(rank.get(node.id), list);
+      }
+    } else columns.set(0, spec.nodes.map(node => node.id));
+    const positions = new Map();
+    let x = 36, height = 80;
+    for (const ids of [...columns.keys()].sort((a, b) => a - b).map(key => columns.get(key))) {
+      const widest = Math.max(...ids.map(id => boxes.get(id).width));
+      let y = 36;
+      for (const id of ids) {
+        const box = boxes.get(id);
+        positions.set(id, {x: x + widest / 2, y: y + box.height / 2, ...box});
+        y += box.height + 28;
+      }
+      height = Math.max(height, y);
+      x += widest + 72;
+    }
+    const skips = spec.edges.filter(edge => (rank.get(edge.to) ?? 0) > (rank.get(edge.from) ?? 0) + 1).length;
+    const svg = element('svg', {viewBox: `0 0 ${Math.max(360, x - 20)} ${height + 24 + skips * 18}`, role: 'img', 'aria-label': spec.title || 'Diagram'});
+    drawing.append(svg);
+    const defs = element('defs', {}), marker = element('marker', {id: 'arrow', viewBox: '0 0 10 10', refX: 9, refY: 5, markerWidth: 9, markerHeight: 9, orient: 'auto'});
+    marker.append(element('path', {d: 'M 0 0 L 10 5 L 0 10 z', fill: '#5f7d68'}));
+    defs.append(marker);
+    svg.append(defs);
     for (const node of spec.nodes) {
-      const p=positions.get(node.id), active=spec.highlight?.includes(node.id);
-      svg.append(element('rect',{x:p.x-65,y:p.y-27,width:130,height:54,rx:18,fill:active?'#ccdec8':'#f4f6f0',stroke:active?'#538b6a':'#b8c9b8'}));
-      const label=element('text',{x:p.x,y:p.y+5,'text-anchor':'middle',fill:'#2d4b3b','font-size':12},node.label);
-      if (node.label.length>20) {label.setAttribute('textLength','115');label.setAttribute('lengthAdjust','spacingAndGlyphs');}
+      const box = positions.get(node.id), active = spec.highlight?.includes(node.id);
+      svg.append(element('rect', {x: box.x - box.width / 2, y: box.y - box.height / 2, width: box.width, height: box.height, rx: 16, fill: active ? '#d7e7d2' : '#f7f8f3', stroke: active ? '#538b6a' : '#b7c7b6', 'stroke-width': 1.6}));
+      const label = element('text', {x: box.x, y: box.y, 'text-anchor': 'middle', 'dominant-baseline': 'middle', fill: '#2d4b3b', 'font-size': 13});
+      const lineHeight = 16, offset = -((box.lines.length - 1) * lineHeight) / 2;
+      box.lines.forEach((line, index) => label.append(element('tspan', {x: box.x, y: box.y + offset + index * lineHeight, 'dominant-baseline': 'middle'}, line)));
       svg.append(label);
+    }
+    const slot = (box, index, count) => count <= 1 ? box.y : box.y - Math.min(box.height - 20, (count - 1) * 16) / 2 + Math.min(box.height - 20, (count - 1) * 16) * index / (count - 1);
+    const fromEdges = new Map(), toEdges = new Map();
+    for (const edge of spec.edges) {
+      fromEdges.set(edge.from, [...(fromEdges.get(edge.from) || []), edge]);
+      toEdges.set(edge.to, [...(toEdges.get(edge.to) || []), edge]);
+    }
+    let bus = 0;
+    for (const edge of spec.edges) {
+      const from = positions.get(edge.from), to = positions.get(edge.to);
+      const outs = fromEdges.get(edge.from), ins = toEdges.get(edge.to);
+      const startY = slot(from, outs.indexOf(edge), outs.length);
+      const endY = slot(to, ins.indexOf(edge), ins.length);
+      const startX = from.x + from.width / 2, endX = to.x - to.width / 2;
+      const adjacent = (rank.get(edge.to) ?? 0) === (rank.get(edge.from) ?? 0) + 1;
+      const lane = height + 6 + bus * 18;
+      const d = adjacent && endX > startX + 16
+        ? `M ${startX} ${startY} H ${endX - 26} V ${endY} H ${endX}`
+        : `M ${startX} ${startY} H ${startX + 18} V ${lane} H ${endX - 26} V ${endY} H ${endX}`;
+      if (!adjacent || endX <= startX + 16) bus += 1;
+      svg.append(element('path', {d, fill: 'none', stroke: '#5f7d68', 'stroke-width': 2.2, 'stroke-linejoin': 'round', 'stroke-linecap': 'round', 'marker-end': 'url(#arrow)'}));
+      if (edge.label) svg.append(element('text', {x: startX + 28, y: startY - 8, fill: '#5c6e63', 'font-size': 12}, edge.label));
     }
   }
   return {show, read:()=>current};

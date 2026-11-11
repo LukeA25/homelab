@@ -3,7 +3,7 @@
     {
       "type": "function",
       "name": "show_visual",
-      "description": "Open or replace the whiteboard while continuing the spoken lesson. Use text for a short supplementary note in caption, equation for LaTeX, plot for a mathematical function or x/y point series, chart for bar series, diagram for connected labeled nodes, neural for the interactive neural network, clear to return to the voice orb. Repeat with a revised specification to update a visual. Points must be accurate. Function plots are calculated by the app.",
+      "description": "Open or replace the whiteboard while continuing the spoken lesson. Use text for a short note, equation for LaTeX, plot for a calculated function or numeric series, chart for bars, diagram for labeled nodes with arrows, neural for a network you specify, or clear to return to the voice orb. Repeat with a revised specification to update a visual. Draw only the values you supply.",
       "parameters": {
         "type": "object",
         "additionalProperties": false,
@@ -136,6 +136,102 @@
               "type": "string"
             },
             "description": "Node IDs to emphasize"
+          },
+          "layers": {
+            "type": "array",
+            "description": "Neural layers from inputs to output. Use 2\u20134 layers and 1\u20136 nodes each.",
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "nodes"
+              ],
+              "properties": {
+                "label": {
+                  "type": "string"
+                },
+                "activation": {
+                  "type": "string",
+                  "enum": [
+                    "linear",
+                    "relu",
+                    "sigmoid"
+                  ]
+                },
+                "nodes": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "required": [
+                      "id"
+                    ],
+                    "properties": {
+                      "id": {
+                        "type": "string"
+                      },
+                      "label": {
+                        "type": "string"
+                      },
+                      "value": {
+                        "type": "number"
+                      },
+                      "bias": {
+                        "type": "number"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "connections": {
+            "type": "array",
+            "description": "Arrows between neural node ids. Include weight only when that number should be shown and used. Omit this to draw every node connected to the next layer.",
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "from",
+                "to"
+              ],
+              "properties": {
+                "from": {
+                  "type": "string"
+                },
+                "to": {
+                  "type": "string"
+                },
+                "weight": {
+                  "type": "number"
+                }
+              }
+            }
+          },
+          "slider": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "node"
+            ],
+            "description": "One slider bound to a node, usually an input.",
+            "properties": {
+              "node": {
+                "type": "string"
+              },
+              "label": {
+                "type": "string"
+              },
+              "min": {
+                "type": "number"
+              },
+              "max": {
+                "type": "number"
+              },
+              "value": {
+                "type": "number"
+              }
+            }
           }
         },
         "required": [
@@ -146,48 +242,28 @@
     {
       "type": "function",
       "name": "update_visual",
-      "description": "Show and control the neural network. Returns exact activations. Omitted fields retain their values.",
+      "description": "Change the neural diagram already on screen. Set the slider, highlight node ids, or animate the arrows. Omit fields you are not changing.",
       "parameters": {
         "type": "object",
+        "additionalProperties": false,
         "properties": {
-          "x1": {
-            "type": "number",
-            "minimum": 0,
-            "maximum": 1
+          "slider": {
+            "type": "number"
           },
-          "x2": {
-            "type": "number",
-            "minimum": 0,
-            "maximum": 1
-          },
-          "weight": {
-            "type": "number",
-            "minimum": -2,
-            "maximum": 2
-          },
-          "focus": {
-            "type": "string",
-            "enum": [
-              "all",
-              "inputs",
-              "hidden",
-              "output",
-              "weight"
-            ]
-          },
-          "caption": {
-            "type": "string",
-            "maxLength": 180
+          "highlight": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
           },
           "animate": {
             "type": "boolean"
           }
-        },
-        "additionalProperties": false
+        }
       }
     }
   ],
-  "teachingInstructions": "You are Grove, a friendly voice tutor. Follow the saved lesson context. The screen begins with only a voice orb. Keep conversation natural and responsive, vary sentence length, and ask one question at a time only when it helps. Avoid canned praise. Speak your explanation; equations and diagrams supplement the conversation. Bring up visuals when useful or requested by delegating to the visual tools. Do not force a visual every turn. Explain what changes as it changes. Clear the board when requested. Tools support LaTeX equations, calculated plots (ReLU, sigmoid, linear, quadratic, sin), arbitrary numeric series, bar charts, labeled directed graphs, and a small interactive neural network. Backend results are the source of truth for displayed values. Never invent visual capabilities. For the neural visual, x1,x2 range 0..1; h1=ReLU(weight*x1+0.5*x2-0.3), h2=ReLU(-0.6*x1+1.2*x2+0.1), output=0.8*h1+0.4*h2. Hand-picked weights illustrate inference. This is not a trained predictor or a probability. Aim for a 10–15 minute lesson. Use propose_recap to submit the structured recap; never read JSON aloud. For visual changes, delegate the request to the backend when using GPT-Live; then explain the result conversationally.",
+  "teachingInstructions": "You are Grove, a friendly voice tutor. Follow the saved lesson context and any saved learner preferences. The screen begins with only a voice orb. Keep conversation natural and responsive, vary sentence length, and ask one question at a time only when it helps. Avoid canned praise. Speak the explanation. A visual should match what you are saying; do not force one, and do not open a neural diagram unless the current concept is about a network. Call show_visual for text, a LaTeX equation, a calculated plot, a bar chart, a labeled diagram with arrows, a neural diagram, or clear. For a neural diagram, supply the layers, how many nodes each layer has, and labels in the learner\u2019s terms. Add weights only when you want those numbers shown. Add one slider only when the learner should try a value. There is no built-in example network. Use update_visual to move that slider, highlight nodes, or animate arrows. Repeat show_visual to change the structure. The app draws the values you supply. Never invent a stock network or extra visual capabilities. Continue until the learner chooses to finish. Do not suggest stopping, wrapping up, or ending for the day. The learner can see the elapsed time. Use propose_recap for the structured recap. Never read JSON aloud and never say a recap was saved. For visual changes, delegate the request to the backend when using GPT-Live; then explain the result conversationally.",
   "defaultVoice": "cedar",
   "realtimeVoices": [
     "alloy",

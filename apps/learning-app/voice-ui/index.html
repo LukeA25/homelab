@@ -1,27 +1,26 @@
 <!doctype html>
 <html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Grove · Lesson</title><link rel="stylesheet" href="/style.css"><script src="/vendor/katex.min.js"></script></head>
 <body>
-<header><span class="brand">◉ grove <small>voice lesson</small></span><button id="settings-toggle" aria-expanded="false" aria-controls="settings">Settings</button></header>
+<header><span class="brand">◉ grove <small id="mode-label">voice</small></span><button id="settings-toggle" hidden aria-expanded="false" aria-controls="settings">Settings</button></header>
 <main>
 <section class="voice-stage">
-  <div class="orb-wrap" role="img" aria-label="Voice activity. Sage responds to your microphone, violet to the tutor.">
+  <div class="orb-wrap" role="img" aria-label="Voice activity">
     <canvas id="orb" aria-hidden="true"></canvas>
     <canvas id="voice-strip" aria-hidden="true"></canvas>
   </div>
-  <h1>Your lesson</h1>
-  <p id="status" role="status">A conversation, with room to see.</p>
-  <div class="call-controls"><button id="mute" disabled>Mute mic</button><button id="start" class="primary">Start conversation</button><button id="stop" disabled>End</button></div>
-  <p class="session-meta"><span id="timer">15:00</span> <span>·</span> <span>● Your voice</span> <span class="violet">● Tutor</span></p>
+  <p id="status" role="status" class="quiet"></p>
+  <p id="elapsed" class="elapsed" hidden>0:00</p>
+  <div class="call-controls"><button id="mute" class="round" disabled aria-label="Mute microphone" aria-pressed="false"><svg class="mic-live" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M12 14a3 3 0 0 0 3-3V6a3 3 0 0 0-6 0v5a3 3 0 0 0 3 3zm5-3a5 5 0 0 1-10 0H5a7 7 0 0 0 6 6.92V21h2v-3.08A7 7 0 0 0 19 11h-2z"/></svg><svg class="mic-muted" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M19 11h-1.7c0 .74-.16 1.43-.43 2.05l1.23 1.23c.56-.98.9-2.09.9-3.28zm-4.02.17c0-.06.02-.11.02-.17V6a3 3 0 0 0-3.15-3A3 3 0 0 0 9 6v.18l5.98 5.99zM4.27 3 3 4.27l6.01 6.01V11a3 3 0 0 0 3 3c.23 0 .44-.03.65-.08l1.66 1.66c-.71.33-1.5.52-2.32.52-2.76 0-5.3-2.1-5.3-5.1H5a7 7 0 0 0 6 6.72V21h2v-3.28c.91-.13 1.77-.45 2.55-.9L19.73 21 21 19.73 4.27 3z"/></svg></button><button id="start" class="primary">Start conversation</button><button id="speech-toggle" class="round" type="button" aria-pressed="false" aria-label="Show captions"><svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M19 4H5a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2zm-8 7H9.5v-.5h-2v3h2V13H11v1a1 1 0 0 1-1 1H7a1 1 0 0 1-1-1v-4a1 1 0 0 1 1-1h3a1 1 0 0 1 1 1v1zm7 0h-1.5v-.5h-2v3h2V13H18v1a1 1 0 0 1-1 1h-3a1 1 0 0 1-1-1v-4a1 1 0 0 1 1-1h3a1 1 0 0 1 1 1v1z"/></svg></button><button id="hear" class="round" hidden aria-label="Hear the tutor"><svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M3 10v4h4l5 5V5L7 10H3zm13.5 2a4.5 4.5 0 0 0-2.5-4.03v8.05A4.5 4.5 0 0 0 16.5 12z"/></svg></button></div>
+  <div id="speech-log" hidden></div>
 </section>
-<section id="board" hidden aria-label="Tutor whiteboard"><div class="board-heading"><h2 id="board-title">Whiteboard</h2><button id="clear">Clear</button></div><div id="drawing"></div><div id="math" hidden></div><p id="board-caption"></p><div id="neural" hidden><p id="caption"></p><svg id="network" viewBox="0 0 800 410" role="img" aria-label="Interactive neural network with two inputs, two hidden neurons and one output"></svg><div class="legend"><span>● Positive weight</span><span class="negative">● Negative weight</span><span>Drag neurons to rearrange</span></div><div class="equations"><div><small>HIDDEN NEURON 1 · ReLU</small><p id="eq1"></p></div><div><small>HIDDEN NEURON 2 · ReLU</small><p id="eq2"></p></div><div><small>OUTPUT · LINEAR</small><p id="eq3"></p></div></div><div class="controls"><label>Input x₁ <output id="v1"></output><input id="x1" type="range" min="0" max="1" step="0.01" value="0.6"></label><label>Input x₂ <output id="v2"></output><input id="x2" type="range" min="0" max="1" step="0.01" value="0.4"></label><label>Weight x₁ → h₁ <output id="vw"></output><input id="weight" type="range" min="-2" max="2" step="0.05" value="1.2"></label></div><div class="actions"><button id="pulse">▶ Follow the signal</button><button id="reset" class="quiet">Reset diagram</button></div></div></section>
+<section id="board" hidden aria-label="Tutor whiteboard"><div class="board-heading"><h2 id="board-title">Whiteboard</h2><button id="clear">Clear</button></div><div id="visual-viewport"><div id="visual-stage"><div id="drawing"></div><div id="math" hidden></div><div id="neural" class="neural-layout" hidden><svg id="network" viewBox="0 0 800 420" role="img" aria-label="Neural network"></svg><aside id="neural-side"><p id="caption"></p><div id="neural-readout"></div><label id="slider-wrap" hidden><span id="slider-label"></span> <output id="slider-value"></output><input id="slider" type="range"></label></aside></div><div id="recap-card" hidden></div></div></div><p id="board-caption"></p></section>
+<button id="save-lesson" class="primary" type="button" hidden>Save and close</button>
 <section id="settings" hidden>
   <h2>Conversation settings</h2>
   <label for="engine">Voice model</label><select id="engine"><option value="live">GPT-Live 1</option><option value="realtime">GPT-Realtime</option><option value="realtime-2.1">GPT-Realtime 2.1</option></select>
   <label for="voice">Voice</label><select id="voice"></select>
   <small>Choose before starting a conversation. GPT-Live uses a backend model for visual commands. API usage is billed to your account.</small>
   <div id="keybox"><label for="key">OpenAI API key</label><input id="key" type="password" autocomplete="off" placeholder="sk-…"><small>Used for this connection. The key is never saved.</small></div>
-  <p><button id="resume">Resume audio</button></p>
   <details><summary>Transcript</summary><p id="transcript"></p></details>
 </section>
-<details class="examples"><summary>Explore visuals without a call</summary><div><button data-demo="equation">Equation</button><button data-demo="plot">ReLU plot</button><button data-demo="chart">Bar chart</button><button data-demo="diagram">Diagram</button><button data-demo="neural">Neural network</button></div></details>
 </main><audio id="audio" autoplay></audio><script type="module" src="/app.js"></script></body></html>

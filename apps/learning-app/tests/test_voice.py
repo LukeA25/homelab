@@ -16,8 +16,14 @@ class VoiceTests(unittest.IsolatedAsyncioTestCase):
             response=await voice.negotiate(self.request({'sdp':'v=0','voice':'cedar'}), {'prompt':'Saved lesson session abc, concept models'})
         payload=post.call_args.args[2]['session']
         self.assertIn('session abc',payload['instructions'])
+        self.assertNotIn('15 minutes',payload['instructions'])
         self.assertEqual(payload['audio']['output']['voice'],'cedar')
-        self.assertIn('propose_recap',[t['name'] for t in payload['delegation']['responses']['tools']])
+        names=[t['name'] for t in payload['delegation']['responses']['tools']]
+        self.assertIn('propose_recap', names)
+        self.assertIn('remember_preference', names)
+        recap=next(t for t in payload['delegation']['responses']['tools'] if t['name']=='propose_recap')
+        self.assertNotIn('session_id', recap['parameters'].get('required', []))
+        self.assertNotIn('Hand-picked', payload['instructions'])
         self.assertEqual(response.status_code,200)
 
     async def test_realtime_receives_context(self):
@@ -26,6 +32,11 @@ class VoiceTests(unittest.IsolatedAsyncioTestCase):
         options=json.loads(post.call_args.args[2]['session'])
         self.assertIn('lesson xyz', options['instructions'])
         self.assertIn('propose_recap',[t['name'] for t in options['tools']])
+
+    async def test_resume_context_is_included(self):
+        with patch.dict('os.environ', {'OPENAI_API_KEY':'test-only'}), patch.object(voice,'post_json', return_value=b'{"transport":{"sdp":"answer"}}') as post:
+            await voice.negotiate(self.request({'sdp':'v=0','resume':'unsaved draft about models'}), {'prompt':'lesson','mode':'lesson'})
+        self.assertIn('unsaved draft about models', post.call_args.args[2]['session']['instructions'])
 
     async def test_invalid_requests_never_call_provider(self):
         with patch.object(voice,'post_json') as post:

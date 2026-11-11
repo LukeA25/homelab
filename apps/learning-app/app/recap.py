@@ -20,3 +20,7 @@ class Recap(Strict):
     topics: list[Topic] = Field(min_length=1,max_length=30)
     questions: list[str] = Field(default_factory=list,max_length=30)
 
+class RecapDraft(Strict):
+    topics: list[Topic] = Field(min_length=1, max_length=30)
+    questions: list[str] = Field(default_factory=list, max_length=30)
+

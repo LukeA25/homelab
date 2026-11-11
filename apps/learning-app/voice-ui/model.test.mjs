@@ -1,3 +1,27 @@
-import test from 'node:test';import assert from 'node:assert/strict';import{initial,values,update}from'./model.mjs';
-test('known forward pass and negative-weight ReLU cutoff',()=>{const s=values(initial());assert.ok(Math.abs(s.h1-.62)<1e-12);assert.ok(Math.abs(s.h2-.22)<1e-12);assert.ok(Math.abs(s.y-.584)<1e-12);const n=values(update(initial(),{weight:-1}));assert.equal(n.h1,0);assert.ok(Math.abs(n.y-.088)<1e-12);});
-test('tool rejects bad numeric values and unknown commands atomically',()=>{for(const patch of [{x1:2},{x2:NaN},{weight:'1'},{focus:'execute'},{html:'bad'},{caption:'x'.repeat(181)}])assert.throws(()=>update(initial(),patch));const s=initial();assert.throws(()=>update(s,{x1:.2,weight:9}));assert.equal(s.x1,.6);});
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import {forward, withSlider} from './model.mjs';
+import {validateVisual} from './visuals.mjs';
+
+const spec = () => validateVisual({
+  kind: 'neural',
+  layers: [
+    {label: 'Inputs', nodes: [{id: 'x', label: 'Clue', value: 1}]},
+    {label: 'Hidden', activation: 'relu', nodes: [{id: 'h', label: 'Mix', bias: -0.2}]},
+    {label: 'Output', nodes: [{id: 'y', label: 'Score'}]},
+  ],
+  connections: [{from: 'x', to: 'h', weight: 0.5}, {from: 'h', to: 'y', weight: 2}],
+  slider: {node: 'x', min: 0, max: 1, value: 1},
+});
+
+test('a specified network computes from its own weights', () => {
+  const values = forward(spec());
+  assert.equal(values.h, 0.3);
+  assert.equal(values.y, 0.6);
+  assert.equal(forward(withSlider(spec(), 0)).h, 0);
+});
+
+test('slider changes stay inside the range the tutor set', () => {
+  assert.throws(() => withSlider(spec(), 2));
+  assert.throws(() => withSlider({layers: spec().layers}, 0));
+});

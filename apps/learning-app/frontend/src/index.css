@@ -1,0 +1,35 @@
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@500;600;700&display=swap');
+@import 'tailwindcss';
+
+@theme {
+  --font-sans: 'DM Sans', ui-sans-serif, system-ui, sans-serif;
+  --font-display: 'Manrope', ui-sans-serif, system-ui, sans-serif;
+  --color-background: #f7f8f4;
+  --color-foreground: #283d32;
+  --color-card: #ffffff;
+  --color-card-foreground: #283d32;
+  --color-primary: #365c43;
+  --color-primary-foreground: #f4f7f4;
+  --color-secondary: #eaf0e3;
+  --color-secondary-foreground: #283d32;
+  --color-muted: #f0f3eb;
+  --color-muted-foreground: #7b867d;
+  --color-accent: #e2e9da;
+  --color-accent-foreground: #365c43;
+  --color-border: #e2e7df;
+  --color-input: #dce3d6;
+  --color-ring: #91ad71;
+  --color-destructive: #9b4030;
+  --radius-sm: 0.4rem;
+  --radius-md: 0.6rem;
+  --radius-lg: 0.8rem;
+  --radius-xl: 0.9rem;
+}
+
+@layer base {
+  * {box-sizing: border-box;}
+  body {margin: 0; background: var(--color-background); color: var(--color-foreground); font-family: var(--font-sans);}
+  button, input, textarea, select {font: inherit;}
+  button:not(:disabled), [role="button"]:not([aria-disabled="true"]), summary, label[for], select {cursor: pointer;}
+  h1, h2, h3, h4 {font-family: var(--font-display); letter-spacing: -0.03em;}
+}

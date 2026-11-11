@@ -1,13 +1,35 @@
-export const initial=()=>({x1:0.6,x2:0.4,weight:1.2,focus:'all',caption:'A small network. A conversation you can see.'});
-export function values(s){const h1=Math.max(0,s.weight*s.x1+0.5*s.x2-0.3),h2=Math.max(0,-0.6*s.x1+1.2*s.x2+0.1);return {...s,h1,h2,y:0.8*h1+0.4*h2};}
-export function update(s,args){
- if(!args||typeof args!=='object'||Array.isArray(args))throw Error('Expected an object');
- for(const [k,v] of Object.entries(args)){
-  if(['x1','x2','weight'].includes(k)){const min=k==='weight'?-2:0,max=k==='weight'?2:1;if(typeof v!=='number'||!Number.isFinite(v)||v<min||v>max)throw Error(`Invalid ${k}`);}
-  else if(k==='focus'){if(!['all','inputs','hidden','output','weight'].includes(v))throw Error('Invalid focus');}
-  else if(k==='caption'){if(typeof v!=='string'||v.length>180)throw Error('Invalid caption');}
-  else if(k==='animate'){if(typeof v!=='boolean')throw Error('Invalid animate');}
-  else throw Error(`Unknown field ${k}`);
- }
- const {animate,...patch}=args;return {...s,...patch};
+const activations = {
+  linear: value => value,
+  relu: value => Math.max(0, value),
+  sigmoid: value => 1 / (1 + Math.exp(-value)),
+};
+
+function nodes(spec) {
+  return spec.layers.flatMap(layer => layer.nodes);
+}
+
+export function forward(spec) {
+  const values = new Map(nodes(spec).map(node => [node.id, Number.isFinite(node.value) ? node.value : null]));
+  const incoming = new Map([...values.keys()].map(id => [id, []]));
+  for (const edge of spec.connections || []) incoming.get(edge.to)?.push(edge);
+  for (const layer of spec.layers) {
+    const activate = activations[layer.activation || 'linear'];
+    for (const node of layer.nodes) {
+      const weighted = (incoming.get(node.id) || []).filter(edge => Number.isFinite(edge.weight));
+      if (!weighted.length) continue;
+      const sum = weighted.reduce((total, edge) => total + edge.weight * (values.get(edge.from) || 0), node.bias || 0);
+      values.set(node.id, activate(sum));
+    }
+  }
+  return Object.fromEntries(values);
+}
+
+export function withSlider(spec, next) {
+  if (!spec.slider) throw Error('This network has no slider');
+  const min = spec.slider.min ?? 0, max = spec.slider.max ?? 1;
+  if (typeof next !== 'number' || !Number.isFinite(next) || next < min || next > max) throw Error('Invalid slider value');
+  const copy = structuredClone(spec);
+  copy.slider.value = next;
+  for (const node of nodes(copy)) if (node.id === copy.slider.node) node.value = next;
+  return copy;
 }

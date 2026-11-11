@@ -23,6 +23,7 @@ export function validateVisual(spec) {
     }
     if (spec.highlight !== undefined && (!Array.isArray(spec.highlight) || spec.highlight.some(id => !ids.has(id)))) throw Error('Unknown highlight node');
   }
+  if (spec.kind === 'neural') validateNetwork(spec);
   if (spec.kind === 'plot' || spec.kind === 'chart') {
     if (spec.function !== undefined) {
       if (!Object.hasOwn(functions, spec.function)) throw Error('Unsupported function');
@@ -42,6 +43,41 @@ export function validateVisual(spec) {
   }
   return structuredClone(spec);
 }
+function validateNetwork(spec) {
+  if (!Array.isArray(spec.layers) || spec.layers.length < 2 || spec.layers.length > 4) throw Error('Supply 2–4 layers');
+  const ids = new Set(), activations = new Set(['linear', 'relu', 'sigmoid']);
+  for (const [index, layer] of spec.layers.entries()) {
+    if (!layer || !Array.isArray(layer.nodes) || layer.nodes.length < 1 || layer.nodes.length > 6) throw Error('Each layer needs 1–6 nodes');
+    if (layer.activation !== undefined && !activations.has(layer.activation)) throw Error('Unsupported activation');
+    if (index === 0 && layer.activation && layer.activation !== 'linear') throw Error('The input layer is not activated');
+    if (layer.label !== undefined && (typeof layer.label !== 'string' || layer.label.length > 40)) throw Error('Invalid layer label');
+    for (const node of layer.nodes) {
+      if (!node || typeof node.id !== 'string' || !node.id || node.id.length > 40 || ids.has(node.id)) throw Error('Invalid or duplicate node');
+      ids.add(node.id);
+      if (node.label !== undefined && (typeof node.label !== 'string' || node.label.length > 80)) throw Error('Invalid node label');
+      for (const field of ['value', 'bias']) {
+        if (node[field] !== undefined && (!Number.isFinite(node[field]) || Math.abs(node[field]) > 1000)) throw Error(`Invalid ${field}`);
+      }
+    }
+  }
+  if (spec.connections !== undefined) {
+    if (!Array.isArray(spec.connections) || spec.connections.length > 80) throw Error('Too many connections');
+    for (const edge of spec.connections) {
+      if (!edge || !ids.has(edge.from) || !ids.has(edge.to)) throw Error('Invalid connection');
+      if (edge.weight !== undefined && (!Number.isFinite(edge.weight) || Math.abs(edge.weight) > 100)) throw Error('Invalid weight');
+    }
+  }
+  if (spec.slider !== undefined) {
+    const slider = spec.slider;
+    if (!slider || !ids.has(slider.node)) throw Error('Slider node is missing');
+    const min = slider.min ?? 0, max = slider.max ?? 1;
+    if (![min, max].every(number => Number.isFinite(number) && Math.abs(number) <= 1000) || min >= max) throw Error('Invalid slider range');
+    if (slider.value !== undefined && (!Number.isFinite(slider.value) || slider.value < min || slider.value > max)) throw Error('Invalid slider value');
+    if (slider.label !== undefined && (typeof slider.label !== 'string' || slider.label.length > 80)) throw Error('Invalid slider label');
+  }
+  if (spec.highlight !== undefined && (!Array.isArray(spec.highlight) || spec.highlight.some(id => !ids.has(id)))) throw Error('Unknown highlight node');
+}
+
 export function plotSeries(spec) {
   if (!spec.function) return spec.series;
   const lo = spec.xMin ?? -4, hi = spec.xMax ?? 4;

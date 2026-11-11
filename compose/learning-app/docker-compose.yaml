@@ -5,6 +5,8 @@ services:
     restart: unless-stopped
     environment:
       LEARNING_DB: /data/learning.db
+      OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+      VOICE_ENGINE: ${VOICE_ENGINE:-live}
     ports:
       - "8009:8000"
     volumes:
