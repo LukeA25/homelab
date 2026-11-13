@@ -1,7 +1,7 @@
 """OpenAI-compatible chat client for Study Desk Ask.
 
-Defaults to OpenAI gpt-4o-mini. Point OPENAI_BASE_URL + OPENAI_API_KEY at any
-OpenAI-compatible provider (Gemini, Groq, OpenRouter) without code changes.
+Defaults to a GPT-5 reasoning model. Point OPENAI_BASE_URL + OPENAI_API_KEY at
+any OpenAI-compatible provider without code changes.
 """
 
 from __future__ import annotations
@@ -15,6 +15,7 @@ from .config import (
     ASK_MAX_TOKENS,
     ASK_MODEL,
     ASK_PROVIDER,
+    ASK_REASONING_EFFORT,
     ASK_TIMEOUT_SECONDS,
     OPENAI_API_KEY,
     OPENAI_BASE_URL,
@@ -33,6 +34,27 @@ def llm_configured() -> bool:
     return False
 
 
+def _reasoning_model(model: str) -> bool:
+    name = model.lower()
+    return name.startswith(("gpt-5", "gpt-6", "o1", "o3", "o4"))
+
+
+def _message_text(content: Any) -> str:
+    if isinstance(content, str):
+        return content.strip()
+    if isinstance(content, list):
+        parts: list[str] = []
+        for part in content:
+            if isinstance(part, str):
+                parts.append(part)
+            elif isinstance(part, dict):
+                text = part.get("text") or part.get("content") or ""
+                if isinstance(text, str):
+                    parts.append(text)
+        return "".join(parts).strip()
+    return ""
+
+
 async def chat_completion(
     messages: list[dict[str, str]],
     *,
@@ -46,12 +68,19 @@ async def chat_completion(
         raise LlmError("OPENAI_API_KEY is not set")
 
     url = f"{OPENAI_BASE_URL}/chat/completions"
+    budget = max_tokens if max_tokens is not None else ASK_MAX_TOKENS
     payload: dict[str, Any] = {
         "model": ASK_MODEL,
         "messages": messages,
-        "temperature": temperature,
-        "max_tokens": max_tokens if max_tokens is not None else ASK_MAX_TOKENS,
     }
+    if _reasoning_model(ASK_MODEL):
+        # Reasoning tokens count against this budget. Temperature is fixed.
+        payload["max_completion_tokens"] = budget
+        if ASK_REASONING_EFFORT and ASK_REASONING_EFFORT != "default":
+            payload["reasoning_effort"] = ASK_REASONING_EFFORT
+    else:
+        payload["temperature"] = temperature
+        payload["max_tokens"] = budget
     headers = {
         "Authorization": f"Bearer {OPENAI_API_KEY}",
         "Content-Type": "application/json",
@@ -69,10 +98,10 @@ async def chat_completion(
 
     data = res.json()
     try:
-        content = data["choices"][0]["message"]["content"]
+        content = _message_text(data["choices"][0]["message"].get("content"))
     except (KeyError, IndexError, TypeError) as exc:
         raise LlmError(f"unexpected LLM response shape: {data!r}") from exc
 
-    if not isinstance(content, str) or not content.strip():
+    if not content:
         raise LlmError("LLM returned an empty completion")
-    return content.strip()
+    return content

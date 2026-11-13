@@ -100,8 +100,7 @@ textarea {
 
 .verse-run.is-reading-focus,
 .reader-para.is-reading-focus {
-  background: rgba(212, 168, 75, 0.28);
-  animation: reading-focus-pulse 2s ease-in-out 3;
+  background: rgba(212, 168, 75, 0.34);
 }
 
 @keyframes reading-focus-pulse {

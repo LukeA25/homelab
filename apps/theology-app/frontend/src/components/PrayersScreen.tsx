@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { ChevronRight } from "lucide-react";
 import { getPrayer, getReadings, listPrayers } from "../lib/api";
-import type { PrayerItem, ReadingsDay } from "../lib/types";
+import type { PrayerItem, ReadingChapterFocus, ReadingsDay } from "../lib/types";
 
 type PrayersScreenProps = {
   view: string | null;
@@ -14,6 +14,7 @@ type PrayersScreenProps = {
       readingVerseStart?: number | null;
       readingVerseEnd?: number | null;
       readingVerses?: number[] | null;
+      readingChapters?: ReadingChapterFocus[] | null;
     },
   ) => void;
 };
@@ -141,11 +142,23 @@ function ReadingsView({
                   disabled={!r.sectionId}
                   onClick={() => {
                     if (r.sectionId) {
+                      const readingChapters = r.chapters?.length
+                        ? r.chapters
+                        : [
+                            {
+                              sectionId: r.sectionId,
+                              verseStart: r.verseStart,
+                              verseEnd: r.verseEnd,
+                              verses: r.verses,
+                              focusLocusId: r.focusLocusId,
+                            },
+                          ];
                       onOpenBibleSection(r.sectionId, r.reference, {
                         focusLocusId: r.focusLocusId,
                         readingVerseStart: r.verseStart,
                         readingVerseEnd: r.verseEnd,
                         readingVerses: r.verses,
+                        readingChapters,
                       });
                     }
                   }}

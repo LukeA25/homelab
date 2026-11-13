@@ -18,11 +18,12 @@ CACHE_DIR = Path(os.getenv("CACHE_DIR", DATA_DIR / "cache"))
 LECTIONARY_CACHE_DIR = CACHE_DIR / "lectionary"
 
 ASK_PROVIDER = os.getenv("ASK_PROVIDER", "openai").strip().lower()
-ASK_MODEL = os.getenv("ASK_MODEL", "gpt-4o-mini").strip()
+ASK_MODEL = os.getenv("ASK_MODEL", "gpt-5.6-sol").strip()
+ASK_REASONING_EFFORT = os.getenv("ASK_REASONING_EFFORT", "medium").strip().lower()
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY", "").strip()
 OPENAI_BASE_URL = os.getenv("OPENAI_BASE_URL", "https://api.openai.com/v1").rstrip("/")
-ASK_TIMEOUT_SECONDS = float(os.getenv("ASK_TIMEOUT_SECONDS", "90"))
-ASK_MAX_TOKENS = int(os.getenv("ASK_MAX_TOKENS", "3200"))
+ASK_TIMEOUT_SECONDS = float(os.getenv("ASK_TIMEOUT_SECONDS", "180"))
+ASK_MAX_TOKENS = int(os.getenv("ASK_MAX_TOKENS", "8000"))
 ASK_MAX_ROUNDS = int(os.getenv("ASK_MAX_ROUNDS", "3"))
 
 LECTIONARY_PROVIDER = os.getenv("LECTIONARY_PROVIDER", "cpbjr").strip().lower()

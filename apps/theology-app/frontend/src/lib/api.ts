@@ -433,6 +433,13 @@ export function getReadings(date?: string): Promise<{
     verseStart?: number | null;
     verseEnd?: number | null;
     verses?: number[];
+    chapters?: Array<{
+      sectionId: string;
+      verseStart?: number | null;
+      verseEnd?: number | null;
+      verses?: number[] | null;
+      focusLocusId?: string | null;
+    }>;
   }>;
 }> {
   const q = date ? `?date=${encodeURIComponent(date)}` : "";

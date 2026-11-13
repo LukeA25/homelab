@@ -32,6 +32,7 @@ import type {
   NoteDoc,
   NoteSection,
   Paragraph,
+  ReadingChapterFocus,
   TabKind,
   Topic,
   WorkspaceLayout,
@@ -461,9 +462,23 @@ export default function App() {
   function focusOrPlaceTab(id: string, preferredSide?: "left" | "right" | null) {
     if (preferredSide && layoutRef.current?.mode === "split") {
       moveTabToSide(id, preferredSide);
+      setLayout((prev) => {
+        if (prev?.mode !== "split") return prev;
+        return preferredSide === "right" ? { ...prev, rightId: id } : { ...prev, leftId: id };
+      });
+      setActivePane(preferredSide);
       return;
     }
     focusTab(id);
+  }
+
+  /** When a link is clicked in a split, open the Bible on the other side. */
+  function oppositePane(sourceTabId?: string): "left" | "right" | null {
+    if (!sourceTabId || layoutRef.current?.mode !== "split") return null;
+    const side = sideOfTab(sourceTabId);
+    if (side === "left") return "right";
+    if (side === "right") return "left";
+    return null;
   }
 
   function addTab(
@@ -524,16 +539,37 @@ export default function App() {
       readingVerseStart?: number | null;
       readingVerseEnd?: number | null;
       readingVerses?: number[] | null;
+      readingChapters?: ReadingChapterFocus[] | null;
     },
+    sourceTabId?: string,
   ) {
     const heading = title || titleFromSectionId(sectionId);
+    const readingChapters = focus
+      ? focus.readingChapters?.length
+        ? focus.readingChapters
+        : [
+            {
+              sectionId,
+              verseStart: focus.readingVerseStart ?? null,
+              verseEnd: focus.readingVerseEnd ?? null,
+              verses: focus.readingVerses?.length ? [...focus.readingVerses] : null,
+              focusLocusId: focus.focusLocusId ?? null,
+            },
+          ]
+      : null;
+    const current = readingChapters?.find((chapter) => chapter.sectionId === sectionId) ?? null;
     const focusPatch = focus
       ? {
-          focusLocusId: focus.focusLocusId ?? null,
+          focusLocusId: current?.focusLocusId ?? focus.focusLocusId ?? null,
           focusNonce: Date.now(),
-          readingVerseStart: focus.readingVerseStart ?? null,
-          readingVerseEnd: focus.readingVerseEnd ?? null,
-          readingVerses: focus.readingVerses?.length ? [...focus.readingVerses] : null,
+          readingVerseStart: current?.verseStart ?? focus.readingVerseStart ?? null,
+          readingVerseEnd: current?.verseEnd ?? focus.readingVerseEnd ?? null,
+          readingVerses: current?.verses?.length
+            ? [...current.verses]
+            : focus.readingVerses?.length
+              ? [...focus.readingVerses]
+              : null,
+          readingChapters,
         }
       : {
           focusLocusId: null,
@@ -541,8 +577,13 @@ export default function App() {
           readingVerseStart: null,
           readingVerseEnd: null,
           readingVerses: null,
+          readingChapters: null,
         };
-    addTab("bible", { bibleSectionId: sectionId, title: heading, ...focusPatch });
+    addTab(
+      "bible",
+      { bibleSectionId: sectionId, title: heading, ...focusPatch },
+      oppositePane(sourceTabId),
+    );
     localStorage.setItem(BIBLE_SECTION_KEY, sectionId);
   }
 
@@ -637,7 +678,7 @@ export default function App() {
     placeNewTab(id, preferredSide);
   }
 
-  function openLocus(workId: string, locusId: string) {
+  function openLocus(workId: string, locusId: string, sourceTabId?: string) {
     void (async () => {
       try {
         const blocks = await getLocus(workId || BIBLE_ID, locusId);
@@ -646,10 +687,10 @@ export default function App() {
         const sectionId = hit.sectionId;
         const title = titleFromSectionId(sectionId);
         if (hit.workId === BIBLE_ID || workId === BIBLE_ID) {
-          openBibleSection(sectionId, title, { focusLocusId: locusId });
+          openBibleSection(sectionId, title, { focusLocusId: locusId }, sourceTabId);
           return;
         }
-        openReaderSection(hit.workId, sectionId, title, { focusLocusId: locusId });
+        openReaderSection(hit.workId, sectionId, title, { focusLocusId: locusId }, oppositePane(sourceTabId));
       } catch (err) {
         setToast(err instanceof Error ? err.message : "Could not open locus");
       }
@@ -784,7 +825,9 @@ export default function App() {
                   : "Prayer";
             updateTab(tab.id, { prayersView: view, title });
           }}
-          onOpenBibleSection={openBibleSection}
+          onOpenBibleSection={(sectionId, title, focus) =>
+            openBibleSection(sectionId, title, focus, tab.id)
+          }
         />
       );
     }
@@ -801,16 +844,33 @@ export default function App() {
           readingVerseStart={tab.readingVerseStart}
           readingVerseEnd={tab.readingVerseEnd}
           readingVerses={tab.readingVerses}
+          highlightHold={Boolean(
+            tab.readingChapters?.some((chapter) => chapter.sectionId === sectionId),
+          )}
           textSize={textSize}
           onSectionChange={(id, title) => {
+            const span = tab.readingChapters ?? [];
+            const hit = span.find((chapter) => chapter.sectionId === id);
             updateTab(tab.id, {
               bibleSectionId: id,
               title: title || titleFromSectionId(id),
-              focusLocusId: undefined,
-              focusNonce: undefined,
-              readingVerseStart: undefined,
-              readingVerseEnd: undefined,
-              readingVerses: undefined,
+              ...(hit
+                ? {
+                    focusLocusId: hit.focusLocusId ?? null,
+                    focusNonce: Date.now(),
+                    readingVerseStart: hit.verseStart ?? null,
+                    readingVerseEnd: hit.verseEnd ?? null,
+                    readingVerses: hit.verses?.length ? [...hit.verses] : null,
+                    readingChapters: span,
+                  }
+                : {
+                    focusLocusId: undefined,
+                    focusNonce: undefined,
+                    readingVerseStart: undefined,
+                    readingVerseEnd: undefined,
+                    readingVerses: undefined,
+                    readingChapters: undefined,
+                  }),
             });
             localStorage.setItem(BIBLE_SECTION_KEY, id);
           }}
@@ -818,15 +878,6 @@ export default function App() {
           onBookmark={(paras) => bookmarkParas(BIBLE_ID, paras, sectionId)}
           onAskSplit={(paras) => askSplit(tab.id, paras)}
           onCopyToNotes={copyToNotes}
-          onClearReadingFocus={() =>
-            updateTab(tab.id, {
-              focusLocusId: undefined,
-              focusNonce: undefined,
-              readingVerseStart: undefined,
-              readingVerseEnd: undefined,
-              readingVerses: undefined,
-            })
-          }
         />
       );
     }
@@ -836,7 +887,9 @@ export default function App() {
         <BibleYearScreen
           day={tab.bibleYearDay ?? null}
           onDayChange={(next) => updateTab(tab.id, { bibleYearDay: next })}
-          onOpenBibleSection={openBibleSection}
+          onOpenBibleSection={(sectionId, title, focus) =>
+            openBibleSection(sectionId, title, focus, tab.id)
+          }
         />
       );
     }
@@ -847,7 +900,7 @@ export default function App() {
           seed={tab.askSeed}
           threadId={tab.askThreadId}
           onThreadIdChange={(id) => updateTab(tab.id, { askThreadId: id })}
-          onOpenLocus={openLocus}
+          onOpenLocus={(workId, locusId) => openLocus(workId, locusId, tab.id)}
           onOpenWork={openLibraryWork}
           onOpenSection={(workId, sectionId, title) =>
             openReaderSection(workId, sectionId, title)
@@ -947,7 +1000,7 @@ export default function App() {
               }
             })();
           }}
-          onOpenLocus={openLocus}
+          onOpenLocus={(workId, locusId) => openLocus(workId, locusId, tab.id)}
         />
       );
     }

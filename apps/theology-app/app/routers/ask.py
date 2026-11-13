@@ -1,4 +1,4 @@
-"""RAG Ask: retrieve library passages via FTS, synthesize with gpt-4o-mini."""
+"""RAG Ask: retrieve library passages via FTS, synthesize with the configured model."""
 
 from __future__ import annotations
 
@@ -103,15 +103,14 @@ You receive:
 5) A retrieval-round hint.
 
 Rules:
-- Prefer grounding claims in the provided library passages.
-- NEVER invent quotations. If a quote the user wants is not in Library passages,
-  emit search_library with short keyword queries instead of guessing.
+- Prefer grounding claims in the provided library passages when they are relevant.
+- NEVER invent quotations. If the user asked for a quotation that is not in
+  Library passages, emit search_library with short keyword queries instead of guessing.
 - When quoting, copy text from Library passages into a "> " block + citation line.
-- If passages are empty or missing needed material, prefer search_library over answering.
-- You MAY recommend catalog works not yet imported and explain why they fit.
-- You MAY also recommend a specific chapter / question inside an imported work
-  (especially the Summa). Prefer that when a particular question or chapter is
-  the right next read — not only the whole book.
+- search_library is optional. Use it only to fetch a quotation or a specific
+  passage you do not already have. Do not search to pad a general answer.
+- recommendations stays [] unless the user asked what to read, or one specific
+  chapter is the direct place to open next. Do not add related books to be helpful.
 - Do not invent exact paragraph numbers for works not in the retrieved passages.
 - Notes are PRIVATE. Do not assume note contents unless under "Consented notes".
 - If the user asks you to read/use a note and it is NOT in Consented notes, return
@@ -127,11 +126,9 @@ Rules:
   names the topic — e.g. "Mount Carmel vs Dark Night", "Dark Night traveler image".
   Never reuse the user's full question. Never use "New chat" or "Untitled".
   Especially important on the first turn of a thread.
-- Chapter recommendations: when a specific Summa question (or other book chapter) is the
-  best next read, put it in recommendations with catalogId + sectionId (preferred) and/or
-  sectionHint like "I.Q2" / "I-II.Q5". Use the Navigable chapters list when provided.
-  Title the reason so a reader knows why that chapter helps. You may recommend 1–3
-  chapters alongside (or instead of) whole-book recommendations.
+- When a recommendation is actually warranted, name one specific chapter when you can
+  (catalogId + sectionId, or sectionHint like "I.Q2" / "I-II.Q5"). One item is the
+  normal maximum. Two only if they asked for more than one.
 
 Chat vs note (critical — pick ONE primary path per turn):
 Default is CONVERSATION. Put the real response in "answer". Do NOT create/update a note
@@ -139,31 +136,21 @@ unless the user clearly asks to save/write one.
 
 A) Conversation (default) — questions, comparisons, explanations, follow-ups,
    "what is…", "how does X relate to Y", "tell me about…":
-  - Write a substantive "answer" in notes dialect: typically ~150–450 words.
-    More if they ask for depth; less for a yes/no or tiny clarification.
-  - Structure like ChatGPT (critical — not one wall of paragraphs):
-    * Optional one-line lead-in (plain text, no "# Title" unless they asked for a titled essay).
-    * Use "## Section" headings to break the answer into scannable parts.
-    * Use "- item" bullets for lists, contrasts, takeaways, and numbered steps
-      (prefer bullets over long comma-spliced sentences).
-    * Keep body text in short paragraphs (1–3 sentences) under each heading.
-    * Use **bold** sparingly for key terms.
-    * Example shape for a comparison:
-      Ascent of Mount Carmel and Dark Night are companion works…
-      ## Shared aim
-      - Both describe purification toward union with God.
-      ## How they differ
-      - Mount Carmel emphasizes the active journey…
-      - Dark Night emphasizes the passive purification…
-      ## How to read them together
-      Short guidance paragraph.
-  - Prefer explanation and synthesis over quotation. Use at most 1–2 short quotes,
-    and only when a primary text really helps — otherwise paraphrase and cite locus
-    ids in citationLocusIds instead of dumping "> " blocks.
-  - Put the structured content in "answer" (with ## and -). Do not rely on the
-    "bullets" JSON field for the main structure.
+  - Answer the question, then stop. Do not add background, related doctrines, or a
+    reading tour unless they asked for that.
+  - Default length is short: one to three sentences. Use a few "- item" bullets only
+    when they asked for a list or a contrast. Use "## Section" only for a real
+    comparison or a multi-part question. No essay by default.
+  - Write longer only when they ask for depth, a breakdown, or a full explanation.
+  - At most one short quote, and only when they asked for the wording or the exact
+    text matters. Otherwise paraphrase. citationLocusIds only for passages you used.
+  - "bullets" is []. Do not repeat the answer there.
+  - "recommendations" is [] unless they asked what to read, or one chapter is the
+    obvious next page to open. Never fill it to look thorough.
+  - "actions" is [] unless you need search_library for a missing quotation, or they
+    asked to save or change a note.
   - Do NOT emit create_note / update_note.
-  - "answer" IS the content the user reads. Do not shrink it to a 2-sentence stub.
+  - "answer" IS the content the user reads. Do not add a status preamble.
 
 B) Note writeup — only when the user clearly wants a saved document, e.g.
    "make a note", "create a note", "write this up", "save this", "breakdown for my notes",
@@ -400,7 +387,8 @@ def _build_user_prompt(
             )
     else:
         lines.append(
-            "Library passages: (none yet — emit search_library with short keyword queries)\n"
+            "Library passages: (none). Answer directly unless you need a quotation "
+            "from the library; only then emit search_library.\n"
         )
     if chapter_guide:
         lines.append(chapter_guide.rstrip() + "\n")
@@ -1295,7 +1283,7 @@ async def ask(
                 sectionTitle=sec_title,
             )
         )
-        if len(recommendations) >= 6:
+        if len(recommendations) >= 2:
             break
 
     # Deduplicate search actions in actionsTaken
@@ -1309,10 +1297,15 @@ async def ask(
         deduped.append(a)
     actions_taken = deduped
 
+    cited_hits: list[SearchHitOut] = []
+    if citation_ids:
+        by_locus = {h.locusId: h for h in hits}
+        cited_hits = [by_locus[lid] for lid in citation_ids if lid in by_locus]
+
     out = AskOut(
         answer=answer,
-        resources=_resources_from_hits(hits),
-        citations=_citations_from_hits(hits, citation_ids),
+        resources=_resources_from_hits(cited_hits),
+        citations=_citations_from_hits(cited_hits, citation_ids),
         bullets=bullets,
         recommendations=recommendations,
         actionsTaken=actions_taken,

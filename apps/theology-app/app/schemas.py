@@ -212,6 +212,14 @@ class AskMessageOut(BaseModel):
     createdAt: str
 
 
+class ReadingChapterOut(BaseModel):
+    sectionId: str
+    verseStart: Optional[int] = None
+    verseEnd: Optional[int] = None
+    verses: list[int] = []
+    focusLocusId: Optional[str] = None
+
+
 class ReadingRefOut(BaseModel):
     type: str
     reference: str
@@ -221,6 +229,7 @@ class ReadingRefOut(BaseModel):
     verseStart: Optional[int] = None
     verseEnd: Optional[int] = None
     verses: list[int] = []
+    chapters: list[ReadingChapterOut] = []
 
 
 class ReadingsOut(BaseModel):

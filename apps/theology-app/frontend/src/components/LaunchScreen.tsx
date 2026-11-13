@@ -7,7 +7,7 @@ type LaunchScreenProps = {
 
 const OPTIONS = [
   { id: "prayers" as const, label: "Prayers", hint: "Readings & fixed prayers", icon: Church },
-  { id: "bible-year" as const, label: "Bible in a Year", hint: "Listen and read along", icon: Headphones },
+  { id: "bible-year" as const, label: "Bible", hint: "Listen to Bible in a Year", icon: Headphones },
   { id: "library" as const, label: "Library", hint: "Books, CCC & Bible", icon: Library },
   { id: "notes" as const, label: "Notes", hint: "Personal & study", icon: NotebookPen },
 ];

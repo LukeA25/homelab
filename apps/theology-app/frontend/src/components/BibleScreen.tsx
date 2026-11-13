@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState, type PointerEvent as ReactPointerEvent } from "react";
-import { ChevronDown } from "lucide-react";
+import { ChevronDown, ChevronLeft, ChevronRight } from "lucide-react";
 import {
   BIBLE_ID,
   adjacentChapter,
@@ -16,9 +16,10 @@ import {
 import type { Bookmark, Highlight, Paragraph, SectionNode } from "../lib/types";
 import { Sheet } from "./Sheet";
 
-const MAX_DRAG = 52;
-const COMMIT = 36;
+const TEXT_SHIFT_MAX = 48;
+const COMMIT = 56;
 const EDGE = 28;
+const TURN_MS = 240;
 
 type BibleScreenProps = {
   sectionId: string;
@@ -29,12 +30,13 @@ type BibleScreenProps = {
   readingVerseStart?: number | null;
   readingVerseEnd?: number | null;
   readingVerses?: number[] | null;
+  /** True while this chapter is still inside the opened reference. */
+  highlightHold?: boolean;
   onSectionChange: (sectionId: string, title?: string) => void;
   onToggleHighlights: (paragraphs: Paragraph[]) => void;
   onBookmark: (paragraphs: Paragraph[]) => void;
   onAskSplit: (paragraphs: Paragraph[]) => void;
   onCopyToNotes: (paragraphs: Paragraph[]) => void;
-  onClearReadingFocus?: () => void;
   textSize: number;
 };
 
@@ -47,12 +49,12 @@ export function BibleScreen({
   readingVerseStart,
   readingVerseEnd,
   readingVerses,
+  highlightHold = false,
   onSectionChange,
   onToggleHighlights,
   onBookmark,
   onAskSplit,
   onCopyToNotes,
-  onClearReadingFocus,
   textSize,
 }: BibleScreenProps) {
   const [roots, setRoots] = useState<ApiSection[]>([]);
@@ -61,21 +63,20 @@ export function BibleScreen({
   const [error, setError] = useState<string | null>(null);
   const [pickerOpen, setPickerOpen] = useState(false);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(() => new Set());
-  const [readingFocusActive, setReadingFocusActive] = useState(false);
-  const [appliedFocus, setAppliedFocus] = useState<{
-    locusId: string | null;
-    start: number | null;
-    end: number | null;
-    verses: number[] | null;
-  } | null>(null);
   const [dragX, setDragX] = useState(0);
+  const [neighbors, setNeighbors] = useState<Record<string, Paragraph[]>>({});
+  const [motion, setMotion] = useState<"drag" | "glide" | "snap">("snap");
+  const [coverId, setCoverId] = useState<string | null>(null);
   const dragXRef = useRef(0);
   const rafRef = useRef(0);
   const startX = useRef(0);
   const tracking = useRef(false);
-  const focusAppliedRef = useRef(false);
-  const focusTimerRef = useRef(0);
   const chapterRef = useRef<HTMLDivElement>(null);
+  const paneRef = useRef<HTMLDivElement>(null);
+  const pendingSection = useRef<string | null>(null);
+  const scrolledKey = useRef("");
+  const turning = useRef(false);
+  const neighborIds = useRef(new Set<string>());
   const gestureRef = useRef<{
     x: number;
     y: number;
@@ -118,19 +119,34 @@ export function BibleScreen({
     let cancelled = false;
     setLoading(true);
     setError(null);
-    focusAppliedRef.current = false;
     void (async () => {
       try {
         const blocks = await getSectionBlocks(sectionId);
         if (!cancelled) {
           setParagraphs(blocks.map(toParagraph));
           setLoading(false);
+          if (pendingSection.current === sectionId) {
+            pendingSection.current = null;
+            turning.current = false;
+            dragXRef.current = 0;
+            setCoverId(null);
+            setMotion("snap");
+            setDragX(0);
+          }
         }
       } catch (err) {
         if (!cancelled) {
           setParagraphs([]);
           setError(err instanceof Error ? err.message : String(err));
           setLoading(false);
+          if (pendingSection.current === sectionId) {
+            pendingSection.current = null;
+            turning.current = false;
+            dragXRef.current = 0;
+            setCoverId(null);
+            setMotion("snap");
+            setDragX(0);
+          }
         }
       }
     })();
@@ -141,57 +157,49 @@ export function BibleScreen({
 
   useEffect(() => {
     setSelectedIds(new Set());
-    setReadingFocusActive(false);
-    setAppliedFocus(null);
-    focusAppliedRef.current = false;
-    window.clearTimeout(focusTimerRef.current);
-    dragXRef.current = 0;
-    setDragX(0);
     tracking.current = false;
   }, [sectionId]);
 
   useEffect(() => {
-    focusAppliedRef.current = false;
-  }, [focusLocusId, readingVerseStart, readingVerseEnd, readingVerses]);
+    const ids = [prev?.sectionId, next?.sectionId].filter((id): id is string => Boolean(id));
+    for (const id of ids) {
+      if (neighborIds.current.has(id)) continue;
+      neighborIds.current.add(id);
+      void getSectionBlocks(id)
+        .then((blocks) => {
+          setNeighbors((map) => (map[id] ? map : { ...map, [id]: blocks.map(toParagraph) }));
+        })
+        .catch(() => {
+          neighborIds.current.delete(id);
+        });
+    }
+  }, [prev?.sectionId, next?.sectionId]);
 
   useEffect(() => {
-    if (loading || !paragraphs.length) return;
-    if (!focusLocusId && readingVerseStart == null && !readingVerses?.length) return;
-    if (focusAppliedRef.current) return;
-    focusAppliedRef.current = true;
-
-    const snapshot = {
-      locusId: focusLocusId ?? null,
-      start: readingVerseStart ?? null,
-      end: readingVerseEnd ?? null,
-      verses: readingVerses?.length ? [...readingVerses] : null,
-    };
-    setAppliedFocus(snapshot);
-    setReadingFocusActive(true);
-    window.clearTimeout(focusTimerRef.current);
-    focusTimerRef.current = window.setTimeout(() => setReadingFocusActive(false), 12000);
-
-    requestAnimationFrame(() => {
-      const verse = snapshot.verses?.[0] ?? snapshot.start;
-      const root = chapterRef.current;
-      const el = snapshot.locusId
-        ? root?.querySelector(`[data-locus-id="${CSS.escape(snapshot.locusId)}"]`)
-        : verse != null
-          ? root?.querySelector(`[data-verse="${verse}"]`)
-          : null;
-      el?.scrollIntoView({ behavior: "smooth", block: "center" });
-      onClearReadingFocus?.();
-    });
+    if (loading || !paragraphs.length || !highlightHold) return;
+    const key = `${sectionId}:${focusNonce ?? 0}`;
+    if (scrolledKey.current === key) return;
+    scrolledKey.current = key;
+    const root = chapterRef.current;
+    if (!root) return;
+    const verse = readingVerses?.[0] ?? (readingVerseStart != null && readingVerseStart < 180 ? readingVerseStart : null);
+    const locusOnly = Boolean(focusLocusId) && readingVerseStart == null && !readingVerses?.length;
+    const el = locusOnly
+      ? root.querySelector(`[data-locus-id="${CSS.escape(focusLocusId ?? "")}"]`)
+      : verse != null
+        ? root.querySelector(`[data-verse="${verse}"]`)
+        : null;
+    if (el) el.scrollIntoView({ behavior: "smooth", block: "center" });
+    else root.scrollTo({ top: 0 });
   }, [
     loading,
     paragraphs,
     sectionId,
-    focusLocusId,
     focusNonce,
+    highlightHold,
+    focusLocusId,
     readingVerseStart,
-    readingVerseEnd,
     readingVerses,
-    onClearReadingFocus,
   ]);
 
   const hlSet = new Set(
@@ -204,7 +212,6 @@ export function BibleScreen({
   const runs = useMemo(() => groupBibleRuns(paragraphs), [paragraphs]);
 
   function toggleSelect(id: string) {
-    setReadingFocusActive(false);
     setSelectedIds((prev) => {
       const nextSet = new Set(prev);
       if (nextSet.has(id)) nextSet.delete(id);
@@ -214,12 +221,17 @@ export function BibleScreen({
   }
 
   function verseInReadingFocus(p: Paragraph): boolean {
-    if (!readingFocusActive || !appliedFocus) return false;
-    if (appliedFocus.locusId && p.locusId === appliedFocus.locusId) return true;
-    if (p.verse != null && appliedFocus.verses?.length) return appliedFocus.verses.includes(p.verse);
-    if (appliedFocus.start == null || p.verse == null) return false;
-    const end = appliedFocus.end ?? appliedFocus.start;
-    return p.verse >= appliedFocus.start && p.verse <= end;
+    if (!highlightHold) return false;
+    if (p.verse != null && readingVerses?.length) return readingVerses.includes(p.verse);
+    if (readingVerseStart != null && p.verse != null) {
+      const end =
+        readingVerseEnd == null || readingVerseEnd >= 180
+          ? Number.POSITIVE_INFINITY
+          : readingVerseEnd;
+      return p.verse >= readingVerseStart && p.verse <= end;
+    }
+    if (focusLocusId && p.locusId === focusLocusId) return true;
+    return !focusLocusId && readingVerseStart == null && !readingVerses?.length;
   }
 
   function scheduleDrag(x: number) {
@@ -231,18 +243,43 @@ export function BibleScreen({
     });
   }
 
+  function paneWidth() {
+    return paneRef.current?.clientWidth || chapterRef.current?.clientWidth || 360;
+  }
+
   function clampDrag(dx: number) {
     if (dx > 0 && !prev) return Math.min(dx * 0.15, 10);
     if (dx < 0 && !next) return Math.max(dx * 0.15, -10);
+    const width = paneWidth();
     const sign = Math.sign(dx) || 1;
-    return sign * Math.min(Math.abs(dx), MAX_DRAG);
+    return sign * Math.min(Math.abs(dx), width);
+  }
+
+  function textShift(dx: number) {
+    return Math.max(-TEXT_SHIFT_MAX, Math.min(TEXT_SHIFT_MAX, dx * 0.4));
+  }
+
+  function turnTo(dir: "next" | "prev") {
+    const target = dir === "next" ? next : prev;
+    if (!target || turning.current) return;
+    turning.current = true;
+    pendingSection.current = target.sectionId;
+    setCoverId(target.sectionId);
+    const width = paneWidth();
+    setMotion("glide");
+    scheduleDrag(dir === "next" ? -width : width);
+    window.setTimeout(() => {
+      onSectionChange(target.sectionId, target.chapterTitle);
+    }, TURN_MS);
   }
 
   function onEdgePointerDown(e: ReactPointerEvent, side: "left" | "right") {
+    if (turning.current) return;
     if (e.pointerType === "mouse" && e.button !== 0) return;
     if (side === "left" && !prev) return;
     if (side === "right" && !next) return;
     tracking.current = true;
+    setMotion("drag");
     startX.current = e.clientX;
     (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId);
   }
@@ -256,19 +293,20 @@ export function BibleScreen({
     tracking.current = false;
     const dx = dragXRef.current;
     if (dx <= -COMMIT && next) {
-      onSectionChange(next.sectionId, next.chapterTitle);
+      turnTo("next");
       return;
     }
     if (dx >= COMMIT && prev) {
-      onSectionChange(prev.sectionId, prev.chapterTitle);
+      turnTo("prev");
       return;
     }
+    setMotion("glide");
     dragXRef.current = 0;
     setDragX(0);
   }
 
   function onChapterPointerDown(e: ReactPointerEvent) {
-    if (e.pointerType === "mouse") return;
+    if (turning.current || e.pointerType === "mouse") return;
     gestureRef.current = { x: e.clientX, y: e.clientY, axis: null, id: e.pointerId };
   }
 
@@ -281,6 +319,7 @@ export function BibleScreen({
       if (Math.abs(dx) < 14 && Math.abs(dy) < 14) return;
       g.axis = Math.abs(dx) > Math.abs(dy) * 1.15 ? "x" : "y";
       if (g.axis === "y") return;
+      setMotion("drag");
       (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId);
     }
     if (g.axis === "x") scheduleDrag(clampDrag(dx));
@@ -294,12 +333,19 @@ export function BibleScreen({
     finishDrag();
   }
 
-  const peekOpacity = Math.min(1, Math.abs(dragX) / COMMIT);
-  const showPrevPeek = dragX > 8 && prev;
-  const showNextPeek = dragX < -8 && next;
+  const width = paneWidth();
+  const dragged = dragX < -8 ? next : dragX > 8 ? prev : null;
+  const incoming =
+    (coverId ? chapters.find((item) => item.sectionId === coverId) ?? null : null) ?? dragged;
+  const incomingPercent = !incoming
+    ? 0
+    : dragX < 0
+      ? Math.max(0, 100 + (dragX / width) * 100)
+      : Math.min(0, -100 + (dragX / width) * 100);
+  const slideTransition = motion === "glide" ? `transform ${TURN_MS}ms ease` : "none";
 
   return (
-    <div className="relative h-full min-h-0 overflow-hidden bg-bg">
+    <div ref={paneRef} className="relative h-full min-h-0 overflow-hidden bg-bg">
       <header className="absolute inset-x-0 top-0 z-20 flex items-center justify-center px-3 py-2">
         <button
           type="button"
@@ -311,26 +357,22 @@ export function BibleScreen({
         </button>
       </header>
 
-      {showPrevPeek && (
+      {incoming ? (
         <div
-          className="pointer-events-none absolute inset-y-0 left-0 z-10 flex w-14 items-center justify-center"
-          style={{ opacity: peekOpacity }}
+          className="pane-scroll pointer-events-none absolute inset-0 z-[5] overflow-hidden bg-bg px-5 pb-28 pt-14"
+          style={{
+            transform: `translateX(${incomingPercent}%)`,
+            transition: slideTransition,
+            ["--reader-size" as string]: `${textSize}rem`,
+          }}
         >
-          <span className="rounded-pill border border-border bg-bg-elevated/95 px-2 py-3 text-xs font-semibold writing-vertical">
-            {shortChapterLabel(prev.chapterTitle)}
-          </span>
+          <ChapterPreview
+            bookTitle={incoming.bookTitle}
+            chapterTitle={incoming.chapterTitle}
+            paragraphs={neighbors[incoming.sectionId] ?? []}
+          />
         </div>
-      )}
-      {showNextPeek && (
-        <div
-          className="pointer-events-none absolute inset-y-0 right-0 z-10 flex w-14 items-center justify-center"
-          style={{ opacity: peekOpacity }}
-        >
-          <span className="rounded-pill border border-border bg-bg-elevated/95 px-2 py-3 text-xs font-semibold writing-vertical">
-            {shortChapterLabel(next.chapterTitle)}
-          </span>
-        </div>
-      )}
+      ) : null}
 
       <div
         className="absolute inset-y-0 left-0 z-20"
@@ -355,6 +397,8 @@ export function BibleScreen({
         style={{
           ["--reader-size" as string]: `${textSize}rem`,
           WebkitOverflowScrolling: "touch",
+          transform: `translateX(${textShift(dragX)}px)`,
+          transition: slideTransition,
         }}
         onPointerDown={onChapterPointerDown}
         onPointerMove={onChapterPointerMove}
@@ -432,6 +476,28 @@ export function BibleScreen({
             })}
           </article>
         )}
+        {!loading && !error ? (
+          <div className="mx-auto mt-14 flex max-w-xl items-center justify-between gap-3 pb-2">
+            <button
+              type="button"
+              disabled={!prev}
+              onClick={() => turnTo("prev")}
+              className="inline-flex items-center gap-1 rounded-full border border-border bg-surface px-3 py-2 text-sm font-semibold disabled:opacity-30"
+            >
+              <ChevronLeft className="h-4 w-4" />
+              {prev ? shortChapterLabel(prev.chapterTitle) : "Previous"}
+            </button>
+            <button
+              type="button"
+              disabled={!next}
+              onClick={() => turnTo("next")}
+              className="inline-flex items-center gap-1 rounded-full border border-border bg-surface px-3 py-2 text-sm font-semibold disabled:opacity-30"
+            >
+              {next ? shortChapterLabel(next.chapterTitle) : "Next"}
+              <ChevronRight className="h-4 w-4" />
+            </button>
+          </div>
+        ) : null}
       </div>
 
       {selectedIds.size > 0 && (
@@ -491,6 +557,48 @@ export function BibleScreen({
 
 function shortChapterLabel(title: string) {
   return title.replace(/^(Psalms?|Genesis|Exodus|Matthew|John|Romans|Revelation)\s+/i, "");
+}
+
+function ChapterPreview({
+  bookTitle,
+  chapterTitle,
+  paragraphs,
+}: {
+  bookTitle: string;
+  chapterTitle: string;
+  paragraphs: Paragraph[];
+}) {
+  const runs = groupBibleRuns(paragraphs);
+  return (
+    <>
+      <p className="mb-2 text-center text-xs font-semibold uppercase tracking-[0.16em] text-muted">
+        {bookTitle}
+      </p>
+      <p className="mb-5 text-center font-display text-lg font-semibold">{chapterTitle}</p>
+      <article className="reader-prose mx-auto max-w-xl">
+        {runs.slice(0, 8).map((run) => {
+          if (run.type === "heading") {
+            return (
+              <h3 key={run.paragraph.id} className="mb-3 mt-6 font-display text-lg font-semibold first:mt-0">
+                {run.paragraph.text}
+              </h3>
+            );
+          }
+          return (
+            <p key={run.verses[0]?.id} className="bible-para">
+              {run.verses.map((p, i) => (
+                <span key={p.id}>
+                  <span className="verse-num">{toSuperscriptDigits(p.verse ?? p.label)}</span>
+                  {p.text}
+                  {i < run.verses.length - 1 ? " " : null}
+                </span>
+              ))}
+            </p>
+          );
+        })}
+      </article>
+    </>
+  );
 }
 
 function BookPicker({

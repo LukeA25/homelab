@@ -13,18 +13,18 @@ from ..bible.resolver import default_bible_id, resolve
 from ..catalog import load_prayers
 from ..db import session_dependency
 from ..lectionary import get_readings
-from ..schemas import PrayerOut, ReadingRefOut, ReadingsOut
+from ..schemas import PrayerOut, ReadingChapterOut, ReadingRefOut, ReadingsOut
 
 router = APIRouter(tags=["prayers"])
 
 
 def _reading_nav(
     session: Session, reference: str
-) -> tuple[Optional[str], Optional[str], Optional[int], Optional[int], list[int]]:
-    """Return (sectionId, focusLocusId, verseStart, verseEnd, verses) for a lectionary reference."""
+) -> tuple[Optional[str], Optional[str], Optional[int], Optional[int], list[int], list[ReadingChapterOut]]:
+    """Return the first chapter plus every chapter the reference covers."""
     work_id = default_bible_id(session)
     if not work_id:
-        return None, None, None, None, []
+        return None, None, None, None, [], []
     passages = resolve(session, reference, work_id)
     for passage in passages:
         if not passage.ok or not passage.book or not passage.verses:
@@ -37,19 +37,34 @@ def _reading_nav(
             continue
         _testament, _order, abbrev = meta
         abbrev_key = abbrev.replace(" ", "")
-        first = passage.verses[0]
-        last = passage.verses[-1]
-        section_id = f"{work_id}/{abbrev_key}/{first.chapter}"
-        # Only verses in the first chapter of this passage (reader opens one section).
-        verse_nums = sorted(
-            {
-                v.verse
-                for v in passage.verses
-                if v.chapter == first.chapter and isinstance(v.verse, int)
-            }
+        by_chapter: dict[int, list] = {}
+        for verse in passage.verses:
+            by_chapter.setdefault(verse.chapter, []).append(verse)
+        chapters: list[ReadingChapterOut] = []
+        for chapter in sorted(by_chapter):
+            verses = by_chapter[chapter]
+            nums = sorted({v.verse for v in verses if isinstance(v.verse, int)})
+            chapters.append(
+                ReadingChapterOut(
+                    sectionId=f"{work_id}/{abbrev_key}/{chapter}",
+                    verseStart=nums[0] if nums else None,
+                    verseEnd=nums[-1] if nums else None,
+                    verses=nums,
+                    focusLocusId=verses[0].locus_id,
+                )
+            )
+        if not chapters:
+            continue
+        first = chapters[0]
+        return (
+            first.sectionId,
+            first.focusLocusId,
+            first.verseStart,
+            first.verseEnd,
+            first.verses,
+            chapters,
         )
-        return section_id, first.locus_id, first.verse, last.verse if last.chapter == first.chapter else (verse_nums[-1] if verse_nums else first.verse), verse_nums
-    return None, None, None, None, []
+    return None, None, None, None, [], []
 
 
 @router.get("/prayers", response_model=list[PrayerOut])
@@ -95,7 +110,7 @@ def readings_for_date(
     normalized = get_readings(target, refresh=refresh)
     items: list[ReadingRefOut] = []
     for r in normalized.readings:
-        section_id, focus, v_start, v_end, verses = _reading_nav(session, r.reference)
+        section_id, focus, v_start, v_end, verses, chapters = _reading_nav(session, r.reference)
         items.append(
             ReadingRefOut(
                 type=r.type,
@@ -106,6 +121,7 @@ def readings_for_date(
                 verseStart=v_start,
                 verseEnd=v_end,
                 verses=verses,
+                chapters=chapters,
             )
         )
     return ReadingsOut(

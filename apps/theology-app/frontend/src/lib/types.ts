@@ -6,6 +6,15 @@ export type NoteSection = "personal" | "apologetics";
 
 export type TabKind = "prayers" | "bible" | "library" | "ask" | "notes" | "reader" | "bible-year";
 
+/** Chapters that belong to one opened reference, in reading order. */
+export type ReadingChapterFocus = {
+  sectionId: string;
+  verseStart?: number | null;
+  verseEnd?: number | null;
+  verses?: number[] | null;
+  focusLocusId?: string | null;
+};
+
 export type WorkspaceTab = {
   id: string;
   kind: TabKind;
@@ -20,6 +29,8 @@ export type WorkspaceTab = {
   readingVerseStart?: number | null;
   readingVerseEnd?: number | null;
   readingVerses?: number[] | null;
+  /** Full passage, including later chapters, so the highlight can follow a swipe. */
+  readingChapters?: ReadingChapterFocus[] | null;
   /** One-shot scroll/highlight when opening reader from bookmark */
   readerFocusLocusId?: string | null;
   readerFocusNonce?: number;
@@ -229,6 +240,7 @@ export type ReadingsDay = {
     verseStart?: number | null;
     verseEnd?: number | null;
     verses?: number[];
+    chapters?: ReadingChapterFocus[];
   }>;
 };
 

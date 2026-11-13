@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef } from "react";
 import { Check, Pause, Play } from "lucide-react";
-import type { BibleYearDay, BibleYearLink } from "../lib/api";
+import type { BibleYearDay, BibleYearLink, BibleYearReading } from "../lib/api";
+import type { ReadingChapterFocus } from "../lib/types";
 import {
   loadBibleYear,
   playDay,
@@ -25,6 +26,7 @@ type BibleYearScreenProps = {
       readingVerseStart?: number | null;
       readingVerseEnd?: number | null;
       readingVerses?: number[] | null;
+      readingChapters?: ReadingChapterFocus[] | null;
     },
   ) => void;
 };
@@ -169,11 +171,19 @@ export function BibleYearScreen({ day, onDayChange, onOpenBibleSection }: BibleY
     else last.days.push(item);
   }
 
-  function openLink(link: BibleYearLink) {
+  function openLink(link: BibleYearLink, reading: BibleYearReading) {
     if (!link.sectionId) return;
+    const readingChapters = reading.links
+      .filter((item) => item.sectionId)
+      .map((item) => ({
+        sectionId: item.sectionId as string,
+        verseStart: item.verseStart,
+        verseEnd: item.verseEnd,
+      }));
     onOpenBibleSection(link.sectionId, link.label, {
       readingVerseStart: link.verseStart,
       readingVerseEnd: link.verseEnd,
+      readingChapters,
     });
   }
 
@@ -229,7 +239,7 @@ export function BibleYearScreen({ day, onDayChange, onOpenBibleSection }: BibleY
                       key={`${link.sectionId}-${link.label}`}
                       type="button"
                       disabled={!link.sectionId}
-                      onClick={() => openLink(link)}
+                      onClick={() => openLink(link, reading)}
                       className="rounded-full border border-border bg-bg px-3 py-1.5 text-sm font-semibold text-accent disabled:opacity-40"
                     >
                       {link.label}
