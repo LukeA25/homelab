@@ -16,7 +16,8 @@ export function createBoard(network, onVisibilityChange) {
     current = spec;
     board.hidden = spec.kind === 'clear';
     document.getElementById('recap-card').hidden = true;
-    document.getElementById('save-lesson').hidden = true;
+    const save = document.getElementById('save-lesson');
+    if (save) save.hidden = true;
     document.getElementById('clear').hidden = false;
     document.body.classList.toggle('with-visual', !board.hidden);
     onVisibilityChange?.(!board.hidden);

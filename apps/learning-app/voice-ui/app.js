@@ -6,9 +6,9 @@ import {createBoard} from './board.js';
 const params = new URLSearchParams(location.search);
 const mode = params.get('mode') || (params.get('session') ? 'lesson' : '');
 const lessonId = params.get('session');
-const ideaId = params.get('idea');
+const focus = params.get('focus') || '';
 const seed = params.get('seed') || '';
-const modeTitle = {lesson:'Your lesson', capture:'Capture an idea', interview:'Talk through my ideas', plan:'Plan a learning path'};
+const modeTitle = {lesson:'Your lesson', plan:'Plan a learning path'};
 if (modeTitle[mode]) document.getElementById('mode-label').textContent = modeTitle[mode];
 let heldTranscript = '';
 const turns = [];
@@ -78,27 +78,55 @@ function shareContext() {
   if (connection.engine==='live') send({type:'session.thinking.append',delegation_id:null,content:text.slice(0,1700)});
   else send({type:'conversation.item.create',item:{type:'message',role:'user',content:[{type:'input_text',text}]}});
 }
+function explain(body) {
+  const detail = body?.detail;
+  if (typeof detail === 'string') return detail;
+  if (Array.isArray(detail)) return detail.map(item => item?.msg || String(item)).join(' ');
+  return 'Could not save';
+}
+async function postJson(path, payload) {
+  const response = await fetch(path, {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(payload)});
+  const body = await response.json().catch(() => ({}));
+  if (!response.ok) return {error: explain(body)};
+  return body;
+}
 async function execute(call) {
   try {
     const args=JSON.parse(call.arguments);
-    if (call.name==='propose_recap') {
-      window.parent.postMessage({type:'grove-recap',recap:{topics:args.topics,questions:args.questions||[]}},location.origin);
-      return {status:'proposed',message:'Awaiting learner review and explicit save'};
-    }
     if (call.name==='remember_preference') {
-      const response = await fetch('/api/preferences', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({text:args.text})});
-      const body = await response.json();
-      if (!response.ok) return {error: body.detail || 'Could not save that preference'};
+      const body = await postJson('/api/preferences', {text:args.text});
+      if (body.error) return body;
       window.parent.postMessage({type:'grove-preference', preference:body}, location.origin);
       return {status:'saved', text:body.text};
     }
-    if (call.name==='propose_ideas') {
-      window.parent.postMessage({type:'grove-ideas',ideas:args.ideas},location.origin);
-      return {status:'proposed',message:'Awaiting learner review before saving'};
+    if (call.name==='search_knowledge') {
+      const params = new URLSearchParams();
+      if (args.query) params.set('q', args.query);
+      if (args.subject) params.set('subject', args.subject);
+      const response = await fetch('/api/knowledge?' + params.toString());
+      const body = await response.json().catch(() => ({}));
+      if (!response.ok) return {error: explain(body)};
+      return body;
     }
-    if (call.name==='propose_path') {
-      window.parent.postMessage({type:'grove-path',draft:args},location.origin);
-      return {status:'proposed',message:'Awaiting learner review before creating the path'};
+    if (call.name==='update_path') {
+      if (!lessonId) return {error:'Open a lesson before changing a path'};
+      const body = await postJson(`/api/sessions/${lessonId}/path`, args);
+      if (body.error) return body;
+      window.parent.postMessage({type:'grove-updated'}, location.origin);
+      return {status:'saved', concepts:(body.concepts||[]).map(item => ({id:item.id, title:item.title, knowledge_id:item.knowledge_id, objectives:item.objectives}))};
+    }
+    if (call.name==='close_session') {
+      if (!lessonId) return {error:'Open a lesson before ending it'};
+      const body = await postJson(`/api/sessions/${lessonId}/close`, args);
+      if (body.error) return body;
+      window.parent.postMessage({type:'grove-session-closed', tree:body.tree}, location.origin);
+      return {status:'saved', hangup:true, message:'Notes saved.'};
+    }
+    if (call.name==='create_path') {
+      const body = await postJson('/api/trees', args);
+      if (body.error) return body;
+      window.parent.postMessage({type:'grove-path-created', tree:body}, location.origin);
+      return {status:'saved', hangup:true, message:'Path saved.', tree_id:body.id, concepts:(body.concepts||[]).map(item => ({id:item.id, title:item.title, knowledge_id:item.knowledge_id}))};
     }
     if (call.name==='show_visual') return board.show(args);
     if (call.name==='update_visual') return network.apply(args);
@@ -115,10 +143,11 @@ function ready(call) {
   call.ready=true;
   clearTimeout(call.connectTimer);
   $('mute').disabled=false;$('mute').hidden=false;$('start').hidden=false;$('start').disabled=false;$('start').textContent='Pause';
+  $('wrap').hidden=false;$('wrap').textContent=mode==='plan'?'Create path':'Wrap up';
   runClock();
   status('Connected.');
   shareContext();
-  const opener={lesson:'Begin the selected learning session from its saved context. Ask one question at a time.',capture:'Help the learner capture one idea. Ask one question at a time. If they say they are done, call propose_ideas immediately with one draft.',interview:'Interview the learner about interests, one question at a time. If they say they are done, call propose_ideas immediately and split distinct interests.',plan:'Help the learner plan a finite learning path, one question at a time. If they say they are done, call propose_path immediately.'}[mode] || 'Ask one question at a time.';
+  const opener={lesson:'Begin the selected learning session from its saved context. Ask one question at a time.',plan:'Help the learner plan a finite learning path, one question at a time. If they say they are done, call create_path immediately.'}[mode] || 'Ask one question at a time.';
   if (call.engine==='live') send({type:'session.commentary.append',delegation_id:null,content:opener});
   else send({type:'response.create'});
 }
@@ -142,8 +171,10 @@ async function onEvent(call, envelope) {
     if (event.type==='response.output_item.done' && event.item?.type==='function_call') {
       if (call.handled.has(event.item.call_id)) return;
       call.handled.add(event.item.call_id);
-      send({type:'response.item.create',item:{type:'function_call_output',call_id:event.item.call_id,output:JSON.stringify(await execute(event.item))}});
-      if (!['propose_recap','propose_ideas','propose_path'].includes(event.item.name)) send({type:'response.create'});
+      const result = await execute(event.item);
+      send({type:'response.item.create',item:{type:'function_call_output',call_id:event.item.call_id,output:JSON.stringify(result)}});
+      if (result.hangup) {end(result.message || 'Saved.'); return;}
+      send({type:'response.create'});
     }
     if (event.type==='response.failed') status('Visual request failed. Try asking again.');
   }
@@ -152,9 +183,11 @@ async function onEvent(call, envelope) {
     for (const item of calls) {
       if (call.handled.has(item.call_id)) continue;
       call.handled.add(item.call_id);
-      send({type:'conversation.item.create',item:{type:'function_call_output',call_id:item.call_id,output:JSON.stringify(await execute(item))}});
+      const result = await execute(item);
+      send({type:'conversation.item.create',item:{type:'function_call_output',call_id:item.call_id,output:JSON.stringify(result)}});
+      if (result.hangup) {end(result.message || 'Saved.'); return;}
     }
-    if (calls.length && calls.every(item=>!['propose_recap','propose_ideas','propose_path'].includes(item.name))) send({type:'response.create'});
+    if (calls.length) send({type:'response.create'});
     if (envelope.response?.status==='failed') status(envelope.response.status_details?.error?.message || 'Response failed. Try again.');
   }
 }
@@ -166,7 +199,7 @@ function cleanup(call, message, keepTime=false) {
   call.channel?.close();call.peer?.close();orb.stop();
   $('audio').pause();$('audio').srcObject=null;
   if (keepTime) freezeClock(); else resetClock();
-  $('start').disabled=false;$('mute').disabled=true;$('mute').classList.remove('muted');$('mute').setAttribute('aria-pressed','false');
+  $('start').disabled=false;$('mute').disabled=true;$('wrap').hidden=true;$('mute').classList.remove('muted');$('mute').setAttribute('aria-pressed','false');
   $('engine').disabled=false;voicePicker.disabled=false;
   $('start').textContent=heldTranscript?'Resume':'Start conversation';
   status(message);
@@ -205,58 +238,6 @@ function hangUp(call, kind) {
   call.channel?.close();
   finish(call, kind==='pausing'?'Paused.':'', true);
 }
-function showBoardCard(title, articles) {
-  const card=$('recap-card');
-  $('board').hidden=false;
-  document.body.classList.add('with-visual');
-  $('board-title').textContent=title;
-  $('clear').hidden=true;
-  $('board-caption').textContent='';
-  card.hidden=false;
-  card.replaceChildren();
-  for (const item of articles) {
-    const article=document.createElement('article');
-    const heading=document.createElement('h3'); heading.textContent=item.title||'Draft';
-    article.append(heading);
-    if (item.state) {const state=document.createElement('p'); state.className='recap-state'; state.textContent=String(item.state).replaceAll('-',' '); article.append(state);}
-    for (const line of item.lines||[]) {const paragraph=document.createElement('p'); paragraph.textContent=line; article.append(paragraph);}
-    card.append(article);
-  }
-  const button=$('save-lesson');
-  button.hidden=false;
-  button.disabled=false;
-  button.textContent='Save and close';
-  if (connection) hangUp(connection, 'recapHangup');
-}
-function saveKind() {
-  return mode==='plan' ? 'grove-path-accept' : mode==='capture' || mode==='interview' ? 'grove-ideas-accept' : 'grove-accept';
-}
-function sendSave() {
-  const button=$('save-lesson');
-  if (button.hidden || button.disabled) return;
-  button.disabled=true;
-  button.textContent='Saving…';
-  window.parent.postMessage({type:saveKind()}, location.origin);
-  clearTimeout(sendSave.timer);
-  sendSave.timer=setTimeout(()=>{
-    if (button.hidden || button.textContent!=='Saving…') return;
-    button.disabled=false;
-    button.textContent='Save and close';
-    status('Save error: the app did not receive this. Press Save and close again.');
-  }, 4000);
-}
-function showRecap(topics) {
-  showBoardCard('Lesson recap', topics.map(topic => ({title: topic.title || 'Concept', state: topic.state, lines: [topic.summary || '', topic.evidence ? `Evidence: ${topic.evidence}` : ''].filter(Boolean)})));
-}
-function showIdeas(ideas) {
-  showBoardCard('Ideas', ideas.map(idea=>({title:idea.title||'Idea', lines:[idea.idea, idea.why&&`Why it interests you: ${idea.why}`, idea.direction&&`Direction: ${idea.direction}`, idea.starting_point&&`Starting point: ${idea.starting_point}`, idea.suggestion&&`Suggestion: ${idea.suggestion}`].filter(Boolean)})));
-}
-function showPath(draft) {
-  const outcomes=(draft.outcomes||[]).filter(Boolean);
-  const concepts=(draft.concepts||[]).filter(Boolean);
-  showBoardCard('Learning path', [{title:draft.title||'Learning path', lines:[draft.goal, draft.category, outcomes.length&&`Outcomes: ${outcomes.join('; ')}`, concepts.length&&`Concepts: ${concepts.join(' → ')}`, draft.excludes&&`Outside this path: ${draft.excludes}`].filter(Boolean)}]);
-}
-document.addEventListener('click', event => { if (event.target instanceof Element && event.target.closest('#save-lesson')) sendSave(); }, true);
 $('start').onclick=async()=>{
   if (connection?.ready && !connection.closing) {hangUp(connection, 'pausing');return;}
   if (connection) return;
@@ -288,7 +269,7 @@ $('start').onclick=async()=>{
     channel.onclose=()=>finish(call, call.engine==='live'?'Connection closed. Final session usage unconfirmed.':'Connection closed.', !call.closing);
     const offer=await peer.createOffer();await peer.setLocalDescription(offer);
     status('Connecting…');
-    const response=await fetch('/api/voice/start',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({sdp:offer.sdp,mode,session_id:lessonId,idea_id:ideaId,resume:heldTranscript||seed||undefined}),signal:call.abort.signal});
+    const response=await fetch('/api/voice/start',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({sdp:offer.sdp,mode,session_id:lessonId,focus:focus||undefined,resume:heldTranscript||seed||undefined}),signal:call.abort.signal});
     if (!response.ok) {const body=await response.json();throw Error(body.detail || body.error || 'Connection failed');}
     call.engine=response.headers.get('x-grove-engine')||'live';
     const answer=call.engine==='live'?(await response.json()).transport?.sdp:await response.text();
@@ -463,28 +444,21 @@ function enableVisualZoom() {
   viewport.addEventListener('pointercancel', release);
 }
 enableVisualZoom();
-function requestRecap() {
+function requestWrap() {
   if(!connection?.ready){status('Start a conversation before finishing.');return;}
-  const text={
-    lesson:'The learner clicked Finish and review. Call propose_recap now. Each topic needs concept_id, summary, evidence, confidence, and state for a concept you actually covered. Do not only say that you will make a recap. Do not claim it is saved.',
-    capture:'The learner is ready to review. Call propose_ideas with exactly one draft. Do not claim it is saved.',
-    interview:'The learner is ready to review. Call propose_ideas and split distinct interests into separate drafts. Do not claim they are saved.',
-    plan:'The learner is ready to review. Call propose_path with the editable path draft. Do not claim the path was created.',
-  }[mode] || 'The learner is ready to review the draft.';
+  const text=mode==='plan'
+    ? 'The learner is done planning. Call create_path now with the full path, including objectives and teaching notes for every concept.'
+    : 'The learner is done. Call close_session now with honest notes for each concept you covered, plus any path edits that are not saved yet. understood needs evidence.';
   if(connection.engine==='live')send({type:'session.commentary.append',delegation_id:null,content:text});
   else {send({type:'conversation.item.create',item:{type:'message',role:'user',content:[{type:'input_text',text}]}});send({type:'response.create'});}
 }
+$('wrap').onclick=requestWrap;
 window.addEventListener('message',event=>{
   if(event.origin!==location.origin||event.source!==window.parent)return;
-  if(event.data?.type==='grove-saved'){clearTimeout(sendSave.timer);$('save-lesson').hidden=true;}
-  if(event.data?.type==='grove-save-error'){clearTimeout(sendSave.timer);$('save-lesson').disabled=false;$('save-lesson').textContent='Save and close';status(`Save error: ${event.data.detail||'Try again.'}`);}
-  if(event.data?.type==='grove-recap-show')showRecap(event.data.topics||[]);
-  if(event.data?.type==='grove-ideas-show')showIdeas(event.data.ideas||[]);
-  if(event.data?.type==='grove-path-show')showPath(event.data.draft||{});
-  if(event.data?.type==='grove-recap-request')requestRecap();
+  if(event.data?.type==='grove-recap-request')requestWrap();
   if(event.data?.type==='grove-recap-error'){
-    status(`Recap needs correction: ${event.data.detail}`);
-    const text=`The draft failed validation: ${event.data.detail}. Correct it and propose it again.`;
+    status(`Save needs correction: ${event.data.detail}`);
+    const text=`The save failed validation: ${event.data.detail}. Correct it and call the tool again.`;
     if(connection?.engine==='live')send({type:'session.commentary.append',delegation_id:null,content:text});
     else if(connection?.ready){send({type:'conversation.item.create',item:{type:'message',role:'user',content:[{type:'input_text',text}]}});send({type:'response.create'});}
   }

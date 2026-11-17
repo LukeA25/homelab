@@ -7,12 +7,12 @@ import {nextConcept} from '@/model';
 import {useGrove} from '@/app/useGrove';
 
 const suggestions = [
-  {name: 'Statistics for machine learning', why: 'A bridge from probability to the models you want to understand.', concepts: 'Random variables\nExpectation\nStatistical estimation'},
-  {name: 'Networking behind your homelab', why: 'Make sense of DNS, reverse proxies, and the routes your requests take.', concepts: 'DNS\nReverse proxies\nPrivate networking'},
+  {name: 'Statistics for machine learning', why: 'A bridge from probability to the models you want to understand.'},
+  {name: 'Networking behind your homelab', why: 'Make sense of DNS, reverse proxies, and the routes your requests take.'},
 ];
 
 export function TodayPage() {
-  const {current, active, accepted, busy, openTree, startLesson, setPage, setDraft, draft} = useGrove();
+  const {current, active, accepted, busy, openTree, startLesson, setPage, openVoice} = useGrove();
   const next = current ? nextConcept(current) : undefined;
   return (
     <motion.div initial={{opacity: 0, y: 8}} animate={{opacity: 1, y: 0}} transition={{duration: 0.25}}>
@@ -36,7 +36,7 @@ export function TodayPage() {
       <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">{active.map(tree => <PathCard key={tree.id} tree={tree} />)}</div>
       <div className="mb-4 mt-10"><h2 className="flex items-center justify-between font-display text-xl">Suggested paths <Sparkles size={18} /></h2><p className="text-sm text-muted-foreground">Examples, not an assessment of what you know.</p></div>
       <div className="grid gap-4 md:grid-cols-2">{suggestions.map((item, index) => (
-        <button key={item.name} type="button" className="flex items-center gap-4 rounded-xl border border-[#e6e8df] bg-[#f0f1e9] p-5 text-left" onClick={() => {setDraft({...draft, title: item.name, goal: item.why, concepts: item.concepts}); setPage('Explore');}}>
+        <button key={item.name} type="button" className="flex items-center gap-4 rounded-xl border border-[#e6e8df] bg-[#f0f1e9] p-5 text-left" onClick={() => openVoice('plan', {focus: `${item.name}. ${item.why}`})}>
           <span className={`grid h-10 w-10 place-items-center rounded-lg ${index ? 'bg-[#e9e4d7] text-[#a3916b]' : 'bg-[#e4e8d8] text-[#82906c]'}`}>{index ? <Compass size={18} /> : <BookOpen size={18} />}</span>
           <span><span className="font-display text-sm font-semibold">{item.name}</span><span className="mt-1 block text-xs text-muted-foreground">{item.why}</span></span>
           <ArrowUpRight className="ml-auto shrink-0 text-[#8b987d]" size={18} />

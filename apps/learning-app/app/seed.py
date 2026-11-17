@@ -1,5 +1,5 @@
-def concept(id, title, x, y, requires=None, state='unexplored', summary=''):
-    return dict(id=id, title=title, x=x, y=y, requires=requires or [], state=state, summary=summary, confidence='Not assessed', evidence='', notes='')
+def concept(id, title, x, y, requires=None, state='unexplored', summary='', objectives=None, teaching_notes='', knowledge_id=''):
+    return dict(id=id, title=title, x=x, y=y, requires=requires or [], state=state, summary=summary, confidence='Not assessed', evidence='', notes='', objectives=objectives or [], teaching_notes=teaching_notes, knowledge_id=knowledge_id)
 
 
 def seed():
