@@ -67,9 +67,13 @@ def get_next_session(tree_id=None):
         if pending is None:
             pending = api("POST", f"/api/trees/{quote(tree['id'], safe='')}/sessions",
                           {"concept_id": concept["id"]})
+        knowledge = next((item for item in workspace.get("knowledge", []) if item["id"] == concept.get("knowledge_id")), None)
         return {
             "path": {key: tree[key] for key in ("id", "title", "goal", "depth", "excludes", "outcomes")},
             "concept": concept,
+            "objectives": concept.get("objectives", []),
+            "teaching_notes": concept.get("teaching_notes", ""),
+            "knowledge": knowledge,
             "prerequisites": prerequisites(tree, concept),
             "session_id": pending["id"],
             "prompt": pending["prompt"],
@@ -93,5 +97,7 @@ def get_concept(tree_id, concept_id):
         if topics or session["concept_id"] == concept_id:
             history.append({"session_id": session["id"], "created_at": session["created_at"],
                             "topics": topics, "questions": recap.get("questions", [])})
-    return {"tree_id": tree_id, "concept": concept, "prerequisites": prerequisites(tree, concept),
-            "accepted_sessions": history}
+    knowledge = next((item for item in workspace.get("knowledge", []) if item["id"] == concept.get("knowledge_id")), None)
+    return {"tree_id": tree_id, "concept": concept, "objectives": concept.get("objectives", []),
+            "teaching_notes": concept.get("teaching_notes", ""), "knowledge": knowledge,
+            "prerequisites": prerequisites(tree, concept), "accepted_sessions": history}

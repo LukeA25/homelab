@@ -3,6 +3,7 @@ import json
 import tempfile
 import unittest
 from pathlib import Path
+from urllib.parse import urlsplit
 from app import main
 
 class LearningAPI(unittest.IsolatedAsyncioTestCase):
@@ -17,10 +18,11 @@ class LearningAPI(unittest.IsolatedAsyncioTestCase):
 
     async def request(self,method,path,body=None):
         payload=json.dumps(body).encode() if body is not None else b''
+        parsed=urlsplit(path)
         output=[]
         async def receive(): return {'type':'http.request','body':payload,'more_body':False}
         async def send(message): output.append(message)
-        await main.app({'type':'http','asgi':{'version':'3.0'},'http_version':'1.1','method':method,'scheme':'http','path':path,'raw_path':path.encode(),'query_string':b'','headers':[(b'content-type',b'application/json')],'server':('test',80),'client':('test',1),'root_path':''},receive,send)
+        await main.app({'type':'http','asgi':{'version':'3.0'},'http_version':'1.1','method':method,'scheme':'http','path':parsed.path,'raw_path':parsed.path.encode(),'query_string':parsed.query.encode(),'headers':[(b'content-type',b'application/json')],'server':('test',80),'client':('test',1),'root_path':''},receive,send)
         status=next(m['status'] for m in output if m['type']=='http.response.start')
         raw=b''.join(m.get('body',b'') for m in output if m['type']=='http.response.body')
         return status,json.loads(raw) if raw else None
@@ -116,5 +118,47 @@ class LearningAPI(unittest.IsolatedAsyncioTestCase):
     async def test_missing_path_and_concept(self):
         self.assertEqual((await self.request('POST','/api/trees/missing/sessions',{'concept_id':'models'}))[0],404)
         self.assertEqual((await self.request('POST','/api/trees/ml/sessions',{'concept_id':'invented'}))[0],422)
+
+    def rich(self, title, objectives, requires=None, knowledge_id=None):
+        item={'title':title,'objectives':objectives,'teaching_notes':f'Teach {title} from what the learner can already say.','requires':requires or []}
+        if knowledge_id: item['knowledge_id']=knowledge_id
+        return item
+
+    async def test_close_session_reuses_knowledge_across_trees(self):
+        concept=self.rich('Act & potency', ['Distinguish act from potency'])
+        code, first=await self.request('POST','/api/trees', dict(title='Thomism', category='Theology / Thomism', goal='Discuss act and potency', depth='Conversational fluency', excludes='', outcomes=['Explain act and potency'], concepts=[concept]))
+        self.assertEqual(code, 200)
+        knowledge_id=first['concepts'][0]['knowledge_id']
+        self.assertTrue(knowledge_id)
+        code, second=await self.request('POST','/api/trees', dict(title='Grace', category='Theology / Thomism', goal='Discuss grace', depth='Conversational fluency', excludes='', outcomes=['Explain grace'], concepts=[self.rich('Potency again', ['Use potency in a new setting'], knowledge_id=knowledge_id)]))
+        self.assertEqual(second['concepts'][0]['knowledge_id'], knowledge_id)
+        code, session=await self.request('POST', f"/api/trees/{second['id']}/sessions", {'concept_id': second['concepts'][0]['id']})
+        self.assertIn('Act & potency', session['prompt'])
+        saved={'topics':[{'concept_id':second['concepts'][0]['id'],'summary':'Potency is the capacity to become.','evidence':'Explained potency with an example.','confidence':'Comfortable','state':'understood'}]}
+        self.assertEqual((await self.request('POST', f"/api/sessions/{session['id']}/close", saved))[0], 200)
+        data=(await self.request('GET','/api/workspace'))[1]
+        shared=next(item for item in data['knowledge'] if item['id']==knowledge_id)
+        self.assertEqual(shared['state'], 'understood')
+        self.assertEqual(shared['notes'], saved['topics'][0]['summary'])
+        for tree in data['trees']:
+            if tree['id'] in (first['id'], second['id']):
+                self.assertEqual(tree['concepts'][0]['notes'], saved['topics'][0]['summary'])
+        self.assertEqual((await self.request('POST', f"/api/sessions/{session['id']}/close", saved))[0], 409)
+        code, found=await self.request('GET','/api/knowledge?q=potency&subject=thomism')
+        self.assertEqual(code, 200)
+        self.assertEqual(found['matches'][0]['id'], knowledge_id)
+
+    async def test_update_path_changes_objectives_and_rejects_other_trees(self):
+        code, session=await self.request('POST','/api/trees/ml/sessions',{'concept_id':'models'})
+        self.assertEqual(code, 200)
+        code, updated=await self.request('POST', f"/api/sessions/{session['id']}/path", {'concepts':[{'id':'models','objectives':['Explain what a model learns','Separate training from prediction']}]})
+        self.assertEqual(code, 200)
+        self.assertEqual(updated['concepts'][0]['objectives'], ['Explain what a model learns','Separate training from prediction'])
+        graphs=(await self.request('GET','/api/workspace'))[1]['trees'][1]
+        self.assertEqual((await self.request('POST', f"/api/sessions/{session['id']}/path", {'concepts':[{'id':graphs['concepts'][0]['id'],'title':'Stolen'}]}))[0], 422)
+        self.assertEqual((await self.request('POST','/api/trees', {'title':'Broken','category':'Theology','goal':'Explain act','depth':'Conversational fluency','excludes':'','outcomes':['Explain act'],'concepts':[self.rich('Act', ['Explain act'], knowledge_id='missing')]}))[0], 422)
+        code, found=await self.request('GET','/api/knowledge?q=model&subject=computer%20science')
+        self.assertEqual(code, 200)
+        self.assertTrue(any(item['title']=='Data & models' for item in found['matches']))
 
 if __name__=='__main__': unittest.main()

@@ -19,9 +19,12 @@ class VoiceTests(unittest.IsolatedAsyncioTestCase):
         self.assertNotIn('15 minutes',payload['instructions'])
         self.assertEqual(payload['audio']['output']['voice'],'cedar')
         names=[t['name'] for t in payload['delegation']['responses']['tools']]
-        self.assertIn('propose_recap', names)
+        self.assertIn('close_session', names)
+        self.assertIn('update_path', names)
+        self.assertIn('search_knowledge', names)
+        self.assertNotIn('propose_recap', names)
         self.assertIn('remember_preference', names)
-        recap=next(t for t in payload['delegation']['responses']['tools'] if t['name']=='propose_recap')
+        recap=next(t for t in payload['delegation']['responses']['tools'] if t['name']=='close_session')
         self.assertNotIn('session_id', recap['parameters'].get('required', []))
         self.assertNotIn('Hand-picked', payload['instructions'])
         self.assertEqual(response.status_code,200)
@@ -31,7 +34,8 @@ class VoiceTests(unittest.IsolatedAsyncioTestCase):
             await voice.negotiate(self.request({'engine':'realtime','sdp':'v=0'}),{'prompt':'lesson xyz'})
         options=json.loads(post.call_args.args[2]['session'])
         self.assertIn('lesson xyz', options['instructions'])
-        self.assertIn('propose_recap',[t['name'] for t in options['tools']])
+        self.assertIn('close_session',[t['name'] for t in options['tools']])
+        self.assertNotIn('propose_recap',[t['name'] for t in options['tools']])
 
     async def test_resume_context_is_included(self):
         with patch.dict('os.environ', {'OPENAI_API_KEY':'test-only'}), patch.object(voice,'post_json', return_value=b'{"transport":{"sdp":"answer"}}') as post:
@@ -45,6 +49,16 @@ class VoiceTests(unittest.IsolatedAsyncioTestCase):
                     await voice.negotiate(self.request(body,origin),{'prompt':'lesson'})
                 self.assertEqual(error.exception.status_code,code)
             post.assert_not_called()
+
+    def test_plan_instructions_do_not_ask_for_a_draft_review(self):
+        config=json.loads((voice.ROOT/'config.json').read_text())
+        instructions, tools, opener=voice.conversation(config, {'mode':'plan','prompt':'Plan a new learning path and call create_path.'}, {})
+        names=[item['name'] for item in tools]
+        self.assertIn('create_path', names)
+        self.assertNotIn('propose_path', names)
+        self.assertNotIn('draft', instructions.lower())
+        self.assertNotIn('review', instructions.lower())
+        self.assertNotIn('draft', opener.lower())
 
     def test_only_public_assets_served(self):
         for path in ['../app/main.py','config.json','server.mjs']:
