@@ -54,7 +54,7 @@
 # Dashboard (+ control/tv) behind assistant.home.arpa — reuses the cert
 # that already works in browsers where homepage.home.arpa HTTPS hangs.
 (assistant_host) {
-	@dash_pages path /control /control/* /tv /tv/* /__cast/*
+	@dash_pages path /control /control/* /tv /tv/* /__cast/* /brand/nova-*
 	handle @dash_pages {
 		reverse_proxy 100.101.135.109:8004
 	}
@@ -65,7 +65,7 @@
 	}
 
 	# Vite hashed bundles; assistant static is app.js / style.css
-	@dash_assets path_regexp dash_assets ^/assets/(index|night)-
+	@dash_assets path_regexp dash_assets ^/assets/(index|night|orbitron-latin|chakra-petch-latin|ibm-plex-mono-latin|barlow-latin)-
 	handle @dash_assets {
 		reverse_proxy 100.101.135.109:8004
 	}

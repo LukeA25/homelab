@@ -1,0 +1,409 @@
+@import "@fontsource/orbitron/latin-700.css";
+@import "@fontsource/chakra-petch/latin-600.css";
+@import "@fontsource/barlow/latin-400.css";
+@import "@fontsource/barlow/latin-600.css";
+@import "@fontsource/ibm-plex-mono/latin-400.css";
+
+.tv-page.nova-tv {
+  background: #07100e;
+  color: #deebe1;
+}
+.nova-wall {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 1920px;
+  height: 1080px;
+  font:
+    26px/1.2 Barlow,
+    sans-serif;
+  background:
+    url("/brand/nova-circuits.svg") center/cover,
+    linear-gradient(117deg, #10251f, #081310 70%, #07100e);
+}
+.nova-wall header,
+.nova-wall footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+}
+.nova-wall small,
+.nova-wall label {
+  font:
+    19px/1.32 "IBM Plex Mono",
+    monospace;
+  color: #acbdaf;
+}
+.nova-wall label {
+  display: block;
+  font-size: 17px;
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
+}
+.nova-header {
+  position: absolute;
+  inset: 12px 60px auto;
+  height: 110px;
+  border-bottom: 1px solid #44624e;
+}
+.nova-brand {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  font:
+    700 54px Orbitron,
+    sans-serif;
+  letter-spacing: 3.6px;
+}
+.nova-brand img {
+  width: 76px;
+  height: 76px;
+  transform: translateY(3px);
+}
+.nova-clock {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  text-align: center;
+}
+.nova-clock strong {
+  font:
+    50px "IBM Plex Mono",
+    monospace;
+}
+.nova-clock small,
+.nova-weather aside {
+  color: #ffd285;
+}
+.nova-face {
+  background-color: #152b22;
+  background-image: linear-gradient(115deg,#203b31,#10221d 82%);
+  isolation:isolate;
+  border: 1.5px solid #51725d;
+  clip-path: polygon(
+    16px 0,
+    100% 0,
+    100% calc(100% - 16px),
+    calc(100% - 16px) 100%,
+    0 100%,
+    0 16px
+  );
+}
+.nova-weather {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  width: 500px;
+  height: 98px;
+  padding: 12px 22px;
+}
+.nova-weather .weather-symbol {
+  width: 70px;
+  height: 62px;
+  color: #a6ecaf;
+}
+.nova-weather b {
+  font-size: 38px;
+}
+.nova-weather span {
+  text-transform: capitalize;
+  font-size: 22px;
+}
+.nova-weather aside {
+  margin-left: auto;
+  border-left: 2px solid #739878;
+  padding-left: 14px;
+  white-space: nowrap;
+  font-size: 19px;
+  line-height: 1.7;
+}
+.nova-panel {
+  position: absolute;
+  height: 340px;
+  top: 676px;
+  width: 584px;
+  padding: 26px 30px;
+  overflow: hidden;
+}
+.nova-panel > header {
+  height: 56px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid #496753;
+}
+.nova-panel h2 {
+  font:
+    600 33px "Chakra Petch",
+    sans-serif;
+}
+.nova-panel > p {
+  margin-top: 30px;
+  color: #b4c7b7;
+}
+.nova-panel.finance,
+.nova-panel.homework {
+  top: 148px;
+  height: 504px;
+}
+.nova-panel.finance,
+.nova-panel.saint {
+  left: 60px;
+}
+.nova-panel.finance {
+  width: 1005px;
+}
+.nova-panel.homework {
+  left: 1089px;
+  width: 771px;
+}
+.nova-panel.lights {
+  left: 668px;
+}
+.nova-panel.homelab {
+  left: 1276px;
+}
+.nova-wall strong,
+.nova-wall meter {
+  color: #a2f0ac;
+}
+.nova-clock strong {
+  color: inherit;
+}
+.nova-wall .budget {
+  display: grid;
+  grid-template-columns: 40% 1fr;
+  gap: 36px;
+  margin-top: 22px;
+  align-items: center;
+}
+.nova-wall .overall {
+  text-align: center;
+  border-right: 1px solid #47634e;
+  padding-right: 28px;
+}
+.nova-wall .overall > b {
+  font-size: 38px;
+}
+.nova-wall .dial {
+  position: relative;
+  height: 294px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+}
+.nova-wall .dial svg {
+  position: absolute;
+  height: 100%;
+  overflow: visible;
+}
+.nova-wall .dial circle {
+  fill: none;
+  stroke: #304d3d;
+  stroke-width: 3.7;
+  transform: rotate(133deg);
+  transform-origin: center;
+}
+.nova-wall .dial circle.used {
+  stroke: #a2f0ac;
+}
+.nova-wall .dial strong {
+  font-size: 66px;
+}
+.nova-wall .tracks {
+  display: grid;
+  gap: 27px;
+}
+.nova-wall .tracks > div + div {
+  padding-top: 22px;
+  border-top: 1px solid #45624f;
+}
+.nova-wall .tracks header b,
+.nova-wall .assignment b,
+.nova-wall .celebration b {
+  font-size: 31px;
+}
+.nova-wall meter {
+  display: block;
+  width: 100%;
+  height: 14px;
+  margin: 12px 0;
+  background: #324b3c;
+  appearance: none;
+  border: 0;
+}
+.nova-wall meter::-webkit-meter-bar {
+  background: #324b3c;
+  border: 0;
+  border-radius: 0;
+  height: 100%;
+}
+.nova-wall meter::-webkit-meter-optimum-value {
+  background: #a2efac;
+}
+.nova-wall .tracks meter::-webkit-meter-optimum-value {
+  background: repeating-linear-gradient(
+    90deg,
+    #a2efac 0 19px,
+    #233e30 19px 22px
+  );
+}
+.nova-wall .assignments {
+  position: relative;
+  height: 422px;
+}
+.nova-wall .assignments::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 117px;
+  width: 2px;
+  background: #648a70;
+}
+.nova-wall .assignment {
+  --signal: #a6eab0;
+  --glow: #9be3ac28;
+  display: grid;
+  align-items: center;
+  grid-template-columns: 104px 40px 1fr;
+  height: 100px;
+  background: radial-gradient(
+    ellipse 110px 43px at 118px 50%,
+    var(--glow),
+    transparent
+  );
+}
+.nova-wall .assignment + .assignment {
+  border-top: 1px solid #405a49;
+}
+.nova-wall .assignment.late {
+  --signal: #ff8583;
+  --glow: #ff796f50;
+}
+.nova-wall .assignment.today {
+  --signal: #ffdc7c;
+  --glow: #ffd16648;
+}
+.nova-wall .assignment i {
+  width: 11px;
+  height: 11px;
+  margin-left: 9px;
+  transform: rotate(45deg);
+  background: var(--signal);
+}
+.nova-wall .assignment b {
+  display: block;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.nova-wall .assignment > div {
+  min-width: 0;
+}
+.nova-wall .assignment.late b,
+.nova-wall .assignment.today b,
+.nova-wall .assignment small {
+  color: var(--signal);
+}
+.nova-wall .assignment p {
+  color: #b3c6b8;
+  font-size: 22px;
+}
+.nova-wall .celebration {
+  height: 220px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  text-align: center;
+  gap: 22px;
+}
+.nova-wall .celebration svg {
+  color: #ffc072;
+  display: inline-block;
+  width: 49px;
+  height: 49px;
+  margin-right: 16px;
+  vertical-align: middle;
+}
+.nova-wall .celebration blockquote {
+  font-size: 25px;
+  line-height: 1.15;
+  overflow: auto;
+}
+.nova-wall .rooms {
+  display: flex;
+  height: 142px;
+  margin-top: 52px;
+  border: 3px double #79a084;
+}
+.nova-wall .room {
+  display: grid;
+  place-items: center;
+  flex: 1;
+  min-width: 0;
+  border-right: 2px solid #61866d;
+}
+.nova-wall .room span {
+  border: 1px solid #75947c;
+  padding: 10px 16px;
+  font:
+    21px "IBM Plex Mono",
+    monospace;
+}
+.nova-wall .metrics {
+  display: flex;
+  margin: 30px 0;
+}
+.nova-wall .metrics > div {
+  flex: 1;
+  min-width: 0;
+  text-align: center;
+  padding: 0 12px;
+}
+.nova-wall .metrics > div + div {
+  border-left: 1px solid #45634e;
+}
+.nova-wall .metrics strong {
+  display: block;
+  font:
+    52px "IBM Plex Mono",
+    monospace;
+}
+.nova-wall .homelab footer {
+  border-top: 1px solid #48644e;
+  padding-top: 18px;
+}
+.nova-wall .homelab footer small {
+  font-size: 17px;
+}
+
+/* The perimeter ink follows the two cut corners, above the phosphor surface. */
+.nova-face::after {
+  content:""; position:absolute; inset:-1px; pointer-events:none;
+  background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='48' height='44'%3E%3Cpath d='M1 42V16L16 1H46' fill='none' stroke='%239fe8ae' stroke-width='3'/%3E%3C/svg%3E") top left no-repeat,
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='48' height='44'%3E%3Cpath d='M47 2V28L32 43H2' fill='none' stroke='%239fe8ae' stroke-width='3'/%3E%3C/svg%3E") bottom right no-repeat;
+}
+.nova-face::before {
+  content:""; position:absolute; inset:0; z-index:-1; pointer-events:none;
+  background:radial-gradient(circle,#a0cfa9 1px,transparent 1.25px) 0 0/12px 12px,
+    radial-gradient(circle,#a0cfa9 .8px,transparent 1px) 6px 6px/12px 12px;
+  opacity:.31;
+  -webkit-mask-image:linear-gradient(115deg,#0002,#0004 34%,#000 73%,#0006);
+  mask-image:linear-gradient(115deg,#0002,#0004 34%,#000 73%,#0006);
+}
+.nova-weather { position:relative; }
+.weather-reading { display:flex; align-items:center; gap:10px; }
+.nova-weather aside { display:flex; flex-direction:column; justify-content:space-between; height:62px; position:relative; }
+.nova-weather aside span { font:20px Barlow,sans-serif; }
+.nova-weather aside span:last-child { color:#a2edae; }
+.nova-weather aside::before,.nova-weather aside::after { content:""; position:absolute; left:-6px; width:10px; height:2px; background:#e8bb74; top:0; }
+.nova-weather aside::after { top:auto; bottom:0; background:#a2edae; }
+.nova-wall .rooms.floorplan { position:relative; height:125px; border:0; margin-top:59px; padding:5px; }
+.floorplan svg { position:absolute; inset:0; width:100%; height:100%; pointer-events:none; }
+.nova-wall .floorplan .room { border:0; margin-top:14px; }
+.nova-wall .floorplan .room.bedroom { flex:0 0 42.5%; order:-1; margin-top:0; }
+.nova-wall .room span { position:relative; background:#16271fee; }
+.nova-wall .pace-key { display:block; margin-top:8px; font-size:16px; }
+.pace-key::before { content:""; display:inline-block; vertical-align:middle; width:14px; height:2px; background:#ffc369; margin-right:10px; }
+.nova-wall .track-percent { float:right; font-size:26px; color:#a2f0ac; }

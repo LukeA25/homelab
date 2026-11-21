@@ -13,3 +13,8 @@ apps/internships-app/
 compose/internships-app/
 compose/caddy/private/*
 !compose/caddy/private/00-keep.caddy
+
+.DS_Store
+/generated_images/exec-*.png
+/apps/dashboard/frontend/node_modules/
+/apps/dashboard/frontend/dist/
