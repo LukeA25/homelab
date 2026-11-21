@@ -6,9 +6,9 @@ import {createBoard} from './board.js';
 const params = new URLSearchParams(location.search);
 const mode = params.get('mode') || (params.get('session') ? 'lesson' : '');
 const lessonId = params.get('session');
-const ideaId = params.get('idea');
+const treeId = params.get('tree') || '';
 const seed = params.get('seed') || '';
-const modeTitle = {lesson:'Your lesson', capture:'Capture an idea', interview:'Talk through my ideas', plan:'Plan a learning path'};
+const modeTitle = {lesson:'Your lesson', plan:'Plan a learning path'};
 if (modeTitle[mode]) document.getElementById('mode-label').textContent = modeTitle[mode];
 let heldTranscript = '';
 const turns = [];
@@ -78,27 +78,54 @@ function shareContext() {
   if (connection.engine==='live') send({type:'session.thinking.append',delegation_id:null,content:text.slice(0,1700)});
   else send({type:'conversation.item.create',item:{type:'message',role:'user',content:[{type:'input_text',text}]}});
 }
+function detail(body) {
+  if (!body) return 'Request failed';
+  if (typeof body.detail === 'string') return body.detail;
+  if (Array.isArray(body.detail)) return body.detail.map(item => item && item.msg ? item.msg : String(item)).join(' ');
+  return 'Request failed';
+}
+const SAVED = new Set(['close_session', 'create_path']);
 async function execute(call) {
   try {
-    const args=JSON.parse(call.arguments);
-    if (call.name==='propose_recap') {
-      window.parent.postMessage({type:'grove-recap',recap:{topics:args.topics,questions:args.questions||[]}},location.origin);
-      return {status:'proposed',message:'Awaiting learner review and explicit save'};
+    const args=JSON.parse(call.arguments || '{}');
+    if (call.name==='search_knowledge') {
+      const query = new URLSearchParams();
+      if (args.query) query.set('q', args.query);
+      if (args.subject) query.set('subject', args.subject);
+      const response = await fetch('/api/knowledge?' + query);
+      const body = await response.json();
+      if (!response.ok) return {error: detail(body)};
+      return body;
     }
     if (call.name==='remember_preference') {
       const response = await fetch('/api/preferences', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({text:args.text})});
       const body = await response.json();
-      if (!response.ok) return {error: body.detail || 'Could not save that preference'};
+      if (!response.ok) return {error: detail(body)};
       window.parent.postMessage({type:'grove-preference', preference:body}, location.origin);
       return {status:'saved', text:body.text};
     }
-    if (call.name==='propose_ideas') {
-      window.parent.postMessage({type:'grove-ideas',ideas:args.ideas},location.origin);
-      return {status:'proposed',message:'Awaiting learner review before saving'};
+    if (call.name==='create_path') {
+      const response = await fetch('/api/trees', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(args)});
+      const body = await response.json();
+      if (!response.ok) return {error: detail(body)};
+      window.parent.postMessage({type:'grove-path-created', tree:body}, location.origin);
+      return {status:'created', id:body.id, title:body.title};
     }
-    if (call.name==='propose_path') {
-      window.parent.postMessage({type:'grove-path',draft:args},location.origin);
-      return {status:'proposed',message:'Awaiting learner review before creating the path'};
+    if (call.name==='update_path') {
+      if (!treeId) return {error:'This lesson is not attached to a path'};
+      const response = await fetch(`/api/trees/${treeId}`, {method:'PATCH', headers:{'Content-Type':'application/json'}, body:JSON.stringify(args)});
+      const body = await response.json();
+      if (!response.ok) return {error: detail(body)};
+      window.parent.postMessage({type:'grove-refresh'}, location.origin);
+      return {status:'updated', id:body.id, concepts:(body.concepts || []).map(concept => ({id:concept.id, title:concept.title, knowledge_id:concept.knowledge_id, objectives:concept.objectives}))};
+    }
+    if (call.name==='close_session') {
+      if (!lessonId) return {error:'Open the lesson again before saving'};
+      const response = await fetch(`/api/sessions/${lessonId}/close`, {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(args)});
+      const body = await response.json();
+      if (!response.ok) return {error: detail(body)};
+      window.parent.postMessage({type:'grove-closed', tree:body.tree}, location.origin);
+      return {status:'saved'};
     }
     if (call.name==='show_visual') return board.show(args);
     if (call.name==='update_visual') return network.apply(args);
@@ -114,11 +141,11 @@ function ready(call) {
   if (connection!==call || call.ready || call.closing) return;
   call.ready=true;
   clearTimeout(call.connectTimer);
-  $('mute').disabled=false;$('mute').hidden=false;$('start').hidden=false;$('start').disabled=false;$('start').textContent='Pause';
+  $('mute').disabled=false;$('mute').hidden=false;$('start').hidden=false;$('start').disabled=false;$('start').textContent='Pause';$('finish').hidden=false;
   runClock();
   status('Connected.');
   shareContext();
-  const opener={lesson:'Begin the selected learning session from its saved context. Ask one question at a time.',capture:'Help the learner capture one idea. Ask one question at a time. If they say they are done, call propose_ideas immediately with one draft.',interview:'Interview the learner about interests, one question at a time. If they say they are done, call propose_ideas immediately and split distinct interests.',plan:'Help the learner plan a finite learning path, one question at a time. If they say they are done, call propose_path immediately.'}[mode] || 'Ask one question at a time.';
+  const opener={lesson:'Begin the selected learning session from its saved context. Ask one question at a time.',plan:'Help the learner plan a finite learning path, one question at a time. When they are done, call create_path.'}[mode] || 'Ask one question at a time.';
   if (call.engine==='live') send({type:'session.commentary.append',delegation_id:null,content:opener});
   else send({type:'response.create'});
 }
@@ -142,19 +169,25 @@ async function onEvent(call, envelope) {
     if (event.type==='response.output_item.done' && event.item?.type==='function_call') {
       if (call.handled.has(event.item.call_id)) return;
       call.handled.add(event.item.call_id);
-      send({type:'response.item.create',item:{type:'function_call_output',call_id:event.item.call_id,output:JSON.stringify(await execute(event.item))}});
-      if (!['propose_recap','propose_ideas','propose_path'].includes(event.item.name)) send({type:'response.create'});
+      const result = await execute(event.item);
+      send({type:'response.item.create',item:{type:'function_call_output',call_id:event.item.call_id,output:JSON.stringify(result)}});
+      if (SAVED.has(event.item.name) && !result.error) {end(event.item.name==='create_path' ? 'Path saved.' : 'Notes saved.');return;}
+      send({type:'response.create'});
     }
     if (event.type==='response.failed') status('Visual request failed. Try asking again.');
   }
   if (call.engine!=='live' && envelope.type==='response.done') {
     const calls=envelope.response?.output?.filter(item=>item.type==='function_call') || [];
+    let saved = '';
     for (const item of calls) {
       if (call.handled.has(item.call_id)) continue;
       call.handled.add(item.call_id);
-      send({type:'conversation.item.create',item:{type:'function_call_output',call_id:item.call_id,output:JSON.stringify(await execute(item))}});
+      const result = await execute(item);
+      send({type:'conversation.item.create',item:{type:'function_call_output',call_id:item.call_id,output:JSON.stringify(result)}});
+      if (SAVED.has(item.name) && !result.error) saved = item.name;
     }
-    if (calls.length && calls.every(item=>!['propose_recap','propose_ideas','propose_path'].includes(item.name))) send({type:'response.create'});
+    if (saved) {end(saved==='create_path' ? 'Path saved.' : 'Notes saved.');return;}
+    if (calls.length) send({type:'response.create'});
     if (envelope.response?.status==='failed') status(envelope.response.status_details?.error?.message || 'Response failed. Try again.');
   }
 }
@@ -166,7 +199,7 @@ function cleanup(call, message, keepTime=false) {
   call.channel?.close();call.peer?.close();orb.stop();
   $('audio').pause();$('audio').srcObject=null;
   if (keepTime) freezeClock(); else resetClock();
-  $('start').disabled=false;$('mute').disabled=true;$('mute').classList.remove('muted');$('mute').setAttribute('aria-pressed','false');
+  $('start').disabled=false;$('finish').hidden=true;$('mute').disabled=true;$('mute').classList.remove('muted');$('mute').setAttribute('aria-pressed','false');
   $('engine').disabled=false;voicePicker.disabled=false;
   $('start').textContent=heldTranscript?'Resume':'Start conversation';
   status(message);
@@ -222,10 +255,7 @@ function showBoardCard(title, articles) {
     for (const line of item.lines||[]) {const paragraph=document.createElement('p'); paragraph.textContent=line; article.append(paragraph);}
     card.append(article);
   }
-  const button=$('save-lesson');
-  button.hidden=false;
-  button.disabled=false;
-  button.textContent='Save and close';
+  $('save-lesson').hidden=true;
   if (connection) hangUp(connection, 'recapHangup');
 }
 function saveKind() {
@@ -288,7 +318,7 @@ $('start').onclick=async()=>{
     channel.onclose=()=>finish(call, call.engine==='live'?'Connection closed. Final session usage unconfirmed.':'Connection closed.', !call.closing);
     const offer=await peer.createOffer();await peer.setLocalDescription(offer);
     status('Connecting…');
-    const response=await fetch('/api/voice/start',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({sdp:offer.sdp,mode,session_id:lessonId,idea_id:ideaId,resume:heldTranscript||seed||undefined}),signal:call.abort.signal});
+    const response=await fetch('/api/voice/start',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({sdp:offer.sdp,mode,session_id:lessonId,seed:seed||undefined,resume:heldTranscript||undefined}),signal:call.abort.signal});
     if (!response.ok) {const body=await response.json();throw Error(body.detail || body.error || 'Connection failed');}
     call.engine=response.headers.get('x-grove-engine')||'live';
     const answer=call.engine==='live'?(await response.json()).transport?.sdp:await response.text();
@@ -466,14 +496,13 @@ enableVisualZoom();
 function requestRecap() {
   if(!connection?.ready){status('Start a conversation before finishing.');return;}
   const text={
-    lesson:'The learner clicked Finish and review. Call propose_recap now. Each topic needs concept_id, summary, evidence, confidence, and state for a concept you actually covered. Do not only say that you will make a recap. Do not claim it is saved.',
-    capture:'The learner is ready to review. Call propose_ideas with exactly one draft. Do not claim it is saved.',
-    interview:'The learner is ready to review. Call propose_ideas and split distinct interests into separate drafts. Do not claim they are saved.',
-    plan:'The learner is ready to review. Call propose_path with the editable path draft. Do not claim the path was created.',
-  }[mode] || 'The learner is ready to review the draft.';
+    lesson:'The learner is done. Call close_session now with notes for concepts you actually covered. Each topic needs concept_id or knowledge_id, summary, evidence, confidence, and state. You may include a path update for this path. Do not ask them to save.',
+    plan:'The learner is done. Call create_path now. Every concept needs objectives. Reuse knowledge_id when a topic is already known.',
+  }[mode] || 'The learner is done.';
   if(connection.engine==='live')send({type:'session.commentary.append',delegation_id:null,content:text});
   else {send({type:'conversation.item.create',item:{type:'message',role:'user',content:[{type:'input_text',text}]}});send({type:'response.create'});}
 }
+$('finish').onclick = requestRecap;
 window.addEventListener('message',event=>{
   if(event.origin!==location.origin||event.source!==window.parent)return;
   if(event.data?.type==='grove-saved'){clearTimeout(sendSave.timer);$('save-lesson').hidden=true;}

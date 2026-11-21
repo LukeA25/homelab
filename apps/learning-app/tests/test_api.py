@@ -15,12 +15,12 @@ class LearningAPI(unittest.IsolatedAsyncioTestCase):
         main.DB=self.old_db
         self.tmp.cleanup()
 
-    async def request(self,method,path,body=None):
+    async def request(self,method,path,body=None,query=''):
         payload=json.dumps(body).encode() if body is not None else b''
         output=[]
         async def receive(): return {'type':'http.request','body':payload,'more_body':False}
         async def send(message): output.append(message)
-        await main.app({'type':'http','asgi':{'version':'3.0'},'http_version':'1.1','method':method,'scheme':'http','path':path,'raw_path':path.encode(),'query_string':b'','headers':[(b'content-type',b'application/json')],'server':('test',80),'client':('test',1),'root_path':''},receive,send)
+        await main.app({'type':'http','asgi':{'version':'3.0'},'http_version':'1.1','method':method,'scheme':'http','path':path,'raw_path':path.encode(),'query_string':query.encode(),'headers':[(b'content-type',b'application/json')],'server':('test',80),'client':('test',1),'root_path':''},receive,send)
         status=next(m['status'] for m in output if m['type']=='http.response.start')
         raw=b''.join(m.get('body',b'') for m in output if m['type']=='http.response.body')
         return status,json.loads(raw) if raw else None
@@ -74,15 +74,7 @@ class LearningAPI(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(code,200)
         self.assertEqual(saved['ideas'][0]['suggestion'],'')
         self.assertEqual((await self.request('POST','/api/ideas',{'text':'   '}))[0],422)
-        idea_id=saved['ideas'][0]['id']
-        code,stored=await self.request('POST','/api/drafts',{'title':'Names','category':'Networking','goal':'Explain resolution','depth':'Conversational fluency','outcomes':['Explain a lookup'],'concepts':['Names'],'idea_id':idea_id})
-        self.assertEqual(code,200)
-        self.assertEqual((await self.request('GET','/api/workspace'))[1]['drafts'][0]['id'],stored['id'])
-        code,tree=await self.request('POST','/api/trees',{'title':'Names','category':'Networking','goal':'Explain resolution','depth':'Conversational fluency','excludes':'','outcomes':['Explain a lookup'],'concepts':['Names'],'idea_id':idea_id})
-        self.assertEqual(code,200)
-        self.assertEqual(tree['idea_id'],idea_id)
-        self.assertEqual((await self.request('GET','/api/workspace'))[1]['drafts'],[])
-        self.assertEqual((await self.request('POST','/api/trees',{'title':'Names','category':'Networking','goal':'Explain resolution','depth':'Conversational fluency','excludes':'','outcomes':['Explain a lookup'],'concepts':['Names'],'idea_id':'missing'}))[0],422)
+        self.assertTrue(saved['ideas'][0]['id'])
 
     async def test_previous_notes_and_preferences_reach_the_next_lesson(self):
         body=await self.recap()
@@ -112,6 +104,39 @@ class LearningAPI(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(t['concepts'][1]['requires'],[t['concepts'][0]['id']])
         self.assertEqual((await self.request('PATCH','/api/trees/'+t['id'],{'status':'active'}))[0],200)
         self.assertEqual((await self.request('PATCH','/api/trees/'+t['id'],{'status':'nonsense'}))[0],422)
+
+    async def test_knowledge_is_reused_across_trees_and_close_saves_it(self):
+        concept={'title':'Act & potency','objectives':['Distinguish act from potency'],'teaching_notes':'Start from change the learner can point to.','requires':[]}
+        code,first=await self.request('POST','/api/trees',{'title':'Thomism','category':'Theology / Thomism','goal':'Discuss act and potency','depth':'Conversational fluency','excludes':'','outcomes':['Distinguish act from potency'],'concepts':[concept]})
+        self.assertEqual(code,200)
+        knowledge_id=first['concepts'][0]['knowledge_id']
+        code,second=await self.request('POST','/api/trees',{'title':'Grace','category':'Theology','goal':'Discuss grace','depth':'Conversational fluency','excludes':'','outcomes':['Explain grace'],'concepts':[{**concept,'title':'Act & potency'}]})
+        self.assertEqual(code,200)
+        self.assertEqual(second['concepts'][0]['knowledge_id'],knowledge_id)
+        code,session=await self.request('POST',f"/api/trees/{second['id']}/sessions",{'concept_id':second['concepts'][0]['id']})
+        self.assertEqual(code,200)
+        close={'topics':[{'concept_id':second['concepts'][0]['id'],'summary':'Act is what a thing is doing.','evidence':'Explained the distinction with an example.','confidence':'Comfortable','state':'understood'}],'questions':[]}
+        self.assertEqual((await self.request('POST',f"/api/sessions/{session['id']}/close",close))[0],200)
+        data=(await self.request('GET','/api/workspace'))[1]
+        shared=[node for tree in data['trees'] if tree['id'] in (first['id'],second['id']) for node in tree['concepts'] if node['title']=='Act & potency']
+        self.assertTrue(all(node['state']=='understood' and node['knowledge_id']==knowledge_id for node in shared))
+        record=next(item for item in data['knowledge'] if item['id']==knowledge_id)
+        self.assertEqual(record['state'],'understood')
+        self.assertIn('Act is what a thing is doing.', record['notes'])
+        self.assertEqual((await self.request('POST',f"/api/sessions/{session['id']}/close",close))[0],409)
+
+    async def test_path_edits_change_objectives_and_reject_foreign_nodes(self):
+        concept={'title':'Names','objectives':['Define a name'],'teaching_notes':'Use the homelab.','requires':[]}
+        code,path=await self.request('POST','/api/trees',{'title':'DNS','category':'Networking','goal':'Explain resolution','depth':'Conversational','excludes':'DNSSEC','outcomes':['Explain recursion'],'concepts':[concept]})
+        self.assertEqual(code,200)
+        code,other=await self.request('POST','/api/trees',{'title':'Other','category':'Networking','goal':'Something else','depth':'Conversational','excludes':'','outcomes':['Name it'],'concepts':[{**concept,'title':'Other'}]})
+        self.assertEqual(code,200)
+        updated=(await self.request('PATCH','/api/trees/'+path['id'],{'concepts':[{'id':path['concepts'][0]['id'],'objectives':['Explain how a lookup starts']}]}))[1]
+        self.assertEqual(updated['concepts'][0]['objectives'],['Explain how a lookup starts'])
+        self.assertEqual((await self.request('PATCH','/api/trees/'+path['id'],{'concepts':[{'id':other['concepts'][0]['id'],'title':'Stolen'}]}))[0],422)
+        self.assertEqual((await self.request('POST','/api/trees',{'title':'Broken','category':'Theology','goal':'Reuse a missing record','depth':'Conversational fluency','excludes':'','outcomes':['Explain it'],'concepts':[{**concept,'knowledge_id':'missing'}]}))[0],422)
+        found=(await self.request('GET','/api/knowledge',query='q=Names'))[1]['knowledge']
+        self.assertTrue(any(item['title']=='Names' for item in found))
 
     async def test_missing_path_and_concept(self):
         self.assertEqual((await self.request('POST','/api/trees/missing/sessions',{'concept_id':'models'}))[0],404)

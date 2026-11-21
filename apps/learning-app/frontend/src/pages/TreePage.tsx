@@ -12,13 +12,16 @@ import {useGrove} from '@/app/useGrove';
 const statuses = [['active', 'Active'], ['planned', 'Planned'], ['paused', 'Paused'], ['completed', 'Completed']] as const;
 
 export function TreePage() {
-  const {tree, concept, setConceptId, setTab, tab, setPage, run, refresh, accepted, startLesson, busy} = useGrove();
+  const {data, tree, concept, setConceptId, setTab, tab, setPage, run, refresh, accepted, startLesson, busy} = useGrove();
   if (!tree || !concept) return null;
+  const known = data?.knowledge?.find(item => item.id === concept.knowledge_id);
+  const state = known?.state || concept.state;
+  const elsewhere = (data?.trees || []).filter(item => item.id !== tree.id && item.concepts.some(node => node.knowledge_id && node.knowledge_id === concept.knowledge_id));
   const home = place(tree.category);
   const hue = subjectHue(home.group);
   const accent = `hsl(${hue} 42% 36%)`;
   const accentSoft = `hsl(${hue} 32% 91%)`;
-  const history = accepted.filter(session => session.tree_id === tree.id && session.recap?.topics.some(topic => topic.concept_id === concept.id));
+  const history = accepted.filter(session => session.recap?.topics.some(topic => topic.concept_id === concept.id || (!!concept.knowledge_id && topic.knowledge_id === concept.knowledge_id)));
   return (
     <div style={{'--accent': accent, '--accent-soft': accentSoft} as CSSProperties}>
       <Button variant="link" onClick={() => setPage('Learning paths')}><ChevronLeft size={16} /> All learning paths</Button>
@@ -45,15 +48,18 @@ export function TreePage() {
           </div>
         </Card>
         <Card className="flex flex-col p-6" style={{'--accent': accent} as CSSProperties}>
-          <Badge className="w-fit" style={{background: accentSoft, color: accent}}>{concept.state.replace('-', ' ')}</Badge>
-          {(concept.state === 'introduced' || concept.state === 'developing') && <p className="mt-3 text-sm text-muted-foreground">This concept is not counted as understood until evidence is saved.</p>}
+          <Badge className="w-fit" style={{background: accentSoft, color: accent}}>{state.replace('-', ' ')}</Badge>
+          {(state === 'introduced' || state === 'developing') && <p className="mt-3 text-sm text-muted-foreground">This concept is not counted as understood until evidence is saved.</p>}
           <h2 className="mt-4 font-display text-2xl">{concept.title}</h2>
-          <p className="mt-2 text-sm text-muted-foreground">{concept.summary || 'Explore this concept in a conversation and build your own explanation.'}</p>
+          <p className="mt-2 text-sm text-muted-foreground">{known?.summary || concept.summary || 'Explore this concept in a conversation and build your own explanation.'}</p>
+          {!!elsewhere.length && <p className="mt-2 text-xs text-muted-foreground">Also on {elsewhere.map(item => item.title).join(', ')}. Understanding is shared across those paths.</p>}
+          {!!concept.objectives?.length && <div className="mt-4"><h3 className="font-display text-sm">Objectives</h3>{concept.objectives.map(objective => <p key={objective} className="mt-1 text-sm text-muted-foreground">{objective}</p>)}</div>}
+          {!!concept.teaching_notes && <p className="mt-3 text-sm text-muted-foreground">{concept.teaching_notes}</p>}
           <Tabs value={tab} onValueChange={setTab} className="mt-4">
             <TabsList><TabsTrigger value="Notes">Notes</TabsTrigger><TabsTrigger value="Evidence">Evidence</TabsTrigger><TabsTrigger value="History">History</TabsTrigger></TabsList>
-            <TabsContent value="Notes"><h3 className="font-display text-sm">Your working notes</h3><p className="mt-2 whitespace-pre-wrap text-sm text-muted-foreground">{concept.notes || 'No accepted notes yet. After a conversation, review and save the tutor’s recap here.'}</p></TabsContent>
-            <TabsContent value="Evidence"><h3 className="font-display text-sm">Self-reported confidence</h3><p className="mt-2 text-sm">{concept.confidence}</p><h3 className="mt-4 font-display text-sm">Demonstrated understanding</h3><p className="mt-2 text-sm text-muted-foreground">{concept.evidence || 'Not assessed. Exposure alone is not evidence of understanding.'}</p></TabsContent>
-            <TabsContent value="History">{history.length ? history.map(session => <article key={session.id} className="mb-3"><p className="text-xs text-muted-foreground">{new Date(session.created_at).toLocaleDateString()}</p><p className="text-sm">{session.recap?.topics.find(topic => topic.concept_id === concept.id)?.summary}</p></article>) : <p className="text-sm text-muted-foreground">No saved sessions for this concept.</p>}</TabsContent>
+            <TabsContent value="Notes"><h3 className="font-display text-sm">Your working notes</h3><p className="mt-2 whitespace-pre-wrap text-sm text-muted-foreground">{known?.notes || 'No notes yet. They are saved when a conversation ends.'}</p></TabsContent>
+            <TabsContent value="Evidence"><h3 className="font-display text-sm">Self-reported confidence</h3><p className="mt-2 text-sm">{known?.confidence || concept.confidence}</p><h3 className="mt-4 font-display text-sm">Demonstrated understanding</h3><p className="mt-2 text-sm text-muted-foreground">{known?.evidence || 'Not assessed. Exposure alone is not evidence of understanding.'}</p></TabsContent>
+            <TabsContent value="History">{history.length ? history.map(session => <article key={session.id} className="mb-3"><p className="text-xs text-muted-foreground">{new Date(session.created_at).toLocaleDateString()}</p><p className="text-sm">{session.recap?.topics.find(topic => topic.concept_id === concept.id || topic.knowledge_id === concept.knowledge_id)?.summary}</p></article>) : <p className="text-sm text-muted-foreground">No saved sessions for this concept.</p>}</TabsContent>
           </Tabs>
           <div className="mt-auto pt-6">
             <Button className="w-full" style={{background: accent}} disabled={busy} onClick={() => startLesson(tree, concept)}>Learn this concept <ArrowRight size={16} /></Button>

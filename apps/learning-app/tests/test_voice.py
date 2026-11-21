@@ -19,9 +19,11 @@ class VoiceTests(unittest.IsolatedAsyncioTestCase):
         self.assertNotIn('15 minutes',payload['instructions'])
         self.assertEqual(payload['audio']['output']['voice'],'cedar')
         names=[t['name'] for t in payload['delegation']['responses']['tools']]
-        self.assertIn('propose_recap', names)
+        self.assertIn('close_session', names)
+        self.assertIn('update_path', names)
+        self.assertNotIn('propose_recap', names)
         self.assertIn('remember_preference', names)
-        recap=next(t for t in payload['delegation']['responses']['tools'] if t['name']=='propose_recap')
+        recap=next(t for t in payload['delegation']['responses']['tools'] if t['name']=='close_session')
         self.assertNotIn('session_id', recap['parameters'].get('required', []))
         self.assertNotIn('Hand-picked', payload['instructions'])
         self.assertEqual(response.status_code,200)
@@ -31,7 +33,7 @@ class VoiceTests(unittest.IsolatedAsyncioTestCase):
             await voice.negotiate(self.request({'engine':'realtime','sdp':'v=0'}),{'prompt':'lesson xyz'})
         options=json.loads(post.call_args.args[2]['session'])
         self.assertIn('lesson xyz', options['instructions'])
-        self.assertIn('propose_recap',[t['name'] for t in options['tools']])
+        self.assertIn('close_session',[t['name'] for t in options['tools']])
 
     async def test_resume_context_is_included(self):
         with patch.dict('os.environ', {'OPENAI_API_KEY':'test-only'}), patch.object(voice,'post_json', return_value=b'{"transport":{"sdp":"answer"}}') as post:
@@ -45,6 +47,16 @@ class VoiceTests(unittest.IsolatedAsyncioTestCase):
                     await voice.negotiate(self.request(body,origin),{'prompt':'lesson'})
                 self.assertEqual(error.exception.status_code,code)
             post.assert_not_called()
+
+    async def test_plan_creates_rather_than_reviewing_a_draft(self):
+        with patch.dict('os.environ', {'OPENAI_API_KEY':'test-only'}), patch.object(voice,'post_json', return_value=b'{"transport":{"sdp":"answer"}}') as post:
+            await voice.negotiate(self.request({'sdp':'v=0'}), {'prompt':'Plan a new learning path.','mode':'plan'})
+        instructions = post.call_args.args[2]['session']['instructions']
+        names = [t['name'] for t in post.call_args.args[2]['session']['delegation']['responses']['tools']]
+        self.assertIn('create_path', names)
+        self.assertIn('search_knowledge', names)
+        self.assertNotIn('propose_path', names)
+        self.assertNotIn('draft', instructions.lower())
 
     def test_only_public_assets_served(self):
         for path in ['../app/main.py','config.json','server.mjs']:

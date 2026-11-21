@@ -53,6 +53,17 @@ def prerequisites(tree, concept):
     return [c for c in tree["concepts"] if c["id"] in concept["requires"]]
 
 
+def knowledge_for(workspace, concept):
+    return next((item for item in workspace.get("knowledge") or [] if item.get("id") == concept.get("knowledge_id")), None)
+
+
+def present(concept):
+    shown = dict(concept)
+    shown.setdefault("objectives", [])
+    shown.setdefault("teaching_notes", "")
+    return shown
+
+
 def get_next_session(tree_id=None):
     with session_lock:
         workspace = api("GET", "/api/workspace")
@@ -67,10 +78,13 @@ def get_next_session(tree_id=None):
         if pending is None:
             pending = api("POST", f"/api/trees/{quote(tree['id'], safe='')}/sessions",
                           {"concept_id": concept["id"]})
+        prereqs = prerequisites(tree, concept)
         return {
             "path": {key: tree[key] for key in ("id", "title", "goal", "depth", "excludes", "outcomes")},
-            "concept": concept,
-            "prerequisites": prerequisites(tree, concept),
+            "concept": present(concept),
+            "knowledge": knowledge_for(workspace, concept),
+            "prerequisites": [present(item) for item in prereqs],
+            "prerequisite_knowledge": [knowledge_for(workspace, item) for item in prereqs],
             "session_id": pending["id"],
             "prompt": pending["prompt"],
         }
@@ -93,5 +107,8 @@ def get_concept(tree_id, concept_id):
         if topics or session["concept_id"] == concept_id:
             history.append({"session_id": session["id"], "created_at": session["created_at"],
                             "topics": topics, "questions": recap.get("questions", [])})
-    return {"tree_id": tree_id, "concept": concept, "prerequisites": prerequisites(tree, concept),
+    prereqs = prerequisites(tree, concept)
+    return {"tree_id": tree_id, "concept": present(concept), "knowledge": knowledge_for(workspace, concept),
+            "prerequisites": [present(item) for item in prereqs],
+            "prerequisite_knowledge": [knowledge_for(workspace, item) for item in prereqs],
             "accepted_sessions": history}

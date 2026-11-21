@@ -10,8 +10,7 @@ import urllib.error
 import uuid
 from fastapi import APIRouter, HTTPException, Request
 from fastapi.responses import FileResponse, HTMLResponse, Response
-from .proposals import IdeaBatch, PathDraft, PreferenceDraft
-from .recap import RecapDraft
+from .proposals import CloseSession, KnowledgeQuery, PathCreate, PreferenceDraft, TreePatch
 
 ROOT = Path(__file__).resolve().parent.parent / 'voice-ui'
 router = APIRouter()
@@ -39,9 +38,7 @@ def tool(name, description, model):
 
 OPENERS = {
     'lesson': 'Begin the selected lesson with one short question.',
-    'capture': 'Help the learner capture one idea. Ask one question at a time. If they say they are done, call propose_ideas immediately with one draft. Do not only say that you will save it.',
-    'interview': 'Ask one question at a time about the learner’s classes, projects, readings, and subjects they have been meaning to explore. If they say they are done, call propose_ideas immediately and split distinct interests. Do not only say that you will save them.',
-    'plan': 'Help the learner plan a finite path. Ask what they want to be able to do, what they already know, how deep to go, and what a reasonable finish line is. If they say they are done, call propose_path immediately. Do not only say that you will make a draft.',
+    'plan': 'Help the learner plan a finite path. Ask what they want to be able to do, what they already know, how deep to go, and what a reasonable finish line is. When they are done, call create_path. Reuse a knowledge_id when they already understand a topic.',
 }
 
 async def read_body(request: Request):
@@ -60,22 +57,27 @@ async def read_body(request: Request):
 
 def conversation(config, session, body):
     mode = session.get('mode', 'lesson')
+    if mode not in OPENERS:
+        raise HTTPException(422, 'Unknown voice conversation')
     instructions = config['teachingInstructions'] + '\n' + session['prompt']
     preference = tool('remember_preference', 'Save one preference the learner wants followed in every future conversation. Use their words.', PreferenceDraft)
+    lookup = tool('search_knowledge', 'Look up what the learner already understands. Use a knowledge id from the result when a topic is the same idea.', KnowledgeQuery)
     if mode == 'lesson':
-        instructions += '\nThis is a saved Learning Grove lesson. Teach this concept before anything else. Use a visual only when it makes this concept easier to see, and make the diagram about what you are saying. Use a neural diagram only when this concept is about a network: specify its layers, node labels, and only the weights you intend to show. Do not preview later concepts. Do not suggest stopping, wrapping up, or ending for the day. If the learner says they are done, finished, or ready to stop, call propose_recap immediately. Do not only say that you will make a recap. The app shows that draft for approval. Never claim it was saved.'
-        tools = config['visualTools'] + [tool('propose_recap', 'Submit lesson notes for review. Include only concepts actually covered. The app attaches the session. Does not save.', RecapDraft), preference]
-    elif mode == 'plan':
-        instructions += '\nAsk one question at a time. Do not suggest stopping. If the learner says they are done, finished, or ready to stop, call propose_path immediately with an editable draft. Do not only say that you will make a draft. Use the learner’s words for the goal, outcomes, and concepts. Put any scope you suggest only where it is clearly a suggestion. The app shows the draft for approval. Do not say a path was created.'
-        tools = [tool('propose_path', 'Propose an editable learning-path draft. Does not create the path.', PathDraft), preference]
+        instructions += '\nThis is a saved Learning Grove lesson. Teach this concept before anything else. Use a visual only when it makes this concept easier to see, and make the diagram about what you are saying. Use a neural diagram only when this concept is about a network: specify its layers, node labels, and only the weights you intend to show. Do not preview later concepts. Do not suggest stopping, wrapping up, or ending for the day. If the learner says they are done, finished, or ready to stop, call close_session immediately. It saves the notes and ends the conversation. Do not ask the learner to press save. Use update_path to change this path only. New nodes need objectives. Prefer an existing knowledge_id when the topic is already known.'
+        tools = config['visualTools'] + [
+            tool('close_session', 'Save lesson notes and an optional update to the current path, then end the conversation. Include only concepts actually covered.', CloseSession),
+            tool('update_path', 'Change the current path: its goal, outcomes, exclusions, or nodes. New nodes need objectives. Does not edit any other path.', TreePatch),
+            lookup,
+            preference,
+        ]
     else:
-        instructions += '\nAsk one question at a time. Do not suggest stopping. If the learner says they are done, finished, or ready to stop, call propose_ideas immediately' + (' with exactly one draft.' if mode == 'capture' else ' and split distinct interests into separate drafts.') + ' Do not only say that you will save it. Keep the learner’s words in idea, why, direction, and starting_point. Put a transcript excerpt in source. Put anything you inferred in suggestion, not in direction. The app shows the draft for approval. Do not say an idea was saved.'
-        tools = [tool('propose_ideas', 'Propose one or more idea drafts for review. Does not save.', IdeaBatch), preference]
+        instructions += '\nAsk one question at a time. Do not suggest stopping. If the learner says they are done, finished, or ready to stop, call create_path immediately. That creates the path. Use the learner’s words for the goal, outcomes, and concept titles. Every concept needs at least one objective and teaching notes that say how to teach it. requires may be titles of other concepts in this path or zero-based index strings. Reuse knowledge_id when search results or the known-understanding list match the topic. Do not ask the learner to save the path.'
+        tools = [tool('create_path', 'Create the learning path now. Reuse knowledge_id for topics the learner already understands.', PathCreate), lookup, preference]
     resume = body.get('resume')
     if resume is not None and not isinstance(resume, str):
         raise HTTPException(422, 'Invalid resume context')
     if isinstance(resume, str) and resume.strip():
-        instructions += '\nThe connection dropped. Continue in place with this unsaved transcript and draft:\n' + resume.strip()[:8000]
+        instructions += '\nThe connection dropped. Continue in place with this unsaved transcript:\n' + resume.strip()[:8000]
     return instructions, tools, OPENERS[mode]
 
 async def negotiate_body(body, session):
