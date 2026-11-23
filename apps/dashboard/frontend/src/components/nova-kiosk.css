@@ -1,0 +1,441 @@
+@import "@fontsource/barlow/latin-500.css";
+
+.control-kiosk {
+  --kiosk-ink: #e3eee6;
+  --kiosk-muted: #a3b8ac;
+  --kiosk-green: #a4efb0;
+  --kiosk-amber: #ffcb84;
+  --kiosk-line: #415d4c;
+  --kiosk-mono: "IBM Plex Mono", monospace;
+  position: relative;
+  min-height: 100dvh;
+  background: #0b1713;
+  color: var(--kiosk-ink);
+  font: 500 17px/1.2 Barlow, sans-serif;
+}
+
+.kiosk-layout {
+  position: relative;
+  isolation: isolate;
+  width: min(100%, 1024px);
+  margin: 0 auto;
+  padding: 32px 24px 44px;
+}
+
+.kiosk-backplane {
+  position: absolute;
+  z-index: -1;
+  top: 0;
+  left: 50%;
+  width: 1024px;
+  height: 768px;
+  transform: translateX(-50%);
+  overflow: hidden;
+  background: url("/brand/nova-kiosk/backplane.svg") center top no-repeat;
+  pointer-events: none;
+}
+
+.kiosk-circuit-motion {
+  display: block;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .kiosk-circuit-motion {
+    display: none;
+  }
+}
+
+.kiosk-header,
+.kiosk-voice-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  border-bottom: 1px solid var(--kiosk-line);
+}
+
+.kiosk-header {
+  height: 56px;
+  align-items: flex-start;
+  border-color: #48604e;
+  margin-bottom: 14px;
+}
+
+.kiosk-header h1 {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font: 700 30px/1 Orbitron, sans-serif;
+}
+
+.kiosk-header h1 img {
+  object-fit: cover;
+}
+
+.control-kiosk button {
+  touch-action: manipulation;
+}
+
+.control-kiosk :is(button, [role="slider"], [tabindex]):focus-visible {
+  outline: 2px solid var(--kiosk-green);
+  outline-offset: 2px;
+}
+
+.control-kiosk button:disabled,
+.kiosk-dimmer[aria-disabled="true"] {
+  opacity: .55;
+  cursor: default;
+}
+
+.kiosk-reload,
+.kiosk-wake,
+.kiosk-presets button {
+  min-height: 44px;
+  background: #142820;
+  border-bottom: 1px solid #45624f;
+}
+
+.kiosk-reload {
+  display: grid;
+  place-items: center;
+  width: 44px;
+}
+
+.kiosk-controls {
+  display: grid;
+  grid-template-columns: 404px 552px;
+  gap: 20px;
+}
+
+.kiosk-voice {
+  width: min(100%, 404px);
+  min-width: 0;
+  height: 622px;
+  padding: 0 20px 22px;
+  background:
+    url("/brand/nova-kiosk/voice-matrix.svg") left top no-repeat,
+    url("/brand/nova-kiosk/voice-surface.svg") left top no-repeat;
+}
+
+.control-kiosk h2 {
+  font: 600 26px/1.2 "Chakra Petch", sans-serif;
+}
+
+.kiosk-voice-header {
+  height: 63px;
+}
+
+.kiosk-wake {
+  width: 90px;
+  flex: none;
+  color: var(--kiosk-muted);
+}
+
+.kiosk-wake[aria-pressed="true"] {
+  color: var(--kiosk-green);
+}
+
+.control-kiosk .kiosk-voice-array {
+  display: block;
+  width: min(100%, 322px);
+  margin: 19px auto 0;
+  border-radius: 50%;
+  user-select: none;
+  touch-action: none;
+}
+
+.kiosk-voice-array canvas {
+  display: block;
+  width: 100%;
+  aspect-ratio: 1;
+}
+
+.kiosk-voice-array[data-phase="listening"] {
+  filter: drop-shadow(0 0 7px #a4efb065);
+}
+
+.kiosk-voice-array[data-phase="speaking"] {
+  filter: drop-shadow(0 0 8px #ffbf6e55);
+}
+
+.kiosk-voice-status {
+  height: 17px;
+  color: var(--kiosk-muted);
+  font-size: 12px;
+  line-height: 17px;
+  text-align: center;
+}
+
+.kiosk-captions {
+  display: grid;
+  gap: 11px;
+}
+
+.kiosk-caption {
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
+  gap: 9px;
+  height: 84px;
+  padding: 8px 12px;
+  background: #0c1814;
+  border: 1px solid #365745;
+  border-left: 2px solid #94dea3;
+  color: #deede3;
+}
+
+.kiosk-caption + .kiosk-caption {
+  border-left-color: #ffbf6e;
+}
+
+.kiosk-caption > p {
+  color: #94dea3;
+  font: 12px/1.2 var(--kiosk-mono);
+  text-transform: uppercase;
+}
+
+.kiosk-caption + .kiosk-caption > p {
+  color: #ffbf6e;
+}
+
+.kiosk-caption > div {
+  overflow: auto;
+  overflow-wrap: anywhere;
+  font-size: 18px;
+}
+
+.kiosk-caption small {
+  display: block;
+  color: var(--kiosk-muted);
+}
+
+.kiosk-caption [data-error="true"],
+.kiosk-room-error,
+.kiosk-message[role="alert"] {
+  color: #ffac9b;
+}
+
+.kiosk-scenes {
+  display: grid;
+  grid-template-columns: repeat(3, 178px);
+  gap: 9px;
+  margin-bottom: 27px;
+}
+
+.kiosk-scenes button {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  height: 62px;
+  padding: 0 5px;
+  background:
+    url("/brand/nova-kiosk/scene-matrix.svg") left top no-repeat,
+    url("/brand/nova-kiosk/scene-surface.svg") left top no-repeat;
+  font-size: 23px;
+}
+
+.kiosk-rooms {
+  display: grid;
+  grid-template-columns: repeat(2, 268px);
+  gap: 16px;
+}
+
+.kiosk-room {
+  --room-signal: var(--kiosk-green);
+  position: relative;
+  height: 533px;
+  padding: 17px 16px 24px;
+  background:
+    url("/brand/nova-kiosk/room-matrix.svg") left top no-repeat,
+    url("/brand/nova-kiosk/room-surface.svg") left top no-repeat;
+}
+
+.kiosk-room[data-on="true"] {
+  --room-signal: var(--kiosk-amber);
+}
+
+.kiosk-room header {
+  height: 66px;
+  border-bottom: 1px solid var(--kiosk-line);
+}
+
+.kiosk-room header p {
+  margin-top: 6px;
+  color: var(--room-signal);
+  font: 15px/1.2 var(--kiosk-mono);
+}
+
+.kiosk-room-controls {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 50px;
+  gap: 8px;
+  height: 270px;
+  margin: 29px 0 25px;
+}
+
+.kiosk-power-area {
+  position: relative;
+}
+
+.kiosk-room-plan {
+  position: absolute;
+  top: 22.3px;
+  left: 10.3px;
+  pointer-events: none;
+}
+
+.kiosk-room-plan.living-room {
+  left: 17.3px;
+}
+
+.kiosk-power {
+  position: absolute;
+  top: 71px;
+  left: 19px;
+  width: 128px;
+  height: 128px;
+  border-radius: 50%;
+}
+
+.kiosk-brightness {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  height: 38px;
+  margin-bottom: 20px;
+}
+
+.kiosk-brightness span {
+  display: block;
+  color: var(--kiosk-muted);
+  font: 13px/1.2 var(--kiosk-mono);
+}
+
+.kiosk-brightness strong {
+  text-align: right;
+  color: var(--room-signal);
+  font-size: 32px;
+  font-weight: 500;
+}
+
+.kiosk-brightness strong[data-unavailable="true"] {
+  font-size: 20px;
+}
+
+.kiosk-dimmer {
+  position: relative;
+  padding: 2px;
+  background: #263b31;
+  cursor: ns-resize;
+  touch-action: none;
+  user-select: none;
+}
+
+.kiosk-dimmer-level {
+  position: absolute;
+  inset: auto 2px 2px;
+  min-height: 3px;
+  background: #607869;
+}
+
+.kiosk-room[data-on="true"] .kiosk-dimmer-level,
+.kiosk-dimmer:active .kiosk-dimmer-level {
+  background: #d7ad70;
+}
+
+.kiosk-dimmer-level::before {
+  content: "";
+  position: absolute;
+  inset: -2px 0 auto;
+  height: 4px;
+  background: var(--room-signal);
+}
+
+.kiosk-presets {
+  display: grid;
+  grid-template-columns: repeat(3, 74px);
+  gap: 6px;
+}
+
+.kiosk-presets button {
+  color: var(--kiosk-muted);
+}
+
+.kiosk-presets [data-selected="true"] {
+  color: var(--room-signal);
+}
+
+.kiosk-room-error {
+  position: absolute;
+  right: 16px;
+  bottom: 2px;
+  font-size: 13px;
+}
+
+.kiosk-message {
+  color: var(--kiosk-muted);
+  grid-column: 1 / -1;
+}
+
+.kiosk-lighting > .kiosk-message {
+  margin: -20px 0 5px;
+  font-size: 13px;
+}
+
+.control-kiosk {
+  overflow-x: clip;
+}
+
+@media (min-width: 768px) and (orientation: landscape) {
+  .control-kiosk {
+    height: 100dvh;
+    overflow: hidden;
+  }
+
+  .kiosk-layout {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 1024px;
+    min-height: 768px;
+    transform: translate(-50%, -50%) scale(var(--kiosk-scale, 1));
+  }
+}
+
+@media (max-width: 767px), (orientation: portrait) {
+  .kiosk-controls {
+    grid-template-columns: minmax(0, 1fr);
+    justify-items: center;
+  }
+}
+
+@media (max-width: 599px) {
+  .kiosk-layout {
+    padding-inline: 12px;
+  }
+
+  .kiosk-lighting {
+    max-width: 100%;
+  }
+
+  .kiosk-scenes {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+
+  .kiosk-scenes button {
+    width: 178px;
+  }
+
+  .kiosk-rooms {
+    grid-template-columns: 268px;
+    justify-content: center;
+  }
+}
+
+@media (max-width: 427px) {
+  .kiosk-voice {
+    border: 1px solid var(--kiosk-line);
+  }
+
+}

@@ -71,18 +71,33 @@ export function assistantBase(): string {
   return "https://assistant.home.arpa";
 }
 
+async function readVoiceReply(response: Response): Promise<TurnResult> {
+  if ([502, 503, 504].includes(response.status) && !response.headers.get("content-type")?.includes("application/json")) {
+    throw new Error("NOVA’s voice service is unavailable. Try again in a moment.");
+  }
+  let data: TurnResult;
+  try {
+    data = await response.json() as TurnResult;
+  } catch {
+    throw new Error(`NOVA returned an unreadable response (HTTP ${response.status}).`);
+  }
+  if (!response.ok) throw new Error(data.detail || `Voice request failed (HTTP ${response.status}).`);
+  return data;
+}
+
 export async function sendAudioTurn(blob: Blob): Promise<TurnResult> {
   const form = new FormData();
-  form.append("audio", blob, "speech.webm");
+  const container = blob.type.split(";")[0].split("/")[1];
+  const extension = container === "mp4" || container === "ogg" || container === "wav" ? container : "webm";
+  const recording = blob.slice(0, blob.size, `audio/${extension}`);
+  form.append("audio", recording, `speech.${extension}`);
   form.append("session_id", getSessionId());
   const res = await fetch(`${assistantBase()}/api/turn`, {
     method: "POST",
     headers: authHeaders(),
     body: form,
   });
-  const data = (await res.json()) as TurnResult;
-  if (!res.ok) throw new Error(data.detail || res.statusText);
-  return data;
+  return readVoiceReply(res);
 }
 
 export async function sendTextTurn(text: string): Promise<TurnResult> {
@@ -94,9 +109,7 @@ export async function sendTextTurn(text: string): Promise<TurnResult> {
     },
     body: JSON.stringify({ text, session_id: getSessionId() }),
   });
-  const data = (await res.json()) as TurnResult;
-  if (!res.ok) throw new Error(data.detail || res.statusText);
-  return data;
+  return readVoiceReply(res);
 }
 
 export interface LastTurn {
@@ -149,11 +162,11 @@ export async function cancelCursorProposal(id: string): Promise<CursorProposal> 
   return data;
 }
 
-export function playAudioBase64(b64: string, mime?: string): {
+export function playAudioBase64(b64: string, mime?: string, audio = new Audio()): {
   audio: HTMLAudioElement;
   done: Promise<void>;
 } {
-  const audio = new Audio(`data:${mime || "audio/mpeg"};base64,${b64}`);
+  audio.src = `data:${mime || "audio/mpeg"};base64,${b64}`;
   const done = new Promise<void>((resolve, reject) => {
     audio.onended = () => resolve();
     audio.onerror = () => reject(new Error("Audio playback failed"));
@@ -162,36 +175,14 @@ export function playAudioBase64(b64: string, mime?: string): {
   return { audio, done };
 }
 
-/** Wake phrases: "Hey Homelab" or just "Homelab" (also "home lab", "home love"). */
-export const WAKE_PHRASES = ["hey homelab", "hey home lab", "hey home love", "homelab", "home lab"];
-
-export function normalizeWakeText(text: string): string {
-  return text
-    .toLowerCase()
-    .replace(/[^\w\s]/g, " ")
-    .replace(/\s+/g, " ")
-    .trim()
-    .replace(/\bhome\s+love\b/g, "home lab")
-    .replace(/\bhome\s+lab\b/g, "homelab")
-    .replace(/\bhomelabs\b/g, "homelab");
-}
+const WAKE_PHRASE = /^\s*(?:hey[\s,]+)?nova\b[\s,.:!?-]*/i;
 
 export function textContainsWakePhrase(text: string): boolean {
-  const n = normalizeWakeText(text);
-  return (
-    n.includes("hey homelab") ||
-    /(^|\s)homelab(\s|$)/.test(n)
-  );
+  return WAKE_PHRASE.test(text);
 }
 
-/** Strip the wake phrase so the remainder can be used as the command if present. */
 export function stripWakePhrase(text: string): string {
-  let n = text.trim();
-  n = n.replace(/^\s*hey[\s,]+home[\s-]*(?:lab|love)[\s,.]*/i, "");
-  n = n.replace(/^\s*hey[\s,]+homelab[\s,.]*/i, "");
-  n = n.replace(/^\s*home[\s-]*lab[\s,.]*/i, "");
-  n = n.replace(/^\s*homelab[\s,.]*/i, "");
-  return n.trim();
+  return text.replace(WAKE_PHRASE, "").trim();
 }
 
 type SpeechRec = {

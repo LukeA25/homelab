@@ -13,6 +13,7 @@ import { api } from "@/lib/api";
 import { castAppForTvApp, stopCast, useCastState } from "@/lib/cast";
 import type {
   FinanceSummary,
+  FinanceTrack,
   HomeworkResponse,
   LiturgyDay,
   Room,
@@ -243,39 +244,64 @@ function LightStatus({ rooms }: { rooms?: Room[] }) {
   );
 }
 
+const BUDGET_DIAL_START = -137;
+const BUDGET_DIAL_SWEEP = 274;
+const BUDGET_DIAL_LENGTH = BUDGET_DIAL_SWEEP / 360 * 100;
+const DAY_TO_DAY_SUBCATEGORIES = ["Food", "Misc", "API Costs"];
+
+function financeSubcategories(track: FinanceTrack) {
+  if (track.name !== "Day to Day") return track.subcategories.slice(0, 2);
+
+  return DAY_TO_DAY_SUBCATEGORIES.map((name) => ({
+    name,
+    spent: track.subcategories.find(
+      (subcategory) => subcategory.name.trim().toLowerCase() === name.toLowerCase(),
+    )?.spent,
+  }));
+}
+
+function budgetStatus(used: number, remaining: number) {
+  if (remaining < 0 || used > 1) return "over-budget";
+  return used >= 0.9 ? "near-budget" : "within-budget";
+}
+
+function clampBudgetUse(used: number) {
+  return Math.max(0, Math.min(1, used));
+}
+
 function FinanceBrief({ summary: s, now, tz }: { summary?: FinanceSummary; now: Date; tz?: string }) {
   const parts = new Intl.DateTimeFormat("en-US",{year:"numeric",month:"numeric",day:"numeric",timeZone:tz}).formatToParts(now);
   const part=(key:string)=>Number(parts.find(p=>p.type===key)?.value);
   const pace=part("day")/new Date(part("year"),part("month"),0).getDate();
   const paceDate=now.toLocaleDateString("en-US",{month:"short",day:"numeric",timeZone:tz});
-  const pct = Math.round((s?.pct_used ?? 0) * 100);
+  const used = clampBudgetUse(s?.pct_used ?? 0);
   return (
     <Panel title="Finances" detail={s?.month_label ?? undefined} area="finance">
       {s?.connected ? (
         <div className="budget">
           <div className="overall">
-            <div className="dial">
+            <div className={`dial ${budgetStatus(s.pct_used, s.remaining)}`}>
               <svg viewBox="0 0 100 100" aria-hidden="true">
-                <circle
-                  cx="50"
-                  cy="50"
-                  r="45"
-                  pathLength="100"
-                  strokeDasharray="76 100"
+                <g transform={`rotate(${BUDGET_DIAL_START - 90} 50 50)`}>
+                  <circle cx="50" cy="50" r="45" pathLength="100" strokeDasharray={`${BUDGET_DIAL_LENGTH} 100`} />
+                  <circle cx="50" cy="50" r="45" pathLength="100" strokeDasharray={`${used * BUDGET_DIAL_LENGTH} 100`} className="used" />
+                  <circle cx="50" cy="50" r="39" pathLength="100" strokeDasharray={`${BUDGET_DIAL_LENGTH} 100`} className="dial-guide" />
+                </g>
+                {Array.from({ length: 41 }, (_, i) => (
+                  <path
+                    key={i}
+                    d={i % 5 === 0 ? "M50 -1v2.8" : "M50 0v1.3"}
+                    stroke="#9ae8a6"
+                    strokeWidth=".4"
+                    transform={`rotate(${BUDGET_DIAL_START + i * BUDGET_DIAL_SWEEP / 40} 50 50)`}
+                  />
+                ))}
+                <path
+                  d="M50 -4v6.5"
+                  stroke="#ffc369"
+                  strokeWidth=".9"
+                  transform={`rotate(${BUDGET_DIAL_START + used * BUDGET_DIAL_SWEEP} 50 50)`}
                 />
-                <circle
-                  cx="50"
-                  cy="50"
-                  r="45"
-                  pathLength="100"
-                  strokeDasharray={
-                    Math.max(0, Math.min(100, pct)) * 0.76 + " 100"
-                  }
-                  className="used"
-                />
-                <path d="M24 78a39 39 0 1 1 52 0" fill="none" stroke="#44634e" strokeWidth=".35"/>
-                {Array.from({length:41},(_,i)=><path key={i} d={i%5===0?"M50 -1v2.8":"M50 0v1.3"} stroke="#9ae8a6" strokeWidth=".4" transform={`rotate(${-137+i*274/40} 50 50)`}/>)}
-                <path d="M50 -1v10" stroke="#ffc369" strokeWidth=".9" transform={`rotate(${-137+274*pace} 50 50)`}/>
                 <g fill="#9eb3a1" fontSize="4" fontFamily="monospace"><text x="13" y="91">0</text><text x="80" y="91">100</text></g>
               </svg>
               <strong>{+(s.pct_used * 100).toFixed(1)}%</strong>
@@ -290,7 +316,7 @@ function FinanceBrief({ summary: s, now, tz }: { summary?: FinanceSummary; now: 
           </div>
           <div className="tracks">
             {s.focus.map((t) => (
-              <div key={t.name}>
+              <div key={t.name} className={budgetStatus(t.pct_used, t.remaining)}>
                 <header>
                   <b>{t.name}</b>
                   <small>
@@ -302,11 +328,11 @@ function FinanceBrief({ summary: s, now, tz }: { summary?: FinanceSummary; now: 
                   {money(t.spent)} / {money(t.budgeted)}
                 </small>
                 <b className="track-percent">{Math.round(t.pct_used*100)}%</b>
-                <meter min="0" max="1" value={t.pct_used} />
+                <meter min="0" max="1" value={clampBudgetUse(t.pct_used)} aria-label={`${t.name} budget used`} />
                 <footer>
-                  {t.subcategories.slice(0, 2).map((v) => (
+                  {financeSubcategories(t).map((v) => (
                     <small key={v.name}>
-                      {v.name}　{money(v.spent)}
+                      {v.name}　{v.spent === undefined ? "—" : money(v.spent)}
                     </small>
                   ))}
                 </footer>
@@ -416,6 +442,7 @@ function HomelabStats({
 }
 
 function SaintCard({ day }: { day?: LiturgyDay }) {
+  const season = day?.season?.replace(/_/g, " ");
   return (
     <Panel
       title="Saint of the day"
@@ -423,10 +450,18 @@ function SaintCard({ day }: { day?: LiturgyDay }) {
       area="saint"
     >
       <div className="celebration">
-        <b>
-          <ShieldPlus />
-          {day?.name || "Celebration unavailable"}
-        </b>
+        <div className="celebration-heading">
+          <ShieldPlus aria-hidden="true" />
+          <div>
+            {(day?.rank_label || season) && (
+              <div className="celebration-details">
+                {day?.rank_label && <small>{day.rank_label}</small>}
+                {season && <small>{season}</small>}
+              </div>
+            )}
+            <h3>{day?.name || "Celebration unavailable"}</h3>
+          </div>
+        </div>
         {day?.quote && <blockquote>“{day.quote}”</blockquote>}
       </div>
     </Panel>

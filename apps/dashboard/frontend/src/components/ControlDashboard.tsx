@@ -1,13 +1,27 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { BookOpen, Lightbulb, Moon, Power, RefreshCw, Sun } from "lucide-react";
-import { useEffect, useRef, useState, type ReactNode } from "react";
+import { useEffect, useRef, useState, type CSSProperties, type KeyboardEvent } from "react";
 import { CastMirror } from "@/components/CastMirror";
 import { ControlVoice } from "@/components/ControlVoice";
+import { KioskBackplane } from "@/components/KioskBackplane";
 import { api } from "@/lib/api";
 import { stopCast, useCastState } from "@/lib/cast";
 import type { Room } from "@/lib/types";
-import { cn } from "@/lib/utils";
 import { TV_BEDROOM_WAKE_LIGHTS } from "@/tv-wake";
+import "./nova-kiosk.css";
+
+const KIOSK_ART = "/brand/nova-kiosk";
+
+const SCENES = [
+  { id: "sleep", label: "Sleep" },
+  { id: "wake", label: "Wake" },
+  { id: "study", label: "Study" },
+] as const;
+
+const LIGHT_PRESETS = [
+  { label: "Warm", color: { color_temp_kelvin: 3200 } },
+  { label: "Neutral", color: { color_temp_kelvin: 4500 } },
+  { label: "Blue", color: { rgb_color: [91, 140, 255] } },
+];
 
 function CompactRoom({ room }: { room: Room }) {
   const qc = useQueryClient();
@@ -24,147 +38,139 @@ function CompactRoom({ room }: { room: Room }) {
     onSettled: () => qc.invalidateQueries({ queryKey: ["rooms"] }),
   });
 
-  const setBrightnessFromPointer = (clientY: number, commit: boolean) => {
-    const el = trackRef.current;
-    if (!el) return;
-    const rect = el.getBoundingClientRect();
-    const ratio = 1 - (clientY - rect.top) / rect.height;
-    const next = Math.max(1, Math.min(100, Math.round(ratio * 100)));
+  const setBrightness = (value: number, commit: boolean) => {
+    const next = Math.max(1, Math.min(100, Math.round(value)));
     setPct(next);
     if (commit) mutate.mutate({ on: true, brightness_pct: next });
   };
 
+  const setBrightnessFromPointer = (clientY: number, commit: boolean) => {
+    const rect = trackRef.current?.getBoundingClientRect();
+    if (rect) setBrightness((1 - (clientY - rect.top) / rect.height) * 100, commit);
+  };
+
+  const onDimmerKeyDown = (event: KeyboardEvent<HTMLDivElement>) => {
+    const values: Record<string, number> = {
+      ArrowUp: pct + 1,
+      ArrowRight: pct + 1,
+      ArrowDown: pct - 1,
+      ArrowLeft: pct - 1,
+      PageUp: pct + 10,
+      PageDown: pct - 10,
+      Home: 1,
+      End: 100,
+    };
+    const value = values[event.key];
+    if (value === undefined || !room.available || mutate.isPending) return;
+    event.preventDefault();
+    setBrightness(value, true);
+  };
+
+  const livingRoom = room.id === "living_room";
+  const name = livingRoom ? "Living room" : room.name;
+  const status = !room.available ? "Unavailable" : room.on ? "On" : "Off";
+  const brightness = room.on || draggingRef.current ? `${pct}%` : status;
+
   return (
-    <div
-      className={cn(
-        "flex min-h-0 flex-col gap-2.5 rounded-2xl border p-3",
-        room.on ? "border-warm/40 bg-warm-soft/30" : "border-hairline bg-card",
-      )}
-    >
-      <div className="flex items-start gap-2 px-0.5">
-        <Lightbulb
-          className={cn("mt-0.5 h-5 w-5 shrink-0", room.on ? "text-warm" : "text-ink-faint")}
-        />
-        <div className="min-w-0">
-          <h2 className="truncate font-display text-lg font-semibold leading-none">{room.name}</h2>
-          <p className={cn("mt-1.5 text-xs", room.on ? "text-ink/80" : "text-ink-faint")}>
-            {!room.available ? "Unavailable" : room.on ? `${pct}%` : "Off"}
-          </p>
+    <section className="kiosk-room" data-on={room.on} aria-label={name}>
+      <header>
+        <h2>{name}</h2>
+        <p>{status}</p>
+      </header>
+      <div className="kiosk-room-controls">
+        <div className="kiosk-power-area">
+          <img
+            className={`kiosk-room-plan ${livingRoom ? "living-room" : ""}`}
+            src={`${KIOSK_ART}/${livingRoom ? "living-room" : "bedroom"}-plan.svg`}
+            alt=""
+          />
+          <button
+            type="button"
+            className="kiosk-power"
+            disabled={!room.available || mutate.isPending}
+            onClick={() => mutate.mutate({ on: !room.on, brightness_pct: pct })}
+            aria-label={`Toggle ${name}`}
+            aria-pressed={room.on}
+          >
+            <img src={`${KIOSK_ART}/power-${room.on ? "on" : "off"}.svg`} width={128} height={128} alt="" />
+          </button>
         </div>
-      </div>
-
-      <div className="grid grid-cols-3 gap-2">
-        <button
-          type="button"
-          className="rounded-xl border border-hairline bg-panel px-2 py-2.5 text-xs font-medium text-ink-muted"
-          onClick={() =>
-            mutate.mutate({ on: true, brightness_pct: pct, color_temp_kelvin: 3200 })
-          }
-        >
-          Warm
-        </button>
-        <button
-          type="button"
-          className="rounded-xl border border-hairline bg-panel px-2 py-2.5 text-xs font-medium text-ink-muted"
-          onClick={() =>
-            mutate.mutate({ on: true, brightness_pct: pct, color_temp_kelvin: 4500 })
-          }
-        >
-          Neutral
-        </button>
-        <button
-          type="button"
-          className="rounded-xl border border-hairline bg-panel px-2 py-2.5 text-xs font-medium text-ink-muted"
-          onClick={() =>
-            mutate.mutate({ on: true, brightness_pct: pct, rgb_color: [91, 140, 255] })
-          }
-        >
-          Blue
-        </button>
-      </div>
-
-      <div className="grid min-h-0 flex-1 grid-cols-[1fr_3.25rem] gap-2.5">
-        <button
-          type="button"
-          disabled={!room.available || mutate.isPending}
-          onClick={() => mutate.mutate({ on: !room.on, brightness_pct: pct })}
-          className={cn(
-            "flex min-h-[9rem] items-center justify-center rounded-xl bg-transparent transition-colors",
-            room.on ? "text-warm" : "text-ink-faint",
-            "hover:bg-black/10 active:bg-black/15 disabled:opacity-50",
-          )}
-          aria-label={`Toggle ${room.name}`}
-        >
-          <Power className="h-[4.75rem] w-[4.75rem]" strokeWidth={1.55} />
-        </button>
-
         <div
           ref={trackRef}
-          className={cn(
-            "relative min-h-[9rem] touch-none select-none overflow-hidden rounded-xl border",
-            room.on ? "border-warm/35 bg-panel" : "border-hairline bg-panel opacity-70",
-            !room.available && "pointer-events-none opacity-50",
-          )}
-          onPointerDown={(e) => {
-            e.stopPropagation();
-            if (!room.available) return;
+          className="kiosk-dimmer"
+          onPointerDown={(event) => {
+            if (!room.available || mutate.isPending) return;
             draggingRef.current = true;
-            e.currentTarget.setPointerCapture(e.pointerId);
-            setBrightnessFromPointer(e.clientY, false);
+            event.currentTarget.setPointerCapture(event.pointerId);
+            setBrightnessFromPointer(event.clientY, false);
           }}
-          onPointerMove={(e) => {
-            if (!draggingRef.current) return;
-            setBrightnessFromPointer(e.clientY, false);
+          onPointerMove={(event) => {
+            if (draggingRef.current) setBrightnessFromPointer(event.clientY, false);
           }}
-          onPointerUp={(e) => {
+          onPointerUp={(event) => {
             if (!draggingRef.current) return;
             draggingRef.current = false;
-            setBrightnessFromPointer(e.clientY, true);
+            setBrightnessFromPointer(event.clientY, true);
           }}
           onPointerCancel={() => {
             draggingRef.current = false;
+            setPct(room.brightness_pct ?? 50);
           }}
+          onKeyDown={onDimmerKeyDown}
+          tabIndex={room.available ? 0 : -1}
           role="slider"
+          aria-disabled={!room.available}
+          aria-orientation="vertical"
           aria-valuemin={1}
           aria-valuemax={100}
           aria-valuenow={pct}
-          aria-label={`${room.name} brightness`}
+          aria-valuetext={brightness}
+          aria-label={`${name} brightness`}
         >
           <div
-            className="absolute inset-x-0 bottom-0 bg-warm/80 transition-[height] duration-75"
-            style={{ height: `${pct}%` }}
+            className="kiosk-dimmer-level"
+            style={{ height: room.on || draggingRef.current ? `clamp(3px, ${pct}%, calc(100% - 4px))` : 3 }}
           />
         </div>
       </div>
-    </div>
+      <div className="kiosk-brightness">
+        <span>Brightness</span>
+        <strong data-unavailable={!room.available}>{brightness}</strong>
+      </div>
+      <div className="kiosk-presets">
+        {LIGHT_PRESETS.map(({ label, color }) => (
+          <button
+            type="button"
+            key={label}
+            disabled={!room.available || mutate.isPending}
+            data-selected={room.on && (
+              "color_temp_kelvin" in color
+                ? room.color_temp_kelvin === color.color_temp_kelvin
+                : color.rgb_color.every((value, index) => value === room.rgb_color?.[index])
+            )}
+            onClick={() => mutate.mutate({ on: true, brightness_pct: pct, ...color })}
+          >
+            {label}
+          </button>
+        ))}
+      </div>
+      {mutate.isError && <p className="kiosk-room-error" role="alert">Couldn’t update the lights.</p>}
+    </section>
   );
 }
 
-function SceneButton({
-  label,
-  icon,
-  onClick,
-  busy,
-}: {
-  label: string;
-  icon: ReactNode;
-  onClick: () => void;
-  busy?: boolean;
-}) {
-  return (
-    <button
-      type="button"
-      disabled={busy}
-      onClick={onClick}
-      className="flex min-h-[5.75rem] flex-col items-center justify-center gap-1.5 rounded-2xl border border-hairline bg-panel px-2 py-3.5 text-sm font-semibold text-ink transition-colors hover:border-accent/40 disabled:opacity-50"
-    >
-      {icon}
-      {label}
-    </button>
-  );
+function fitKiosk() {
+  return Math.min(window.innerWidth / 1024, window.innerHeight / 768);
 }
 
 export default function ControlDashboard() {
+  const [scale, setScale] = useState(fitKiosk);
+  useEffect(() => {
+    const resize = () => setScale(fitKiosk());
+    window.addEventListener("resize", resize);
+    return () => window.removeEventListener("resize", resize);
+  }, []);
+
   const qc = useQueryClient();
   const kioskCast = useCastState()?.targets.kiosk ?? null;
   const roomsQ = useQuery({
@@ -196,66 +202,41 @@ export default function ControlDashboard() {
   });
 
   return (
-    <div className="control-kiosk h-[100dvh] w-full overflow-hidden text-ink">
-      <div className="mx-auto grid h-full max-w-[1200px] grid-cols-2 grid-rows-1 gap-3.5 p-3.5">
-        <ControlVoice
-          className="min-h-0 h-full"
-          onRoomsMaybeChanged={() => qc.invalidateQueries({ queryKey: ["rooms"] })}
-        />
+    <div className="control-kiosk">
+      <main className="kiosk-layout" style={{ "--kiosk-scale": scale } as CSSProperties}>
+        <KioskBackplane />
+        <header className="kiosk-header">
+          <h1>
+            <img src={`${KIOSK_ART}/nova-logo.png`} width={48} height={48} alt="" />
+            NOVA
+          </h1>
+          <button type="button" className="kiosk-reload" onClick={() => window.location.reload()} aria-label="Reload page">
+            <img src={`${KIOSK_ART}/reload.svg`} width={20} height={20} alt="" />
+          </button>
+        </header>
 
-        <div className="flex min-h-0 flex-col gap-3 overflow-hidden">
-          <header className="flex shrink-0 items-end justify-between gap-2 px-0.5">
-            <div>
-              <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-ink-faint">
-                Nightstand
-              </p>
-              <h1 className="font-display text-3xl font-semibold leading-none tracking-tight">
-                Controls
-              </h1>
+        <div className="kiosk-controls">
+          <ControlVoice onRoomsMaybeChanged={() => qc.invalidateQueries({ queryKey: ["rooms"] })} />
+
+          <div className="kiosk-lighting">
+            <section className="kiosk-scenes" aria-label="Scenes">
+              {SCENES.map(({ id, label }) => (
+                <button key={id} type="button" disabled={sceneMut.isPending} onClick={() => sceneMut.mutate(id)}>
+                  <img src={`${KIOSK_ART}/${id}.svg`} width={58} height={48} alt="" />
+                  {label}
+                </button>
+              ))}
+            </section>
+            {sceneMut.isError && <p className="kiosk-message" role="alert">Couldn’t activate the scene.</p>}
+            <div className="kiosk-rooms">
+              {rooms.map((room) => <CompactRoom key={room.id} room={room} />)}
+              {!rooms.length && (
+                <p className="kiosk-message">{roomsQ.isPending ? "Loading rooms…" : "No rooms available."}</p>
+              )}
             </div>
-            <button
-              type="button"
-              onClick={() => window.location.reload()}
-              aria-label="Reload page"
-              className="flex h-11 w-11 items-center justify-center rounded-xl border border-hairline bg-panel text-ink-muted"
-            >
-              <RefreshCw className="h-5 w-5" aria-hidden />
-            </button>
-          </header>
-
-          <div className="grid shrink-0 grid-cols-3 gap-2.5">
-            <SceneButton
-              label="Sleep"
-              icon={<Moon className="h-6 w-6 text-ink-muted" />}
-              busy={sceneMut.isPending}
-              onClick={() => sceneMut.mutate("sleep")}
-            />
-            <SceneButton
-              label="Wake"
-              icon={<Sun className="h-6 w-6 text-warm" />}
-              busy={sceneMut.isPending}
-              onClick={() => sceneMut.mutate("wake")}
-            />
-            <SceneButton
-              label="Study"
-              icon={<BookOpen className="h-6 w-6 text-accent" />}
-              busy={sceneMut.isPending}
-              onClick={() => sceneMut.mutate("study")}
-            />
-          </div>
-
-          <div className="grid min-h-0 flex-1 grid-cols-2 gap-3 overflow-hidden">
-            {rooms.map((room) => (
-              <CompactRoom key={room.id} room={room} />
-            ))}
-            {!rooms.length ? (
-              <div className="col-span-full rounded-2xl border border-hairline bg-card p-4 text-base text-ink-muted">
-                No rooms found. Check HA_TOKEN.
-              </div>
-            ) : null}
           </div>
         </div>
-      </div>
+      </main>
 
       {kioskCast ? (
         <CastMirror

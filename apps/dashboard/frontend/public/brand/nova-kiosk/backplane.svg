@@ -1,0 +1,32 @@
+<svg preserveAspectRatio="none" overflow="visible" style="display: block;" width="1024" height="768" viewBox="0 0 1024 768" fill="none" xmlns="http://www.w3.org/2000/svg">
+<g id="PCB traces &#194;&#183; iPad perimeter and gutters" clip-path="url(#clip0_0_116)">
+<path id="Vector" d="M0 136H9L26 119H86L107 98H214L239 73H337L363 47H570" stroke="#538366" stroke-opacity="0.64"/>
+<path id="Vector_2" d="M0 146H15L32 129H92L112 109H219L244 84H344L370 58H542" stroke="#335F4A" stroke-opacity="0.56"/>
+<path id="Vector_3" d="M1024 108H1007L983 84H868L839 55H698L677 34H613" stroke="#538366" stroke-opacity="0.64"/>
+<path id="Vector_4" d="M1024 118H1000L978 96H863L834 67H693L673 46H650" stroke="#335F4A" stroke-opacity="0.56"/>
+<path id="Vector_5" d="M440 100V211L437 214V367L441 371V538L435 544V710L408 737H285" stroke="#538366" stroke-opacity="0.64"/>
+<path id="Vector_6" d="M445 121V214L442 217V365L446 369V541L440 547V715L414 741H371" stroke="#335F4A" stroke-opacity="0.56"/>
+<path id="Vector_7" d="M1019 174H958L953 179H786L773 170H634L628 177H462" stroke="#538366" stroke-opacity="0.64"/>
+<path id="Vector_8" d="M1009 181H963L958 186H779L766 175H638L632 183H492" stroke="#335F4A" stroke-opacity="0.56"/>
+<path id="Vector_9" d="M724 195V295L721 300V512L726 517V713L748 735H906L928 713H1024" stroke="#538366" stroke-opacity="0.64"/>
+<path id="Vector_10" d="M728 204V298L725 303V510L730 515V709L752 731H901L924 708H1024" stroke="#335F4A" stroke-opacity="0.56"/>
+<path id="Vector_11" d="M0 711H10L35 736H149L162 723H255L277 745H471" stroke="#538366" stroke-opacity="0.64"/>
+<path id="Vector_12" d="M0 701H15L42 728H144L157 715H259L283 741H364" stroke="#335F4A" stroke-opacity="0.56"/>
+<path id="Vector_13" d="M516 756L544 728H636L658 750H710" stroke="#538366" stroke-opacity="0.64"/>
+<path id="Vector_14" d="M1024 550H1015L1009 544V394L1014 389V284L1024 274" stroke="#335F4A" stroke-opacity="0.56"/>
+<path id="Vector_15" d="M239 75.7C240.491 75.7 241.7 74.4912 241.7 73C241.7 71.5088 240.491 70.3 239 70.3C237.509 70.3 236.3 71.5088 236.3 73C236.3 74.4912 237.509 75.7 239 75.7Z" fill="#FFBC74" fill-opacity="0.62"/>
+<path id="Vector_16" d="M570 49.1C571.16 49.1 572.1 48.1598 572.1 47C572.1 45.8402 571.16 44.9 570 44.9C568.84 44.9 567.9 45.8402 567.9 47C567.9 48.1598 568.84 49.1 570 49.1Z" fill="#83B894" fill-opacity="0.62"/>
+<path id="Vector_17" d="M613 36.1C614.16 36.1 615.1 35.1598 615.1 34C615.1 32.8402 614.16 31.9 613 31.9C611.84 31.9 610.9 32.8402 610.9 34C610.9 35.1598 611.84 36.1 613 36.1Z" fill="#83B894" fill-opacity="0.62"/>
+<path id="Vector_18" d="M285 739.7C286.491 739.7 287.7 738.491 287.7 737C287.7 735.509 286.491 734.3 285 734.3C283.509 734.3 282.3 735.509 282.3 737C282.3 738.491 283.509 739.7 285 739.7Z" fill="#FFBC74" fill-opacity="0.62"/>
+<path id="Vector_19" d="M462 179.1C463.16 179.1 464.1 178.16 464.1 177C464.1 175.84 463.16 174.9 462 174.9C460.84 174.9 459.9 175.84 459.9 177C459.9 178.16 460.84 179.1 462 179.1Z" fill="#83B894" fill-opacity="0.62"/>
+<path id="Vector_20" d="M906 737.1C907.16 737.1 908.1 736.16 908.1 735C908.1 733.84 907.16 732.9 906 732.9C904.84 732.9 903.9 733.84 903.9 735C903.9 736.16 904.84 737.1 906 737.1Z" fill="#83B894" fill-opacity="0.62"/>
+<path id="Vector_21" d="M255 725.7C256.491 725.7 257.7 724.491 257.7 723C257.7 721.509 256.491 720.3 255 720.3C253.509 720.3 252.3 721.509 252.3 723C252.3 724.491 253.509 725.7 255 725.7Z" fill="#FFBC74" fill-opacity="0.62"/>
+<path id="Vector_22" d="M710 752.1C711.16 752.1 712.1 751.16 712.1 750C712.1 748.84 711.16 747.9 710 747.9C708.84 747.9 707.9 748.84 707.9 750C707.9 751.16 708.84 752.1 710 752.1Z" fill="#83B894" fill-opacity="0.62"/>
+<path id="Vector_23" d="M724 197.1C725.16 197.1 726.1 196.16 726.1 195C726.1 193.84 725.16 192.9 724 192.9C722.84 192.9 721.9 193.84 721.9 195C721.9 196.16 722.84 197.1 724 197.1Z" fill="#83B894" fill-opacity="0.62"/>
+</g>
+<defs>
+<clipPath id="clip0_0_116">
+<rect width="1024" height="768" fill="white"/>
+</clipPath>
+</defs>
+</svg>

@@ -170,11 +170,18 @@
   color: inherit;
 }
 .nova-wall .budget {
+  --budget-fill: #a2efac;
   display: grid;
   grid-template-columns: 40% 1fr;
   gap: 36px;
   margin-top: 22px;
   align-items: center;
+}
+.nova-wall .budget .near-budget {
+  --budget-fill: #ffe078;
+}
+.nova-wall .budget .over-budget {
+  --budget-fill: #ff827b;
 }
 .nova-wall .overall {
   text-align: center;
@@ -201,14 +208,17 @@
   fill: none;
   stroke: #304d3d;
   stroke-width: 3.7;
-  transform: rotate(133deg);
-  transform-origin: center;
+}
+.nova-wall .dial circle.dial-guide {
+  stroke: #44634e;
+  stroke-width: .35;
 }
 .nova-wall .dial circle.used {
-  stroke: #a2f0ac;
+  stroke: var(--budget-fill);
 }
 .nova-wall .dial strong {
   font-size: 66px;
+  color: var(--budget-fill);
 }
 .nova-wall .tracks {
   display: grid;
@@ -219,8 +229,7 @@
   border-top: 1px solid #45624f;
 }
 .nova-wall .tracks header b,
-.nova-wall .assignment b,
-.nova-wall .celebration b {
+.nova-wall .assignment b {
   font-size: 31px;
 }
 .nova-wall meter {
@@ -244,7 +253,14 @@
 .nova-wall .tracks meter::-webkit-meter-optimum-value {
   background: repeating-linear-gradient(
     90deg,
-    #a2efac 0 19px,
+    var(--budget-fill) 0 19px,
+    #233e30 19px 22px
+  );
+}
+.nova-wall .tracks meter::-moz-meter-bar {
+  background: repeating-linear-gradient(
+    90deg,
+    var(--budget-fill) 0 19px,
     #233e30 19px 22px
   );
 }
@@ -311,24 +327,50 @@
   font-size: 22px;
 }
 .nova-wall .celebration {
-  height: 220px;
+  height: calc(100% - 56px);
   display: flex;
   flex-direction: column;
-  justify-content: center;
-  text-align: center;
-  gap: 22px;
+  gap: 16px;
+  padding-top: 20px;
+}
+.nova-wall .celebration-heading {
+  display: grid;
+  grid-template-columns: 38px minmax(0, 1fr);
+  align-items: start;
+  gap: 14px;
 }
 .nova-wall .celebration svg {
   color: #ffc072;
-  display: inline-block;
-  width: 49px;
-  height: 49px;
-  margin-right: 16px;
-  vertical-align: middle;
+  width: 38px;
+  height: 38px;
+}
+.nova-wall .celebration-details {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 12px;
+  margin-bottom: 6px;
+}
+.nova-wall .celebration-details small {
+  font-size: 17px;
+  text-transform: uppercase;
+}
+.nova-wall .celebration-details small + small {
+  padding-left: 12px;
+  border-left: 1px solid #668470;
+}
+.nova-wall .celebration h3 {
+  font-size: 31px;
+  line-height: 1.1;
+  font-weight: 600;
 }
 .nova-wall .celebration blockquote {
+  min-height: 0;
+  border-left: 2px solid #ffc072;
+  padding-left: 16px;
+  color: #c9d8cb;
   font-size: 25px;
-  line-height: 1.15;
+  line-height: 1.25;
   overflow: auto;
 }
 .nova-wall .rooms {
@@ -405,5 +447,4 @@
 .nova-wall .floorplan .room.bedroom { flex:0 0 42.5%; order:-1; margin-top:0; }
 .nova-wall .room span { position:relative; background:#16271fee; }
 .nova-wall .pace-key { display:block; margin-top:8px; font-size:16px; }
-.pace-key::before { content:""; display:inline-block; vertical-align:middle; width:14px; height:2px; background:#ffc369; margin-right:10px; }
-.nova-wall .track-percent { float:right; font-size:26px; color:#a2f0ac; }
+.nova-wall .track-percent { float:right; font-size:26px; color:var(--budget-fill); }

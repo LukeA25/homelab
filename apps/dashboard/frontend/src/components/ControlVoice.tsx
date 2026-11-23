@@ -1,4 +1,4 @@
-import { Mic, MicOff, Square } from "lucide-react";
+import { VoiceRadialArray } from "@/components/VoiceRadialArray";
 import { useCallback, useEffect, useRef, useState, type PointerEvent } from "react";
 import { CursorOverlay } from "@/components/CursorOverlay";
 import {
@@ -15,7 +15,6 @@ import {
   type TurnResult,
   type VoicePhase,
 } from "@/lib/assistantClient";
-import { cn } from "@/lib/utils";
 
 const PTT_MS = 8000;
 const MIN_HOLD_MS = 280;
@@ -25,14 +24,49 @@ const FOLLOWUP_MAX_MS = 10000;
 const FOLLOWUP_SILENCE_MS = 1400;
 const FOLLOWUP_SPEECH_RMS = 0.018;
 
+const SILENT_AUDIO = "data:audio/wav;base64,UklGRnQAAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YVAAAACAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgA==";
+
+function requestMicrophone() {
+  if (!window.isSecureContext) throw new Error("Open the HTTPS kiosk to use the microphone.");
+  if (!navigator.mediaDevices?.getUserMedia) throw new Error("This browser does not provide microphone access.");
+  return navigator.mediaDevices.getUserMedia({ audio: true });
+}
+
+function microphoneError(error: unknown) {
+  if (error instanceof DOMException && error.name === "NotAllowedError") {
+    return "Microphone access was denied. Allow it in Safari’s website settings and try again.";
+  }
+  return error instanceof Error ? error.message : String(error);
+}
+
+function startMicrophoneRecorder(stream: MediaStream) {
+  // Let WebKit choose its native container before trying explicit formats.
+  try {
+    const recorder = new MediaRecorder(stream);
+    recorder.start();
+    return recorder;
+  } catch {
+    for (const mimeType of ["audio/mp4", "audio/webm;codecs=opus", "audio/webm"]) {
+      if (!MediaRecorder.isTypeSupported(mimeType)) continue;
+      try {
+        const recorder = new MediaRecorder(stream, { mimeType });
+        recorder.start();
+        return recorder;
+      } catch {
+        // Try the next advertised format if the browser rejects this one.
+      }
+    }
+    throw new Error("The browser could not start an audio recording with this microphone.");
+  }
+}
+
 type ListenMode = "off" | "wake" | "command";
 
 type Props = {
-  className?: string;
   onRoomsMaybeChanged?: () => void;
 };
 
-export function ControlVoice({ className, onRoomsMaybeChanged }: Props) {
+export function ControlVoice({ onRoomsMaybeChanged }: Props) {
   const [phase, setPhase] = useState<VoicePhase>("idle");
   const [heard, setHeard] = useState("");
   const [reply, setReply] = useState("");
@@ -49,8 +83,10 @@ export function ControlVoice({ className, onRoomsMaybeChanged }: Props) {
   const chunksRef = useRef<Blob[]>([]);
   const streamRef = useRef<MediaStream | null>(null);
   const pttTimerRef = useRef<number | null>(null);
-  const holdStartedRef = useRef(0);
+  const holdReleasedRef = useRef(true);
+  const startingHoldRef = useRef(false);
   const audioRef = useRef<HTMLAudioElement | null>(null);
+  const playbackRef = useRef<HTMLAudioElement | null>(null);
   const autoListenRef = useRef(false);
   const vadRafRef = useRef<number | null>(null);
   const startRecordingRef = useRef<(opts?: { auto?: boolean }) => Promise<void>>(async () => undefined);
@@ -64,7 +100,7 @@ export function ControlVoice({ className, onRoomsMaybeChanged }: Props) {
   const silenceTimerRef = useRef<number | null>(null);
   const maxTimerRef = useRef<number | null>(null);
   const submitLockRef = useRef(false);
-  const startWakeRef = useRef<() => Promise<void>>(async () => undefined);
+  const startWakeRef = useRef<() => void>(() => undefined);
   const wakeRestartTimerRef = useRef<number | null>(null);
   const wakeRestartCountRef = useRef(0);
   const wakeRestartWindowRef = useRef(0);
@@ -109,6 +145,16 @@ export function ControlVoice({ className, onRoomsMaybeChanged }: Props) {
     wakeRecRef.current = null;
   }, []);
 
+  const preparePlayback = () => {
+    if (playbackRef.current) return;
+    // Safari grants playback permission to the audio element used during a gesture.
+    const player = new Audio(SILENT_AUDIO);
+    playbackRef.current = player;
+    void player.play().catch(() => {
+      if (playbackRef.current === player && player.src === SILENT_AUDIO) playbackRef.current = null;
+    });
+  };
+
   const stopSpeech = useCallback(() => {
     const audio = audioRef.current;
     if (!audio) return;
@@ -148,11 +194,13 @@ export function ControlVoice({ className, onRoomsMaybeChanged }: Props) {
       if (result.audio_base64) {
         setPhaseSafe("speaking");
         try {
-          const { audio, done } = playAudioBase64(result.audio_base64, result.audio_mime);
+          const { audio, done } = playAudioBase64(result.audio_base64, result.audio_mime, playbackRef.current ?? undefined);
           audioRef.current = audio;
           await done;
-        } catch {
-          /* still show text */
+        } catch (err) {
+          setError(err instanceof DOMException && err.name === "NotAllowedError"
+            ? "Safari blocked audio playback. Hold to talk once to enable audio."
+            : "Couldn’t play the voice reply.");
         } finally {
           audioRef.current = null;
         }
@@ -169,7 +217,7 @@ export function ControlVoice({ className, onRoomsMaybeChanged }: Props) {
           setAutoListen(false);
           setPhaseSafe("idle");
           modeRef.current = wakeOnRef.current ? "wake" : "off";
-          setError("Mic permission failed: " + (err instanceof Error ? err.message : err));
+          setError(microphoneError(err));
         }
         return;
       }
@@ -264,13 +312,23 @@ export function ControlVoice({ className, onRoomsMaybeChanged }: Props) {
       setReply("");
       setSavedNote("");
     }
-    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+    const stream = await requestMicrophone();
+    if (!auto && holdReleasedRef.current) {
+      stream.getTracks().forEach((track) => track.stop());
+      setError("Hold until you see Listening, then speak and release.");
+      setPhaseSafe("idle");
+      return;
+    }
+    let mr: MediaRecorder;
+    try {
+      mr = startMicrophoneRecorder(stream);
+    } catch (error) {
+      stream.getTracks().forEach((track) => track.stop());
+      throw error;
+    }
+    const recordingStartedAt = performance.now();
     streamRef.current = stream;
     chunksRef.current = [];
-    const mime = MediaRecorder.isTypeSupported("audio/webm;codecs=opus")
-      ? "audio/webm;codecs=opus"
-      : "audio/webm";
-    const mr = new MediaRecorder(stream, { mimeType: mime });
     mediaRecorderRef.current = mr;
     mr.ondataavailable = (e) => {
       if (e.data?.size) chunksRef.current.push(e.data);
@@ -284,11 +342,11 @@ export function ControlVoice({ className, onRoomsMaybeChanged }: Props) {
       }
       stream.getTracks().forEach((t) => t.stop());
       streamRef.current = null;
-      const blob = new Blob(chunksRef.current, { type: mime });
-      if (blob.size < 800) {
+      const blob = new Blob(chunksRef.current, { type: chunksRef.current[0]?.type || mr.mimeType });
+      if ((!auto && performance.now() - recordingStartedAt < MIN_HOLD_MS) || !blob.size) {
         setPhaseSafe("idle");
         setHeard("");
-        setError("Didn't catch that.");
+        setError(auto ? "No audio was recorded. Hold to talk to try again." : "Hold until you see Listening, then speak and release.");
         modeRef.current = wakeOnRef.current ? "wake" : "off";
         return;
       }
@@ -298,11 +356,11 @@ export function ControlVoice({ className, onRoomsMaybeChanged }: Props) {
         await finishTurn(result);
       } catch (err) {
         setPhaseSafe("error");
-        setError(String(err instanceof Error ? err.message : err));
+        const detail = err instanceof DOMException ? err.name : microphoneError(err);
+        setError(`Couldn’t send the recording. ${detail}`);
         window.setTimeout(() => setPhaseSafe("idle"), 2500);
       }
     };
-    mr.start();
     recordingRef.current = true;
     setPhaseSafe("listening");
     setHeard(auto ? "Your turn…" : "Listening…");
@@ -367,24 +425,28 @@ export function ControlVoice({ className, onRoomsMaybeChanged }: Props) {
     [beginCommandCapture, scheduleCommandSubmit],
   );
 
-  const startWake = useCallback(async () => {
+  const startWake = useCallback(() => {
     if (!wakeOnRef.current) return;
     if (recordingRef.current || autoListenRef.current) return;
     if (phaseRef.current === "thinking" || phaseRef.current === "speaking") return;
     if (wakeFatalRef.current) return;
 
-    const rec = createWakeRecognizer();
-    if (!rec) {
-      setError("Wake unsupported in this browser");
+    const disableWake = (message: string) => {
+      wakeFatalRef.current = true;
+      wakeOnRef.current = false;
+      setWakeOn(false);
+      setError(message);
+      stopRecognizer();
+      if (phaseRef.current === "wake") setPhaseSafe("idle");
+    };
+
+    if (!window.isSecureContext) {
+      disableWake("Open the HTTPS kiosk to use the wake word.");
       return;
     }
-    try {
-      const warm = await navigator.mediaDevices.getUserMedia({ audio: true });
-      warm.getTracks().forEach((t) => t.stop());
-    } catch (err) {
-      setWakeOn(false);
-      wakeOnRef.current = false;
-      setError(String(err instanceof Error ? err.message : err));
+    const rec = createWakeRecognizer();
+    if (!rec) {
+      disableWake("Wake word detection is unavailable here. Hold to talk instead.");
       return;
     }
 
@@ -442,9 +504,9 @@ export function ControlVoice({ className, onRoomsMaybeChanged }: Props) {
         code === "not-allowed"
           ? "Mic permission denied"
           : code === "service-not-allowed"
-            ? "Speech service blocked in this browser"
+            ? "Wake word unavailable. In Safari, enable Siri or Dictation, or hold to talk."
             : code === "network"
-              ? "Speech network error — Firefox’s recognition server is not usable. Hold to talk instead."
+              ? "The browser could not reach its speech recognition service. Hold to talk instead."
               : `Wake error: ${code}`;
       if (
         code === "not-allowed" ||
@@ -453,11 +515,7 @@ export function ControlVoice({ className, onRoomsMaybeChanged }: Props) {
         code === "audio-capture" ||
         code === "language-not-supported"
       ) {
-        wakeFatalRef.current = true;
-        setError(msg);
-        setWakeOn(false);
-        wakeOnRef.current = false;
-        stopRecognizer();
+        disableWake(msg);
       }
     };
     rec.onend = () => {
@@ -473,7 +531,7 @@ export function ControlVoice({ className, onRoomsMaybeChanged }: Props) {
     try {
       rec.start();
     } catch (err) {
-      setError(String(err instanceof Error ? err.message : err));
+      disableWake(`Couldn’t start wake word detection. ${microphoneError(err)}`);
     }
   }, [handleRecognizerResult, runTextCommand, stopRecognizer]);
 
@@ -515,12 +573,7 @@ export function ControlVoice({ className, onRoomsMaybeChanged }: Props) {
 
   useEffect(() => {
     wakeOnRef.current = wakeOn;
-    if (wakeOn) {
-      wakeFatalRef.current = false;
-      wakeRestartCountRef.current = 0;
-      modeRef.current = "wake";
-      void startWake();
-    } else {
+    if (!wakeOn) {
       modeRef.current = "off";
       wakeFatalRef.current = false;
       clearCommandTimers();
@@ -545,9 +598,7 @@ export function ControlVoice({ className, onRoomsMaybeChanged }: Props) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [phase]);
 
-  const onPointerDown = async (e: PointerEvent<HTMLButtonElement>) => {
-    e.preventDefault();
-    e.currentTarget.setPointerCapture(e.pointerId);
+  const beginHold = async () => {
     if (phaseRef.current === "speaking") {
       stopSpeech();
       return;
@@ -557,22 +608,27 @@ export function ControlVoice({ className, onRoomsMaybeChanged }: Props) {
       stopRecording();
       return;
     }
-    if (recordingRef.current) return;
-    holdStartedRef.current = Date.now();
+    holdReleasedRef.current = false;
+    if (recordingRef.current || startingHoldRef.current) return;
+    startingHoldRef.current = true;
+    try {
+      preparePlayback();
+    } catch {
+      // Recording is still available if the browser rejects playback setup.
+    }
     try {
       await startRecording();
     } catch (err) {
       setPhaseSafe("error");
-      setError("Mic permission failed: " + (err instanceof Error ? err.message : err));
+      setError(microphoneError(err));
+    } finally {
+      startingHoldRef.current = false;
     }
   };
 
-  const onPointerUp = (e: PointerEvent<HTMLButtonElement>) => {
-    e.preventDefault();
-    if (!recordingRef.current) return;
-    if (autoListenRef.current) return;
-    const held = Date.now() - holdStartedRef.current;
-    if (held < MIN_HOLD_MS) return;
+  const endHold = () => {
+    holdReleasedRef.current = true;
+    if (!recordingRef.current || autoListenRef.current) return;
     stopRecording();
   };
 
@@ -604,7 +660,7 @@ export function ControlVoice({ className, onRoomsMaybeChanged }: Props) {
 
   const statusLabel =
     phase === "wake"
-      ? "Say “Hey Homelab”"
+      ? "Say “NOVA”"
       : phase === "listening"
         ? autoListen
           ? "Your turn… pause when you’re done"
@@ -618,122 +674,76 @@ export function ControlVoice({ className, onRoomsMaybeChanged }: Props) {
             : phase === "error"
               ? "Something went wrong"
               : wakeOn
-                ? "Listening for Homelab"
+                ? "Listening for “NOVA”"
                 : "Hold the mic to talk";
 
   return (
-    <section
-      className={cn(
-        "relative flex min-h-0 flex-col overflow-hidden rounded-2xl border border-hairline bg-card/90 p-3.5",
-        className,
-      )}
-    >
-      <div className="flex shrink-0 items-start justify-between gap-2">
-        <div className="min-w-0">
-          <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-ink-faint">
-            Voice
-          </p>
-          <p className="truncate text-base font-medium text-ink-muted">{statusLabel}</p>
-        </div>
-        <div className="flex shrink-0 items-center justify-end">
-          <button
-            type="button"
-            onClick={() => {
-              const next = !wakeOn;
-              wakeOnRef.current = next;
-              setWakeOn(next);
-            }}
-            className={cn(
-              "rounded-full border px-3 py-1.5 text-xs font-medium",
-              wakeOn
-                ? "border-accent/40 bg-accent-soft text-accent"
-                : "border-hairline bg-panel text-ink-faint",
-            )}
-          >
-            {wakeOn ? "Wake on" : "Wake off"}
-          </button>
-        </div>
-      </div>
-
-      <div className="mt-3 grid min-h-0 flex-1 grid-cols-[1.15fr_1fr] gap-3">
-        <div className="flex min-h-0 flex-col justify-between gap-3 rounded-xl border border-hairline bg-panel/60 px-3.5 py-3">
-          <div className="min-h-0 flex-1">
-            <p className="text-[11px] font-semibold uppercase tracking-wide text-ink-faint">You</p>
-            <p className="mt-1 line-clamp-4 text-base leading-snug text-ink">{heard || "—"}</p>
-          </div>
-          <div className="min-h-0 flex-1 border-t border-hairline pt-3">
-            <p className="text-[11px] font-semibold uppercase tracking-wide text-ink-faint">
-              Assistant
-            </p>
-            <p
-              className={cn(
-                "mt-1 line-clamp-5 text-base leading-snug",
-                error ? "text-loss" : "text-ink-muted",
-              )}
-            >
-              {error || reply || "—"}
-            </p>
-            {savedNote && !error ? (
-              <p
-                className={cn(
-                  "mt-1.5 text-xs",
-                  savedNote.includes("failed") ? "text-loss" : "text-gain",
-                )}
-              >
-                {savedNote}
-              </p>
-            ) : null}
-          </div>
-        </div>
-
-        <div className="flex min-h-0 w-full flex-col items-center justify-center gap-2 overflow-hidden">
-          <button
-            type="button"
-            onPointerDown={(e) => void onPointerDown(e)}
-            onPointerUp={onPointerUp}
-            onPointerCancel={onPointerUp}
-            className={cn(
-              "voice-orb relative flex items-center justify-center rounded-full border transition-colors select-none touch-none",
-              "h-[8.5rem] w-[8.5rem]",
-              phase === "listening" || phase === "wake"
-                ? "border-warm/50 bg-warm-soft text-warm"
-                : phase === "thinking"
-                  ? "border-accent/50 bg-accent-soft text-accent"
-                  : phase === "speaking"
-                    ? "border-gain/50 bg-gain/10 text-gain"
-                    : phase === "error"
-                      ? "border-loss/50 bg-loss/10 text-loss"
-                      : "border-hairline bg-panel text-ink-muted",
-            )}
-            aria-label={
-              phase === "speaking"
-                ? "Stop speaking"
-                : phase === "listening"
-                  ? autoListen
-                    ? "Listening"
-                    : "Release to send"
-                  : "Hold to talk"
+    <section className="kiosk-voice" aria-labelledby="kiosk-voice-title">
+      <header className="kiosk-voice-header">
+        <h2 id="kiosk-voice-title">Voice assistant</h2>
+        <button
+          type="button"
+          className="kiosk-wake"
+          aria-label="Wake word detection"
+          aria-pressed={wakeOn}
+          onClick={() => {
+            const next = !wakeOn;
+            wakeOnRef.current = next;
+            setWakeOn(next);
+            if (next) {
+              wakeFatalRef.current = false;
+              wakeRestartCountRef.current = 0;
+              setError("");
+              startWake();
             }
-          >
-            <span className={cn("voice-ring", phase)} aria-hidden />
-            <span className={cn("voice-ring delay", phase)} aria-hidden />
-            {phase === "speaking" ? (
-              <Square className="relative z-10 h-9 w-9 fill-current" aria-hidden />
-            ) : phase === "listening" || phase === "wake" ? (
-              <Mic className="relative z-10 h-10 w-10" />
-            ) : (
-              <MicOff className="relative z-10 h-10 w-10" />
-            )}
-          </button>
-          <p className="text-center text-xs text-ink-faint">
-            {phase === "speaking"
-              ? "Tap to stop"
-              : phase === "listening" && autoListen
-                ? "Pause to send"
-                : phase === "listening" && recordingRef.current
-                  ? "Release to send"
-                  : "Hold to talk"}
-          </p>
+          }}
+        >
+          {wakeOn ? "Wake on" : "Wake off"}
+        </button>
+      </header>
+
+      <button
+        type="button"
+        className="kiosk-voice-array"
+        data-phase={phase}
+        aria-label={phase === "speaking" ? "Stop speaking" : "Hold to talk"}
+        aria-describedby="kiosk-voice-status"
+        onPointerDown={(event: PointerEvent<HTMLButtonElement>) => {
+          if (event.button !== 0) return;
+          event.preventDefault();
+          event.currentTarget.setPointerCapture(event.pointerId);
+          void beginHold();
+        }}
+        onPointerUp={endHold}
+        onPointerCancel={endHold}
+        onKeyDown={(event) => {
+          if (event.key !== " " && event.key !== "Enter") return;
+          event.preventDefault();
+          if (!event.repeat) void beginHold();
+        }}
+        onKeyUp={(event) => {
+          if (event.key !== " " && event.key !== "Enter") return;
+          event.preventDefault();
+          endHold();
+        }}
+        onBlur={endHold}
+      >
+        <VoiceRadialArray phase={phase} streamRef={streamRef} audioRef={audioRef} />
+      </button>
+      <p id="kiosk-voice-status" className="kiosk-voice-status" role="status">{statusLabel}</p>
+
+      <div className="kiosk-captions" aria-live="polite">
+        <div className="kiosk-caption">
+          <p>You</p>
+          <div tabIndex={heard ? 0 : undefined}>{heard || "—"}</div>
+        </div>
+        <div className="kiosk-caption">
+          <p>NOVA</p>
+          <div tabIndex={error || reply ? 0 : undefined}>
+            <span>{reply || (!error ? "—" : "")}</span>
+            {error && <small data-error="true">{error}</small>}
+            {savedNote && !error && <small>{savedNote}</small>}
+          </div>
         </div>
       </div>
 

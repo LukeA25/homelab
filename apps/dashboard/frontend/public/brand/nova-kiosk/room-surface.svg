@@ -1,0 +1,15 @@
+<svg preserveAspectRatio="none" overflow="visible" style="display: block;" width="268" height="533" viewBox="0 0 268 533" fill="none" xmlns="http://www.w3.org/2000/svg">
+<g id="Chamfered phosphor surface" clip-path="url(#clip0_0_101)">
+<path id="Vector" d="M12 1H267V514.638L255 532H1V18.3624L12 1Z" fill="url(#paint0_linear_0_101)" stroke="#496856"/>
+<path id="Vector_2" d="M1 42.9591V18.3624L13 1H34M267 490.041V514.638L255 532H234" stroke-width="2" stroke="#9FE8AE"/>
+</g>
+<defs>
+<linearGradient id="paint0_linear_0_101" x1="1" y1="1" x2="426.279" y2="214.04" gradientUnits="userSpaceOnUse">
+<stop stop-color="#203B30"/>
+<stop offset="1" stop-color="#10221E"/>
+</linearGradient>
+<clipPath id="clip0_0_101">
+<rect width="268" height="533" fill="white"/>
+</clipPath>
+</defs>
+</svg>
