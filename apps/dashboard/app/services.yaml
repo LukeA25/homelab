@@ -13,27 +13,27 @@
     - name: Finance
       href: http://finance.home.arpa
       icon: wallet
-      health: http://100.101.135.109:8000/api/data
+      health: http://finance-app:8000/api/data
       description: Spending tracker
     - name: Guitar
       href: http://guitar.home.arpa
       icon: music
-      health: http://100.101.135.109:8001
+      health: http://guitar-app:8000
       description: Song library
     - name: Theology
       href: http://theology.home.arpa
       icon: book
-      health: http://100.101.135.109:8002
+      health: http://theology-app:8000
       description: Study notes
     - name: Homework
       href: http://homework.home.arpa
       icon: graduation
-      health: http://100.101.135.109:8005/api/health
+      health: http://homework-app:8000/api/health
       description: Assignment tracker
     - name: Learning
       href: http://learning.home.arpa
       icon: graduation
-      health: http://100.101.135.109:8009/api/health
+      health: http://learning-app:8000/api/health
       description: Learning paths and concept notes
 
 - group: Homelab
@@ -41,7 +41,7 @@
     - name: Uptime Kuma
       href: http://kuma.home.arpa
       icon: activity
-      health: http://100.101.135.109:3001
+      health: http://uptime-kuma:3001
       description: Service monitoring
     - name: Portainer
       href: http://portainer.home.arpa

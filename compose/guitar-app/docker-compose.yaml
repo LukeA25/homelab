@@ -6,6 +6,13 @@ services:
     env_file:
       - .env
     ports:
-      - "8001:8000"
+      - "127.0.0.1:8001:8000"  # host-only; Caddy reaches it on the edge network
     volumes:
       - /srv/appdata/guitar-app:/data
+    networks:
+      - default
+      - edge
+
+networks:
+  edge:
+    external: true

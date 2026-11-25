@@ -8,6 +8,13 @@ services:
       OPENAI_API_KEY: ${OPENAI_API_KEY:-}
       VOICE_ENGINE: ${VOICE_ENGINE:-live}
     ports:
-      - "8009:8000"
+      - "127.0.0.1:8009:8000"  # host-only; Caddy reaches it on the edge network
     volumes:
       - /srv/appdata/learning-app:/data
+    networks:
+      - default
+      - edge
+
+networks:
+  edge:
+    external: true

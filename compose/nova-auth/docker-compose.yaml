@@ -1,0 +1,29 @@
+# Per-device sign-in for app hostnames (Caddy forward_auth). Nova-critical: see AGENTS.md.
+# Built from the gateway source with a different entrypoint; reads the device
+# registry read-only, so gateway restarts never lock anyone out of the apps.
+services:
+  nova-auth:
+    build: ../../apps/assistant
+    image: nova-auth
+    container_name: nova-auth
+    restart: unless-stopped
+    command: ["uvicorn", "app.authsvc:app", "--host", "0.0.0.0", "--port", "8000", "--no-access-log"]
+    env_file:
+      - .env
+    environment:
+      TZ: ${DISPLAY_TZ:-America/Chicago}
+      NOVA_DATA_DIR: /data
+      NOVA_DEVICES_READONLY: "1"
+      AUTH_HOST: auth.home.arpa
+      AUTH_DOMAIN: home.arpa
+    read_only: true
+    tmpfs:
+      - /tmp
+    volumes:
+      - /srv/appdata/nova/auth:/data/auth:ro
+    networks:
+      - edge
+
+networks:
+  edge:
+    external: true

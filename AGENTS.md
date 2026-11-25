@@ -24,15 +24,15 @@ The protection is about **runtime impact**, not about which files you touch. You
 
 | Component | Defined in | Interrupted by | Edits with immediate live effect |
 |---|---|---|---|
-| `assistant` (Nova gateway: voice turns, device auth, tools, approvals) | `compose/assistant/`, `apps/assistant/` | stop, restart, rebuild, recreate, `compose/assistant/restart.sh`, `docker compose up` in that stack, `.env` change plus recreate | files under `/srv/appdata/nova/context/` (read on every turn); `/srv/appdata/nova/devices.db` (auth). Source code is baked into the image. |
+| `assistant` (Nova gateway: voice turns, device auth, tools, approvals) | `compose/assistant/`, `apps/assistant/` | stop, restart, rebuild, recreate, `compose/assistant/restart.sh`, `docker compose up` in that stack, `.env` change plus recreate | files under `/srv/appdata/nova/context/` (read on every turn); `/srv/appdata/nova/auth/devices.db` (device registry). Source code is baked into the image. |
+| `nova-auth` (per-device sign-in for every gated `*.home.arpa` app and the kiosk routes; Caddy `forward_auth`) | `compose/nova-auth/`, `apps/assistant/app/authsvc.py` | stop, restart, rebuild, recreate; `AUTH_SECRET` change signs every browser out. If it is down, gated hosts fail closed. | `/srv/appdata/nova/auth/devices.db` (read-only mount) |
 | `ops-runner` (only holder of the Docker socket; executes approved operations) | `compose/ops-runner/`, `apps/ops-runner/` | any restart or rebuild. **Manual-only**: apply from the host, never through itself or the worker. | — |
 | `caddy` (TLS and routing for `assistant.home.arpa` and every `*.home.arpa` host) | `compose/caddy/Caddyfile`, `compose/caddy/private/*.caddy` | restart, reload, recreate | none until reloaded |
-| `dashboard` (serves the Pi kiosk `/control`, `/api/rooms` and related routes on the assistant hostname) | `compose/dashboard/`, `apps/dashboard/` | restart, rebuild | none until rebuilt |
+| `dashboard` (serves the kiosk `/control`, `/api/rooms` and related routes on the assistant hostname) | `compose/dashboard/`, `apps/dashboard/` | restart, rebuild | none until rebuilt |
 | `pihole` (resolves `*.home.arpa` for tailnet clients) | `compose/pihole/` | restart, recreate, DNS record edits via `pihole-FTL --config dns.hosts` | live DNS config edits |
 | Docker network `nova-internal` (gateway ↔ worker ↔ ops-runner) | created by hand (runbook) | removal or recreation | — |
+| Docker network `edge` (Caddy, `nova-auth`, gateway and dashboard ↔ apps; app ports are host-only) | created by hand (runbook) | removal or recreation | — |
 | Host networking | host | `tailscaled` restart or config change, Tailscale serve/funnel changes, Docker daemon restart, firewall changes | — |
-| Raspberry Pi nightstand client | `apps/assistant/pi/` (deployed by hand to `raspberrypi`) | `homelab-wake.service` / `homelab-kiosk.service` restart or reconfiguration | — |
-
 `agent-worker` (the Cursor coding agent) is not on the voice path, but it is the remote repair channel: it is **manual-only** and must never be rebuilt or restarted from inside itself. If it is down, use the host recovery path below.
 
 Services Nova calls as tools (Home Assistant, `homework-app`, `finance-app`, `notify`) are not on the voice path: if they stop, a tool fails but voice keeps working. `notify` becomes Nova-critical once Nova notifications ship (Phase 4); update this table then.
@@ -54,14 +54,14 @@ Inside `agent-worker` there is no Docker access. Use `homelab-ops` (`stacks`, `p
 
 ### Deploys
 
-`scripts/deploy.sh` (run by CI on push to `main`) deploys changed routine stacks and `agent-worker` automatically. It never deploys `caddy`, `dashboard`, `pihole`, `assistant` or `ops-runner`; it lists them as "NOT deployed". Apply those by hand, after approval, with `cd compose/<stack> && docker compose up -d --build`.
+`scripts/deploy.sh` (run by CI on push to `main`) deploys changed routine stacks and `agent-worker` automatically. It never deploys `caddy`, `dashboard`, `pihole`, `assistant`, `nova-auth` or `ops-runner`; it lists them as "NOT deployed". Apply those by hand, after approval, with `cd compose/<stack> && docker compose up -d --build`.
 
 ### Recovery path independent of Nova
 
 - SSH to the homelab over Tailscale (`100.101.135.109`) or the LAN.
 - `cd /home/landerson/homelab/compose/<stack> && docker compose up -d` (add `--build` for app stacks).
 - Portainer at `https://100.101.135.109:9443`.
-- Every service is reachable directly by host port if Caddy or DNS is down (see `README.md` service table).
+- App ports are bound to `127.0.0.1` only. If Caddy, DNS or `nova-auth` is down, reach an app from the host (`curl 127.0.0.1:<port>`) or over an SSH tunnel: `ssh -L 8000:127.0.0.1:8000 landerson@100.101.135.109`, then open `http://localhost:8000`. Jellyfin (8096), Home Assistant (8123) and Portainer (9443) stay directly reachable.
 
 ## Keeping Nova's capability index accurate
 

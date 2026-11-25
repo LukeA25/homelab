@@ -11,10 +11,25 @@ services:
       HOMEWORK_DB: /homework/homework.db
       DISK_PATH: /homework
       DASHBOARD_DATA_DIR: /data
+      # App ports are host-only; reach apps by container name on the edge network.
+      # These override any older values in .env.
+      FINANCE_BASE_URL: http://finance-app:8000
+      CAST_UPSTREAM_HOME: http://127.0.0.1:8000
+      CAST_UPSTREAM_FINANCE: http://finance-app:8000
+      CAST_UPSTREAM_GUITAR: http://guitar-app:8000
+      CAST_UPSTREAM_THEOLOGY: http://theology-app:8000
+      CAST_UPSTREAM_HOMEWORK: http://homework-app:8000
     ports:
-      - "8004:8000"
+      - "127.0.0.1:8004:8000"  # host-only; Caddy reaches it on the edge network
       # Guest screen gateway — localhost only; Tailscale Funnel is its sole way in.
       - "127.0.0.1:8010:8010"
     volumes:
       - /home/landerson/homework-test/data:/homework:ro
       - /srv/appdata/dashboard:/data
+    networks:
+      - default
+      - edge
+
+networks:
+  edge:
+    external: true

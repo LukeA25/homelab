@@ -10,6 +10,13 @@ services:
       NOTIFY_DB: /data/notify.db
       NOTIFY_VAPID: /data/vapid.json
     ports:
-      - "8008:8000"
+      - "127.0.0.1:8008:8000"  # host-only; Caddy reaches it on the edge network
     volumes:
       - /srv/appdata/notify:/data
+    networks:
+      - default
+      - edge
+
+networks:
+  edge:
+    external: true

@@ -30,11 +30,12 @@ declare -A TRIGGERS=(
   [notify]="compose/notify/ apps/notify/"
   [agent-worker]="compose/agent-worker/ apps/agent-worker/"
   [assistant]="compose/assistant/ apps/assistant/"
+  [nova-auth]="compose/nova-auth/ apps/assistant/"
   [ops-runner]="compose/ops-runner/ apps/ops-runner/"
 )
 
 # Never auto-deployed: they carry Nova's voice/control path or its approval channel.
-MANUAL=(caddy dashboard pihole assistant ops-runner)
+MANUAL=(caddy dashboard pihole assistant nova-auth ops-runner)
 
 # Built from source rather than pulled.
 BUILT=(dashboard finance-app guitar-app theology-app homework-app learning-app notify agent-worker)

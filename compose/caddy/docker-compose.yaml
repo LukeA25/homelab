@@ -11,3 +11,10 @@ services:
       - ./private:/etc/caddy/private:ro
       - /srv/appdata/caddy/data:/data
       - /srv/appdata/caddy/config:/config
+    networks:
+      - default
+      - edge
+
+networks:
+  edge:
+    external: true

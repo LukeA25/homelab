@@ -2,6 +2,16 @@
 
 Meaningful code, API, infrastructure, container and architectural changes. See `AGENTS.md` for what belongs here. Git history holds the full detail.
 
+## 2026-11-25 — Nova Phase 1b: app lockdown (applied)
+
+- Pi-hole left unchanged: the running container differs from `compose/pihole` (LAN DNS binding, missing `.env`). Its admin UI stays on port 8080 with its own password.
+- Raspberry Pi nightstand client retired; `pi-wake` credential revoked.
+
+- New `nova-auth` service: per-device sign-in for app hostnames through Caddy `forward_auth`, one sign-in per device at `auth.home.arpa`, per-app scopes (`app.finance`, `app.home`, …), bearer credentials for scripts.
+- App ports (finance, guitar, theology, homework, learning, notify, dashboard, Uptime Kuma, Nova gateway) bind to `127.0.0.1`; Caddy and internal callers use container names on the new internal `edge` network. Plain-HTTP app hosts redirect to HTTPS.
+- Device registry moves to `/srv/appdata/nova/auth/devices.db` (automatic migration) with a rollback journal so `nova-auth` can mount it read-only.
+- `scripts/deploy.sh` never auto-deploys `nova-auth`.
+
 ## 2026-11-25 — Nova Phase 1: trusted gateway (deployed; legacy shared token revoked)
 
 - **Gateway (`apps/assistant`)**: per-device revocable credentials with scopes (`devices.db`, CLI `python -m app.devices`); the shared token is imported once as `legacy-shared`, and the public default is refused unless `ALLOW_DEFAULT_LEGACY_TOKEN=true`. Query-string tokens removed; WebSockets use single-use tickets.

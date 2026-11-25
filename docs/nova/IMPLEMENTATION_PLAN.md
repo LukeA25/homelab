@@ -107,9 +107,45 @@ Steps 4 and 6 interrupt Nova's voice path and need explicit approval at the time
 - Deploy gating: remove `caddy`, `dashboard` and `pihole` from automatic deploy; add a manual path for critical stacks.
 - Tests: unauthorized device, out-of-scope tool (including via the model), protected action without approval, finance money movement unavailable.
 
-### Phase 1b — App lockdown
+### Phase 1b — App lockdown (applied 2026-11-25 18:51–18:56 UTC)
 
-Port rebinding, shared Docker network, Caddy `forward_auth`, device enrollment for browsers and kiosks, Home Assistant firewall rule. One maintenance window.
+Applied with one deviation: **Pi-hole was left unchanged.** The running container was created from an older compose file that also binds DNS on the LAN (`192.168.1.156:53`) and its `compose/pihole/.env` no longer exists, so recreating it from the repo would drop LAN DNS. Its admin UI stays on `0.0.0.0:8080` (own password) and Caddy still proxies to it there. Reconcile `compose/pihole` with the running container before ever recreating it. The Raspberry Pi nightstand client has been retired and its `pi-wake` credential revoked.
+
+Note: `compose/caddy/Caddyfile` is bind-mounted as a single file. Editors and `sed -i` replace the file, so `caddy reload` keeps reading the old one; recreate Caddy (`docker compose up -d --force-recreate`) after editing.
+
+Decisions (2026-11-25): single sign-in per device at `auth.home.arpa`; apps with their own login (Jellyfin, Home Assistant, Uptime Kuma, Pi-hole, Portainer) keep it; Jellyfin, Home Assistant and Portainer stay directly reachable, Uptime Kuma and Pi-hole only through Caddy; Home Assistant gets an nftables rule run by the user; `internships-app` is out of scope for now. The homework Shortcuts run `add.py` over SSH and touch no app port.
+
+Design:
+- `nova-auth` (`apps/assistant/app/authsvc.py`, image built from the gateway source) answers `forward_auth` at `/verify?app=<name>`; a device needs scope `app.<name>` (`home` covers the dashboard, homepage and kiosk routes). Browsers without a session are redirected to `auth.home.arpa/login`, sign in once with their credential (or a `#token=` link), and come back through `/__auth/callback` with a 60-second single-use code that becomes a host-bound, HTTPS-only session cookie. Scripts send `Authorization: Bearer <credential>`. Every check re-reads the registry, so revocation is immediate.
+- The device registry moves to `/srv/appdata/nova/auth/devices.db` (migrated automatically by the gateway) and uses SQLite's rollback journal, so `nova-auth` mounts only that directory, read-only, with a read-only root filesystem and no network except `edge`.
+- App ports bind to `127.0.0.1`; Caddy, `nova-auth`, the gateway and the dashboard reach apps by container name on the internal Docker network `edge`. Plain-HTTP app hosts redirect to HTTPS. The gateway's port 8006 also becomes host-only, closing direct access to `/api/last-turn`, which Caddy now gates as `app.home`.
+- Rehearsed end to end on an isolated network with the real Caddyfile (redirect to sign-in, 401 for API calls, bearer scope check, sign-in hand-off, code replay, host binding, revocation, assistant-host gating).
+
+#### Phase 1b maintenance window
+
+Expected impact: app hostnames unavailable for 2–3 minutes in total; voice drops for about 5 seconds twice (gateway and Caddy recreate); DNS pauses about 10 seconds (Pi-hole recreate). Every browser then signs in once per device.
+
+Prechecks (no live effect):
+1. On the Pi, `ASSISTANT_URL` in `wake.env` is unset or `https://assistant.home.arpa` (port 8006 becomes host-only).
+2. `compose/nova-auth/.env` with `AUTH_SECRET` (`openssl rand -hex 32`).
+3. `docker network create --internal edge`.
+4. Tag rollback images: `assistant-assistant:pre-1b`, `dashboard-dashboard:pre-1b`.
+
+Window, in order:
+1. Gateway: `cd compose/assistant && docker compose up -d --build`. Check health, `auth/devices.db` exists, device list unchanged.
+2. `cd compose/nova-auth && docker compose up -d --build`. Check `/health` from the gateway container.
+3. DNS: add `100.101.135.109 auth.home.arpa` to the full `dns.hosts` list with `pihole-FTL --config dns.hosts`.
+4. Apps: `docker compose up -d` in `finance-app`, `guitar-app`, `theology-app`, `homework-app`, `learning-app`, `notify`, `uptime-kuma`.
+5. `cd compose/dashboard && docker compose up -d --build`; `cd compose/pihole && docker compose up -d`.
+6. `cd compose/caddy && docker compose up -d` (recreate: joins `edge`, loads the new Caddyfile).
+7. Verify: every gated host redirects to sign-in; `auth.home.arpa` loads; Nova health through Caddy; Jellyfin, Home Assistant, Uptime Kuma, Pi-hole and Portainer load; app ports refuse connections on `100.101.135.109`; guest screen answers on `127.0.0.1:8010`.
+8. Sign in each device once. Pi kiosk: open `https://auth.home.arpa/login?rd=https://assistant.home.arpa/control#token=<pi-wake credential>` in its Chromium.
+9. Uptime Kuma monitors move to container names (`http://finance-app:8000`, …); Kuma is on `edge`.
+10. Commit and push only after the window: routine app stacks auto-deploy and need `edge` and the new Caddyfile.
+
+Home Assistant firewall (user, with sudo; optional, not persistent across reboots unless added to `/etc/nftables.conf`): accept TCP 8123 on `lo`, `tailscale0`, `docker0` and `br-*`, drop it elsewhere (the LAN). The Home Assistant phone app then needs Tailscale at home too. Remove with `sudo nft delete table inet ha_guard`.
+
+Rollback: `git checkout 45f4e16 -- compose apps/dashboard apps/assistant scripts/deploy.sh`, move the registry back (`docker exec assistant mv /data/auth/devices.db /data/devices.db`), then `docker compose up -d --build` in `assistant`, the app stacks, `dashboard`, `pihole` and `caddy`, and `docker compose down` in `nova-auth`.
 
 ### Phase 2 — Voice and context
 

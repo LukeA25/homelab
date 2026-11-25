@@ -15,15 +15,19 @@ import argparse
 import hashlib
 import hmac
 import json
+import os
 import re
 import secrets
+import sqlite3
 import sys
 from dataclasses import dataclass
 from datetime import datetime, timezone
 
 from . import store
 
-DB = "devices.db"
+# Its own directory so nova-auth can mount it read-only without seeing the rest of Nova's state.
+DB = "auth/devices.db"
+_OLD_DB = "devices.db"
 TOKEN_PREFIX = "nova_"
 LEGACY_ID = "legacy-shared"
 _ID = re.compile(r"[a-z0-9](?:[a-z0-9-]{0,30}[a-z0-9])?")
@@ -57,8 +61,32 @@ def _hash(token: str) -> str:
     return hashlib.sha256(token.encode("utf-8")).hexdigest()
 
 
+def _readonly() -> bool:
+    return os.getenv("NOVA_DEVICES_READONLY", "").lower() in ("1", "true", "yes")
+
+
+def _migrate_old_location() -> None:
+    old, new = store.data_dir() / _OLD_DB, store.data_dir() / DB
+    if not old.exists() or new.exists():
+        return
+    conn = sqlite3.connect(old)
+    try:
+        conn.execute("PRAGMA wal_checkpoint(TRUNCATE)")
+        conn.execute("PRAGMA journal_mode=DELETE")
+    finally:
+        conn.close()
+    new.parent.mkdir(parents=True, exist_ok=True)
+    os.replace(old, new)
+    for suffix in ("-wal", "-shm"):
+        old.with_name(old.name + suffix).unlink(missing_ok=True)
+
+
 def _conn():
-    conn = store.connect(DB)
+    if _readonly():
+        return store.connect(DB, readonly=True)
+    _migrate_old_location()
+    # DELETE journal mode: WAL would stop nova-auth reading through a read-only mount.
+    conn = store.connect(DB, journal="DELETE")
     conn.execute(
         """
         CREATE TABLE IF NOT EXISTS devices (
@@ -141,6 +169,15 @@ def verify(token: str | None) -> Device | None:
     if row is None or not hmac.compare_digest(row["secret_hash"], digest):
         return None
     return _row_device(row)
+
+
+def get_active(device_id: str) -> Device | None:
+    """Look up a device that is still enrolled, without its credential (for signed sessions)."""
+    with _conn() as conn:
+        row = conn.execute(
+            "SELECT * FROM devices WHERE id = ? AND legacy = 0 AND revoked_at IS NULL", (device_id,)
+        ).fetchone()
+    return _row_device(row) if row else None
 
 
 def revoke(device_id: str) -> bool:

@@ -4,6 +4,13 @@ services:
     container_name: uptime-kuma
     restart: unless-stopped
     ports:
-      - "3001:3001"
+      - "127.0.0.1:3001:3001"  # host-only; Caddy reaches it on the edge network
     volumes:
       - /srv/appdata/uptime-kuma:/app/data
+    networks:
+      - default
+      - edge
+
+networks:
+  edge:
+    external: true

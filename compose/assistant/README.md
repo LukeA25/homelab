@@ -37,6 +37,8 @@ docker exec assistant python -m app.devices revoke ipad
 
 Scopes: `nova.voice` (talk to Nova), `home.lights`, `home.scenes`, `home.tv`, `weather.read`, `homework.read`, `homework.write`, `finance.read`, `nova.persona`, `nova.profile`, `worker.status`, `worker.query`, `worker.change`, `ops.approve`. `*` and prefixes like `home.*` work.
 
+App sign-in (checked by `nova-auth` at Caddy): `app.home` (dashboard, homepage, kiosk), `app.finance`, `app.guitar`, `app.theology`, `app.homework`, `app.learning`, `app.notify`; `app.*` grants all. Example for an iPad limited to theology: `--scopes 'app.theology'`.
+
 The old shared `ASSISTANT_DEVICE_TOKEN` is imported once as device `legacy-shared` with full access so existing clients keep working. `/api/health` warns while it is active. The public default value is refused unless `ALLOW_DEFAULT_LEGACY_TOKEN=true`.
 
 ## Approvals

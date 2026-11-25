@@ -32,71 +32,114 @@
 	}
 }
 
+# Per-device sign-in (nova-auth). {args[0]} is the app name; the device needs
+# scope app.<name>. Browsers sign in once at auth.home.arpa; scripts send
+# "Authorization: Bearer <credential>". The web manifest is exempt because
+# browsers fetch it without cookies.
+(gate) {
+	handle /__auth/* {
+		reverse_proxy nova-auth:8000
+	}
+	@gated not path /__auth/* /manifest.webmanifest
+	forward_auth @gated nova-auth:8000 {
+		uri /verify?app={args[0]}
+		copy_headers X-Nova-Device
+	}
+}
+
+# Plain-HTTP app hosts only redirect: sign-in cookies are HTTPS-only.
+(to_https) {
+	import local_ca
+	handle {
+		redir https://{host}{uri}
+	}
+}
+
 # Cast API + phone script live on the dashboard; every app host forwards them
 # so the phone's cast requests stay same-origin.
 (cast) {
 	handle /__cast/* {
-		reverse_proxy 100.101.135.109:8004
+		reverse_proxy dashboard:8000
 	}
 }
 
 # Phone notifications. Forwarded onto each app so a subscription belongs to
-# that app. Sending stays on :8008 and is not exposed through this path.
+# that app. Sending is not exposed through this path.
 (notify) {
 	handle /__notify/* {
-		reverse_proxy 100.101.135.109:8008
+		reverse_proxy notify:8000
 	}
 	handle /manifest.webmanifest {
-		reverse_proxy 100.101.135.109:8008
+		reverse_proxy notify:8000
 	}
 }
 
 # Dashboard (+ control/tv) behind assistant.home.arpa — reuses the cert
 # that already works in browsers where homepage.home.arpa HTTPS hangs.
+# Nova's own routes are not gated here: the gateway checks device credentials itself.
 (assistant_host) {
+	handle /__auth/* {
+		reverse_proxy nova-auth:8000
+	}
+
+	@home_gated path /control /control/* /tv /tv/* /__cast/* /api/rooms /api/rooms/* /api/config /api/weather /api/finance /api/finance/* /api/homework /api/services /api/system /api/liturgy /api/tv-display /api/last-turn /api/last-turn/*
+	forward_auth @home_gated nova-auth:8000 {
+		uri /verify?app=home
+		copy_headers X-Nova-Device
+	}
+
 	@dash_pages path /control /control/* /tv /tv/* /__cast/* /brand/nova-*
 	handle @dash_pages {
-		reverse_proxy 100.101.135.109:8004
+		reverse_proxy dashboard:8000
 	}
 
 	@dash_api path /api/rooms /api/rooms/* /api/config /api/weather /api/finance /api/finance/* /api/homework /api/services /api/system /api/liturgy /api/tv-display
 	handle @dash_api {
-		reverse_proxy 100.101.135.109:8004
+		reverse_proxy dashboard:8000
 	}
 
 	# Vite hashed bundles; assistant static is app.js / style.css
 	@dash_assets path_regexp dash_assets ^/assets/(index|night|orbitron-latin|chakra-petch-latin|ibm-plex-mono-latin|barlow-latin)-
 	handle @dash_assets {
-		reverse_proxy 100.101.135.109:8004
+		reverse_proxy dashboard:8000
 	}
 
 	import notify
 
 	handle {
-		reverse_proxy 100.101.135.109:8006
+		reverse_proxy assistant:8000
 	}
+}
+
+http://auth.home.arpa {
+	import to_https
+}
+
+https://auth.home.arpa {
+	import local_https
+	reverse_proxy nova-auth:8000
 }
 
 http://homepage.home.arpa,
 http://homelab.tail47f19f.ts.net,
 http://100.101.135.109 {
 	import local_ca
-	import notify
 	handle {
-		reverse_proxy 100.101.135.109:8004
+		redir https://homepage.home.arpa{uri}
 	}
 }
 
 https://homepage.home.arpa {
 	import local_https
+	import gate home
 	import notify
 	handle {
-		reverse_proxy 100.101.135.109:8004
+		reverse_proxy dashboard:8000
 	}
 }
 
 http://kuma.home.arpa {
-	reverse_proxy 100.101.135.109:3001
+	reverse_proxy uptime-kuma:3001
 }
 
 http://jellyfin.home.arpa {
@@ -116,80 +159,71 @@ http://portainer.home.arpa {
 }
 
 http://finance.home.arpa {
-	import cast
-	import notify
-	handle {
-		reverse_proxy 100.101.135.109:8000
-	}
+	import to_https
 }
 
 https://finance.home.arpa {
 	import local_https
+	import gate finance
 	import cast
 	import notify
 	handle {
-		reverse_proxy 100.101.135.109:8000
+		reverse_proxy finance-app:8000
 	}
 }
 
 http://guitar.home.arpa {
-	import cast
-	import notify
-	handle {
-		reverse_proxy 100.101.135.109:8001
-	}
+	import to_https
 }
 
 https://guitar.home.arpa {
 	import local_https
+	import gate guitar
 	import cast
 	import notify
 	handle {
-		reverse_proxy 100.101.135.109:8001
+		reverse_proxy guitar-app:8000
 	}
 }
 
 http://theology.home.arpa {
-	import cast
-	import notify
-	handle {
-		reverse_proxy 100.101.135.109:8002
-	}
+	import to_https
 }
 
 https://theology.home.arpa {
 	import local_https
+	import gate theology
 	import cast
 	import notify
 	handle {
-		reverse_proxy 100.101.135.109:8002
+		reverse_proxy theology-app:8000
 	}
 }
 
 http://homework.home.arpa {
-	import cast
-	import notify
-	handle {
-		reverse_proxy 100.101.135.109:8005
-	}
+	import to_https
 }
 
 https://homework.home.arpa {
 	import local_https
+	import gate homework
 	import cast
 	import notify
 	handle {
-		reverse_proxy 100.101.135.109:8005
+		reverse_proxy homework-app:8000
 	}
 }
 
 http://notify.home.arpa {
-	reverse_proxy 100.101.135.109:8008
+	import to_https
 }
 
 https://notify.home.arpa {
 	import local_https
-	reverse_proxy 100.101.135.109:8008
+	import gate notify
+	handle {
+		reverse_proxy notify:8000
+	}
 }
 
 import /etc/caddy/private/*.caddy
@@ -199,7 +233,10 @@ http://homeassistant.home.arpa {
 }
 
 http://assistant.home.arpa {
-	import assistant_host
+	import local_ca
+	handle {
+		redir https://assistant.home.arpa{uri}
+	}
 }
 
 https://assistant.home.arpa {
@@ -209,10 +246,13 @@ https://assistant.home.arpa {
 
 # Personal learning companion
 http://learning.home.arpa {
-	reverse_proxy 100.101.135.109:8009
+	import to_https
 }
 
 https://learning.home.arpa {
 	import local_https
-	reverse_proxy 100.101.135.109:8009
+	import gate learning
+	handle {
+		reverse_proxy learning-app:8000
+	}
 }

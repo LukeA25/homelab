@@ -11,19 +11,25 @@ services:
       TZ: ${DISPLAY_TZ:-America/Chicago}
       NOVA_DATA_DIR: /data
       HA_BASE_URL: ${HA_BASE_URL:-http://100.101.135.109:8123}
-      HOMEWORK_BASE_URL: ${HOMEWORK_BASE_URL:-http://100.101.135.109:8005}
-      DASHBOARD_BASE_URL: ${DASHBOARD_BASE_URL:-http://100.101.135.109:8004}
+      # App ports are host-only; reach apps by container name on the edge network.
+      # These override any older values in .env.
+      HOMEWORK_BASE_URL: http://homework-app:8000
+      DASHBOARD_BASE_URL: http://dashboard:8000
       WORKER_URL: http://agent-worker:8000
       OPS_URL: http://ops-runner:8000
     ports:
-      - "8006:8000"
+      # Host-only: clients use https://assistant.home.arpa through Caddy.
+      - "127.0.0.1:8006:8000"
     volumes:
       # Context, devices, approvals, history and audit logs. Never inside the repo checkout.
       - /srv/appdata/nova:/data
     networks:
       - default
       - nova-internal
+      - edge
 
 networks:
   nova-internal:
+    external: true
+  edge:
     external: true

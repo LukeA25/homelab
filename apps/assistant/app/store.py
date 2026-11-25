@@ -51,9 +51,18 @@ def file_lock(target: Path) -> Iterator[None]:
             fcntl.flock(fh, fcntl.LOCK_UN)
 
 
-def connect(name: str) -> sqlite3.Connection:
-    conn = sqlite3.connect(path(name), timeout=10, isolation_level=None)
+def connect(name: str, *, journal: str = "WAL", readonly: bool = False) -> sqlite3.Connection:
+    """Open a database under the data dir.
+
+    WAL readers need write access to the directory, so a database that a
+    read-only mount must read uses journal="DELETE" instead.
+    """
+    if readonly:
+        uri = f"file:{data_dir().joinpath(name)}?mode=ro"
+        conn = sqlite3.connect(uri, uri=True, timeout=10, isolation_level=None)
+    else:
+        conn = sqlite3.connect(path(name), timeout=10, isolation_level=None)
+        conn.execute(f"PRAGMA journal_mode={journal}")
     conn.row_factory = sqlite3.Row
-    conn.execute("PRAGMA journal_mode=WAL")
     conn.execute("PRAGMA busy_timeout=10000")
     return conn
