@@ -13,6 +13,8 @@ Meaningful code, API, infrastructure, container and architectural changes. See `
 - **New `ops-runner`** stack: sole holder of the Docker socket; routine stacks run directly, protected stacks need a gateway-relayed approval, `ops-runner` and `agent-worker` are manual-only.
 - **Deploy gating**: `scripts/deploy.sh` no longer auto-deploys `caddy`, `dashboard`, `pihole`, `assistant` or `ops-runner`; it lists them as skipped.
 - `assistant` no longer mounts the repo or the Docker socket; state moves to `/srv/appdata/nova`.
+- Fixed: the Cursor edit popup always showed because its CSS overrode `hidden`. Web UI files are now served with `Cache-Control: no-cache` so browsers pick up fixes.
+- Web UI saves the device credential in the browser, accepts a one-time `/#token=…` link, and shows which device it is signed in as.
 - Fixed: a light *status* question could change the lights. The pre-existing light nudge told the model to call a light-changing tool whenever a message mentioned lights. It now fires only when the model claims a change without calling any tool.
 - Deployed 2026-11-25 02:48 UTC: `ops-runner`, `agent-worker`, `nova-internal` network, and the new gateway (still accepting the legacy token). Rollback image: `assistant-assistant:pre-phase1`.
 

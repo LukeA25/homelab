@@ -55,6 +55,8 @@ async def _correlate(request: Request, call_next):
     reqctx.session_id.set(None)
     response = await call_next(request)
     response.headers["X-Request-Id"] = rid
+    if not request.url.path.startswith(("/api/", "/ws/")):
+        response.headers["Cache-Control"] = "no-cache"
     return response
 
 

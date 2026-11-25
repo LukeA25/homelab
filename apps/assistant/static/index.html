@@ -4,7 +4,7 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
     <title>Homelab Assistant</title>
-    <link rel="stylesheet" href="/assets/style.css" />
+    <link rel="stylesheet" href="/assets/style.css?v=2" />
   </head>
   <body>
     <main class="shell">
@@ -45,9 +45,9 @@
       <section class="card small">
         <label class="token-row">
           Device token
-          <input id="token" type="password" value="dev-token-change-me" />
+          <input id="token" type="password" autocomplete="off" />
         </label>
-        <p class="meta">Must match <code>ASSISTANT_DEVICE_TOKEN</code> in <code>compose/assistant/.env</code>.</p>
+        <p class="meta" id="token-status"></p>
       </section>
     </main>
 
@@ -73,6 +73,6 @@
       </section>
     </div>
 
-    <script src="/assets/app.js"></script>
+    <script src="/assets/app.js?v=2"></script>
   </body>
 </html>

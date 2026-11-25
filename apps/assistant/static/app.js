@@ -33,9 +33,47 @@ function sessionId() {
   return id;
 }
 
+const TOKEN_KEY = "nova_device_token";
+const tokenStatus = document.getElementById("token-status");
+
 function token() {
   return tokenInput.value.trim();
 }
+
+async function showDevice() {
+  if (!token()) {
+    tokenStatus.textContent = "No credential saved on this device.";
+    return;
+  }
+  try {
+    const res = await fetch("/api/devices/me", { headers: authHeaders() });
+    if (!res.ok) {
+      tokenStatus.textContent = "This credential was rejected.";
+      return;
+    }
+    const me = await res.json();
+    tokenStatus.textContent = `Signed in as ${me.name || me.id}.`;
+  } catch {
+    tokenStatus.textContent = "Could not reach Nova.";
+  }
+}
+
+function saveToken(value) {
+  tokenInput.value = value.trim();
+  localStorage.setItem(TOKEN_KEY, tokenInput.value);
+  showDevice();
+}
+
+// The fragment is never sent to the server, so the credential stays out of request logs.
+const fragmentToken = new URLSearchParams(location.hash.slice(1)).get("token");
+if (fragmentToken) {
+  history.replaceState(null, "", location.pathname + location.search);
+  saveToken(fragmentToken);
+} else {
+  tokenInput.value = localStorage.getItem(TOKEN_KEY) || "";
+  showDevice();
+}
+tokenInput.addEventListener("change", () => saveToken(tokenInput.value));
 
 function setPhase(name) {
   phaseEl.textContent = name;
