@@ -6,7 +6,6 @@ from typing import Any
 from openai import AsyncOpenAI
 
 from .config import settings
-from .tools import responses_tools
 
 
 def _client() -> AsyncOpenAI:
@@ -55,13 +54,13 @@ async def respond(
     input_list: list[Any],
     tools: list[dict[str, Any]],
 ) -> Any:
-    """Same Responses API path the finance consultant uses (gpt-5.4)."""
+    """Same Responses API path the finance consultant uses (gpt-5.4). tools are Responses function tools."""
     cfg = settings()
     client = _client()
     kwargs: dict[str, Any] = {
         "model": cfg["llm_model"],
         "instructions": instructions,
-        "tools": responses_tools(tools),
+        "tools": tools,
         "input": input_list,
     }
     effort = cfg.get("llm_reasoning") or "medium"

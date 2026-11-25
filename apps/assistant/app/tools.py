@@ -1,259 +1,122 @@
+"""Capability handlers. Schemas, scopes and policies live in capabilities.yaml."""
+
 from __future__ import annotations
 
 import json
-from typing import Any, Callable, Awaitable
+from dataclasses import dataclass
+from typing import Any, Awaitable, Callable
 
-from . import finance, ha, homework
-
-ToolHandler = Callable[[dict[str, Any]], Awaitable[Any]]
-
-TOOLS: list[dict[str, Any]] = [
-    {
-        "type": "function",
-        "function": {
-            "name": "get_rooms",
-            "description": "Get current bedroom and living room light status.",
-            "parameters": {"type": "object", "properties": {}, "additionalProperties": False},
-        },
-    },
-    {
-        "type": "function",
-        "function": {
-            "name": "set_room_lights",
-            "description": (
-                "Control a room's lights. Rooms: bedroom, living_room. "
-                "Use brightness_pct 1-100 and optional color_temp_kelvin "
-                "(3200=warm, 4500=neutral)."
-            ),
-            "parameters": {
-                "type": "object",
-                "properties": {
-                    "room_id": {
-                        "type": "string",
-                        "enum": ["bedroom", "living_room"],
-                    },
-                    "on": {"type": "boolean"},
-                    "brightness_pct": {"type": "integer", "minimum": 1, "maximum": 100},
-                    "color_temp_kelvin": {"type": "integer"},
-                },
-                "required": ["room_id", "on"],
-                "additionalProperties": False,
-            },
-        },
-    },
-    {
-        "type": "function",
-        "function": {
-            "name": "apply_scene",
-            "description": "Apply a named scene: sleep (bedroom off + blank TV), wake (1% warm + show TV), study (80% neutral).",
-            "parameters": {
-                "type": "object",
-                "properties": {
-                    "scene": {
-                        "type": "string",
-                        "enum": ["sleep", "wake", "study"],
-                    }
-                },
-                "required": ["scene"],
-                "additionalProperties": False,
-            },
-        },
-    },
-    {
-        "type": "function",
-        "function": {
-            "name": "get_weather",
-            "description": (
-                "Get local weather from Home Assistant: current condition, temperature, "
-                "humidity, multi-day forecast, and today.hourly-style periods with precipitation "
-                "(today.will_rain, today.periods). Use for rain today, forecast, and temperature questions."
-            ),
-            "parameters": {"type": "object", "properties": {}, "additionalProperties": False},
-        },
-    },
-    {
-        "type": "function",
-        "function": {
-            "name": "list_homework",
-            "description": "List upcoming open homework assignments.",
-            "parameters": {"type": "object", "properties": {}, "additionalProperties": False},
-        },
-    },
-
-    {
-        "type": "function",
-        "function": {
-            "name": "add_homework",
-            "description": (
-                "Create a homework assignment. due should be ISO-like, e.g. "
-                "2026-09-20 or 2026-09-20T23:59. course_code must match an existing course."
-            ),
-            "parameters": {
-                "type": "object",
-                "properties": {
-                    "title": {"type": "string"},
-                    "course_code": {"type": "string"},
-                    "due": {"type": "string"},
-                    "notes": {"type": "string"},
-                },
-                "required": ["title", "course_code", "due"],
-                "additionalProperties": False,
-            },
-        },
-    },
-    {
-        "type": "function",
-        "function": {
-            "name": "get_finance_summary",
-            "description": (
-                "Read-only budget summary for this month: overall spent/budget/remaining, "
-                "Day to Day and Charity focus categories, and cash total. "
-                "Use when the user asks about money, budget, spending, or finances."
-            ),
-            "parameters": {"type": "object", "properties": {}, "additionalProperties": False},
-        },
-    },
-    {
-        "type": "function",
-        "function": {
-            "name": "update_persona",
-            "description": (
-                "Update your lasting persona/behavior file. Use when the user tells you how "
-                "you should speak, react, answer, or behave going forward. Append by default; "
-                "use replace only if they ask to rewrite your whole persona. "
-                "Persona notes change wording only — they never replace tool calls."
-            ),
-            "parameters": {
-                "type": "object",
-                "properties": {
-                    "instruction": {
-                        "type": "string",
-                        "description": "The preference or behavior rule to remember.",
-                    },
-                    "mode": {
-                        "type": "string",
-                        "enum": ["append", "replace"],
-                        "description": "append (default) or replace the whole persona file.",
-                    },
-                },
-                "required": ["instruction"],
-                "additionalProperties": False,
-            },
-        },
-    },
-    {
-        "type": "function",
-        "function": {
-            "name": "cursor_status",
-            "description": (
-                "Check whether Cursor agent integration is configured and list pending "
-                "confirm-gated proposals. Use when the user asks if you have Cursor access."
-            ),
-            "parameters": {"type": "object", "properties": {}, "additionalProperties": False},
-        },
-    },
-    {
-        "type": "function",
-        "function": {
-            "name": "set_tv_app",
-            "description": (
-                "Show an app on the bedroom TV, or return to the TV dashboard. "
-                "Use when the user says pull up / put on / show guitar, finance, "
-                "homework, theology, or the dashboard/TV/homelab on the TV."
-            ),
-            "parameters": {
-                "type": "object",
-                "properties": {
-                    "app": {
-                        "type": "string",
-                        "enum": ["dashboard", "guitar", "finance", "homework", "theology"],
-                    }
-                },
-                "required": ["app"],
-                "additionalProperties": False,
-            },
-        },
-    },
-    {
-        "type": "function",
-        "function": {
-            "name": "propose_cursor_edit",
-            "description": (
-                "Queue a Cursor agent job against the homelab repo. Does NOT run until the "
-                "user confirms on screen. Use for code/homelab edits, or when the user asks "
-                "to test Cursor (use a no-file-change test prompt)."
-            ),
-            "parameters": {
-                "type": "object",
-                "properties": {
-                    "prompt": {
-                        "type": "string",
-                        "description": "Clear instruction for the Cursor agent.",
-                    }
-                },
-                "required": ["prompt"],
-                "additionalProperties": False,
-            },
-        },
-    },
-]
+from . import approvals, context_files, finance, ha, homework, ops_client, worker_client
+from .devices import Device
 
 
-async def run_tool(name: str, args: dict[str, Any]) -> Any:
-    if name == "get_rooms":
-        return await ha.get_rooms()
-    if name == "set_room_lights":
-        payload = {"on": bool(args["on"])}
-        if args.get("brightness_pct") is not None:
-            payload["brightness_pct"] = args["brightness_pct"]
-        if args.get("color_temp_kelvin") is not None:
-            payload["color_temp_kelvin"] = args["color_temp_kelvin"]
-        return await ha.set_room(args["room_id"], payload)
-    if name == "apply_scene":
-        return await ha.apply_scene(args["scene"])
-    if name == "get_weather":
-        return await ha.get_weather()
-    if name == "list_homework":
-        return await homework.list_assignments()
+@dataclass
+class CallContext:
+    device: Device
+    session_id: str | None
+    request_id: str | None
+    user_text: str | None = None
+    approval_id: str | None = None
 
-    if name == "add_homework":
-        return await homework.create_assignment(
-            title=args["title"],
-            course_code=args["course_code"],
-            due=args["due"],
-            notes=args.get("notes"),
+
+Handler = Callable[[dict[str, Any], CallContext], Awaitable[Any]]
+
+
+async def _set_room_lights(args: dict[str, Any], ctx: CallContext) -> Any:
+    payload: dict[str, Any] = {"on": bool(args["on"])}
+    for key in ("brightness_pct", "color_temp_kelvin"):
+        if args.get(key) is not None:
+            payload[key] = args[key]
+    return await ha.set_room(args["room_id"], payload)
+
+
+async def _add_homework(args: dict[str, Any], ctx: CallContext) -> Any:
+    return await homework.create_assignment(
+        title=args["title"], course_code=args["course_code"], due=args["due"], notes=args.get("notes")
+    )
+
+
+def _rewrite(kind: str) -> Handler:
+    async def handler(args: dict[str, Any], ctx: CallContext) -> Any:
+        return context_files.rewrite(kind, args["content"], reason=args["reason"], evidence=ctx.user_text)
+
+    return handler
+
+
+async def _cursor_status(args: dict[str, Any], ctx: CallContext) -> Any:
+    pending = [
+        {"id": a["id"], "prompt": a["args"].get("prompt")}
+        for a in approvals.recent("propose_cursor_edit", limit=10)
+        if a["status"] == "pending"
+    ]
+    try:
+        health = await worker_client.health()
+        jobs = await worker_client.list_jobs(limit=5)
+    except Exception as exc:
+        return {"worker_reachable": False, "error": str(exc), "pending_approvals": pending}
+    return {
+        "worker_reachable": True,
+        "cursor_configured": health.get("cursor_configured"),
+        "recent_jobs": [
+            {"id": j["id"], "kind": j["kind"], "status": j["status"], "prompt": (j.get("prompt") or "")[:160]}
+            for j in jobs
+        ],
+        "pending_approvals": pending,
+        "note": "Change requests run only after the user says yes or taps Confirm.",
+    }
+
+
+async def _ask_worker(args: dict[str, Any], ctx: CallContext) -> Any:
+    return await worker_client.ask(args["question"])
+
+
+async def _propose_cursor_edit(args: dict[str, Any], ctx: CallContext) -> Any:
+    # Reached only after approval; the approval id doubles as the job id.
+    if not ctx.approval_id:
+        raise RuntimeError("change requests require an approval")
+    return await worker_client.submit_change(ctx.approval_id, args["prompt"])
+
+
+async def _list_ops_requests(args: dict[str, Any], ctx: CallContext) -> Any:
+    return {"requests": await ops_client.pending_requests()}
+
+
+async def _approve_ops_request(args: dict[str, Any], ctx: CallContext) -> Any:
+    if not ctx.approval_id:
+        raise RuntimeError("protected operations require an approval")
+    req = await ops_client.get_request(args["request_id"])
+    # The read-back used the model's stack/operation; refuse if they don't match the real request.
+    if req.get("stack") != args["stack"] or req.get("operation") != args["operation"]:
+        raise RuntimeError(
+            f"request {args['request_id']} is {req.get('operation')} on {req.get('stack')}, not what was read back"
         )
-    if name == "get_finance_summary":
-        return await finance.get_summary()
-    if name == "update_persona":
-        from . import persona
+    return await ops_client.execute(args["request_id"], ctx.approval_id)
 
-        return persona.update_persona(
-            instruction=str(args.get("instruction") or ""),
-            mode=str(args.get("mode") or "append"),
-        )
-    if name == "cursor_status":
-        from . import cursor_agent
-        from .config import settings
 
-        cfg = settings()
-        pending = [p for p in cursor_agent.list_pending() if p["status"] == "pending"]
-        return {
-            "cursor_api_key_configured": bool(cfg["cursor_api_key"]),
-            "repo_path": cfg["cursor_repo"],
-            "pending_proposals": len(pending),
-            "note": (
-                "Edits are confirm-gated: propose_cursor_edit queues work; "
-                "the user must tap Confirm on the assistant UI to run the agent."
-            ),
-        }
-    if name == "set_tv_app":
-        return await ha.set_tv_app(str(args.get("app") or ""))
-    if name == "propose_cursor_edit":
-        from . import cursor_agent
+def _noargs(fn: Callable[[], Awaitable[Any]]) -> Handler:
+    async def handler(args: dict[str, Any], ctx: CallContext) -> Any:
+        return await fn()
 
-        return cursor_agent.propose(args["prompt"])
-    return {"error": f"Unknown tool: {name}"}
+    return handler
+
+
+HANDLERS: dict[str, Handler] = {
+    "get_rooms": _noargs(ha.get_rooms),
+    "set_room_lights": _set_room_lights,
+    "apply_scene": lambda args, ctx: ha.apply_scene(args["scene"]),
+    "set_tv_app": lambda args, ctx: ha.set_tv_app(args["app"]),
+    "get_weather": _noargs(ha.get_weather),
+    "list_homework": _noargs(homework.list_assignments),
+    "add_homework": _add_homework,
+    "get_finance_summary": _noargs(finance.get_summary),
+    "update_persona": _rewrite("persona"),
+    "update_profile": _rewrite("profile"),
+    "cursor_status": _cursor_status,
+    "ask_worker": _ask_worker,
+    "propose_cursor_edit": _propose_cursor_edit,
+    "list_ops_requests": _list_ops_requests,
+    "approve_ops_request": _approve_ops_request,
+}
 
 
 def parse_tool_args(raw: str | None) -> dict[str, Any]:
@@ -264,20 +127,3 @@ def parse_tool_args(raw: str | None) -> dict[str, Any]:
         return data if isinstance(data, dict) else {}
     except json.JSONDecodeError:
         return {}
-
-
-def responses_tools(tools: list[dict[str, Any]] | None = None) -> list[dict[str, Any]]:
-    """Chat-completions tool schema → Responses API function tools."""
-    out: list[dict[str, Any]] = []
-    for item in tools or TOOLS:
-        fn = item.get("function") if isinstance(item.get("function"), dict) else item
-        out.append(
-            {
-                "type": "function",
-                "name": fn["name"],
-                "description": fn.get("description") or "",
-                "parameters": fn.get("parameters")
-                or {"type": "object", "properties": {}, "additionalProperties": False},
-            }
-        )
-    return out

@@ -1,0 +1,228 @@
+# Nova capability index. Maintained by coding agents, never by Nova at runtime.
+#
+# Every entry needs a handler in app/tools.py (HANDLERS); tests/test_registry.py
+# fails if the two drift. The bootstrap summary and the model's tool list are
+# generated from this file, filtered by the calling device's scopes.
+#
+# policy:  automatic | approval | forbidden
+# effect:  read | write
+# read_back: required for approval; spoken back before the user says yes.
+
+capabilities:
+  - name: get_rooms
+    app: home
+    scope: home.lights
+    policy: automatic
+    effect: read
+    summary: Check bedroom and living room light status.
+    description: Get current bedroom and living room light status.
+    parameters: {type: object, properties: {}, additionalProperties: false}
+
+  - name: set_room_lights
+    app: home
+    scope: home.lights
+    policy: automatic
+    effect: write
+    summary: "Turn room lights on or off, set brightness and warmth (rooms: bedroom, living_room; warm 3200K, neutral 4500K)."
+    description: >-
+      Control a room's lights. Rooms: bedroom, living_room. Use brightness_pct 1-100 and
+      optional color_temp_kelvin (3200=warm, 4500=neutral).
+    parameters:
+      type: object
+      properties:
+        room_id: {type: string, enum: [bedroom, living_room]}
+        "on": {type: boolean}
+        brightness_pct: {type: integer, minimum: 1, maximum: 100}
+        color_temp_kelvin: {type: integer, minimum: 2000, maximum: 6500}
+      required: [room_id, "on"]
+      additionalProperties: false
+
+  - name: apply_scene
+    app: home
+    scope: home.scenes
+    policy: automatic
+    effect: write
+    summary: "Apply a scene: sleep (bedroom off, blank TV), wake (1% warm, show TV), study (80% neutral)."
+    description: "Apply a named scene: sleep (bedroom off + blank TV), wake (1% warm + show TV), study (80% neutral)."
+    parameters:
+      type: object
+      properties:
+        scene: {type: string, enum: [sleep, wake, study]}
+      required: [scene]
+      additionalProperties: false
+
+  - name: set_tv_app
+    app: home
+    scope: home.tv
+    policy: automatic
+    effect: write
+    summary: Show guitar, finance, homework or theology on the bedroom TV, or return it to the dashboard.
+    description: >-
+      Show an app on the bedroom TV, or return to the TV dashboard. Use when the user says
+      pull up / put on / show guitar, finance, homework, theology, or the dashboard on the TV.
+    parameters:
+      type: object
+      properties:
+        app: {type: string, enum: [dashboard, guitar, finance, homework, theology]}
+      required: [app]
+      additionalProperties: false
+
+  - name: get_weather
+    app: weather
+    scope: weather.read
+    policy: automatic
+    effect: read
+    summary: Local weather, forecast and whether it will rain today.
+    description: >-
+      Get local weather from Home Assistant: current condition, temperature, humidity,
+      multi-day forecast, and today.periods with precipitation (today.will_rain).
+    parameters: {type: object, properties: {}, additionalProperties: false}
+
+  - name: list_homework
+    app: homework
+    scope: homework.read
+    policy: automatic
+    effect: read
+    summary: List upcoming open homework assignments.
+    description: List upcoming open homework assignments.
+    parameters: {type: object, properties: {}, additionalProperties: false}
+
+  - name: add_homework
+    app: homework
+    scope: homework.write
+    policy: automatic
+    effect: write
+    summary: Add a homework assignment (course code must already exist).
+    description: >-
+      Create a homework assignment. due should be ISO-like, e.g. 2026-09-20 or
+      2026-09-20T23:59. course_code must match an existing course.
+    parameters:
+      type: object
+      properties:
+        title: {type: string, maxLength: 200}
+        course_code: {type: string, maxLength: 40}
+        due: {type: string, maxLength: 40}
+        notes: {type: string, maxLength: 2000}
+      required: [title, course_code, due]
+      additionalProperties: false
+
+  - name: get_finance_summary
+    app: finance
+    scope: finance.read
+    policy: automatic
+    effect: read
+    summary: Read-only budget summary for this month (spent, budget, remaining, focus categories, cash).
+    description: >-
+      Read-only budget summary for this month: overall spent/budget/remaining, Day to Day and
+      Charity focus categories, and cash total.
+    parameters: {type: object, properties: {}, additionalProperties: false}
+
+  - name: update_persona
+    app: nova
+    scope: nova.persona
+    policy: automatic
+    effect: write
+    summary: Rewrite your persona (how you speak and act) when the user explicitly asks you to change your behavior.
+    description: >-
+      Replace your persona file with a consolidated rewrite. Only when the user explicitly tells
+      you how to speak, react or behave going forward. Merge the new instruction into the current
+      persona shown in your context; remove anything it contradicts; keep it short. Never use this
+      for facts about the user (use update_profile) and never on your own initiative.
+    parameters:
+      type: object
+      properties:
+        content: {type: string, minLength: 1, maxLength: 4000, description: The complete new persona in Markdown.}
+        reason: {type: string, maxLength: 300, description: The user's instruction, briefly.}
+      required: [content, reason]
+      additionalProperties: false
+
+  - name: update_profile
+    app: nova
+    scope: nova.profile
+    policy: automatic
+    effect: write
+    summary: Rewrite the user's profile (stable facts, preferences, routines) when the user explicitly tells you to remember or correct something.
+    description: >-
+      Replace the profile file with a consolidated rewrite. Only when the user explicitly states a
+      stable fact, preference or routine to remember, or corrects one. Merge it into the current
+      profile shown in your context; keep it compact. Never on your own initiative.
+    parameters:
+      type: object
+      properties:
+        content: {type: string, minLength: 1, maxLength: 6000, description: The complete new profile in Markdown.}
+        reason: {type: string, maxLength: 300, description: The user's instruction, briefly.}
+      required: [content, reason]
+      additionalProperties: false
+
+  - name: cursor_status
+    app: worker
+    scope: worker.status
+    policy: automatic
+    effect: read
+    summary: Check whether the coding agent is reachable and list recent and pending jobs.
+    description: Check whether the Cursor coding agent is reachable and list recent jobs and pending change requests.
+    parameters: {type: object, properties: {}, additionalProperties: false}
+
+  - name: ask_worker
+    app: worker
+    scope: worker.query
+    policy: automatic
+    effect: read
+    summary: Ask the coding agent a read-only question about the homelab code, containers or infrastructure.
+    description: >-
+      Delegate a read-only question about the homelab repository, containers or infrastructure to
+      the Cursor coding agent and get its answer. It will not change files. If it does not finish
+      in time you get a job id; tell the user the answer will appear on the assistant screen.
+    parameters:
+      type: object
+      properties:
+        question: {type: string, minLength: 1, maxLength: 4000}
+      required: [question]
+      additionalProperties: false
+
+  - name: propose_cursor_edit
+    app: worker
+    scope: worker.change
+    policy: approval
+    effect: write
+    summary: Send a code or homelab change request to the coding agent (needs the user's yes).
+    description: >-
+      Send a change request to the Cursor coding agent working on the homelab repo. It does not
+      run until the user approves: read the request back and ask for a yes.
+    parameters:
+      type: object
+      properties:
+        prompt: {type: string, minLength: 1, maxLength: 4000, description: Clear instruction for the coding agent.}
+      required: [prompt]
+      additionalProperties: false
+    read_back: "Send this change request to the coding agent: {prompt}"
+
+  - name: list_ops_requests
+    app: ops
+    scope: ops.approve
+    policy: automatic
+    effect: read
+    summary: List pending requests from the coding agent to restart or rebuild protected services.
+    description: >-
+      List pending operations the coding agent asked to run on Nova-critical services (for
+      example rebuilding caddy). Each needs the user's approval.
+    parameters: {type: object, properties: {}, additionalProperties: false}
+
+  - name: approve_ops_request
+    app: ops
+    scope: ops.approve
+    policy: approval
+    effect: write
+    summary: Run one pending protected-service operation after the user says yes.
+    description: >-
+      Run one pending protected-service operation by its request id. Read back the stack,
+      operation and expected impact, and ask for a yes. Voice may drop while it runs.
+    parameters:
+      type: object
+      properties:
+        request_id: {type: string, minLength: 1, maxLength: 64}
+        stack: {type: string, maxLength: 40, description: Stack name from list_ops_requests.}
+        operation: {type: string, maxLength: 20, description: Operation from list_ops_requests.}
+      required: [request_id, stack, operation]
+      additionalProperties: false
+    read_back: "Run {operation} on {stack} (request {request_id}). This can interrupt service while it runs."

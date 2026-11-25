@@ -27,7 +27,7 @@ python3 -m venv ~/assistant-venv
 ~/assistant-venv/bin/python -c "import openwakeword; openwakeword.utils.download_models()"
 
 cp wake.env.example ~/.config/homelab/wake.env
-nano ~/.config/homelab/wake.env   # ASSISTANT_DEVICE_TOKEN
+nano ~/.config/homelab/wake.env   # ASSISTANT_DEVICE_TOKEN = this Pi's own device credential (see compose/assistant/README.md)
 chmod 600 ~/.config/homelab/wake.env
 
 sudo cp homelab-wake.service /etc/systemd/system/

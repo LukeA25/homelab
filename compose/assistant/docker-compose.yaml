@@ -1,3 +1,4 @@
+# Nova gateway. Nova-critical: see AGENTS.md before restarting or rebuilding.
 services:
   assistant:
     build: ../../apps/assistant
@@ -8,11 +9,21 @@ services:
     environment:
       DISPLAY_TZ: ${DISPLAY_TZ:-America/Chicago}
       TZ: ${DISPLAY_TZ:-America/Chicago}
+      NOVA_DATA_DIR: /data
       HA_BASE_URL: ${HA_BASE_URL:-http://100.101.135.109:8123}
       HOMEWORK_BASE_URL: ${HOMEWORK_BASE_URL:-http://100.101.135.109:8005}
       DASHBOARD_BASE_URL: ${DASHBOARD_BASE_URL:-http://100.101.135.109:8004}
+      WORKER_URL: http://agent-worker:8000
+      OPS_URL: http://ops-runner:8000
     ports:
       - "8006:8000"
     volumes:
-      - /home/landerson/homelab:/home/landerson/homelab
-      - /var/run/docker.sock:/var/run/docker.sock
+      # Context, devices, approvals, history and audit logs. Never inside the repo checkout.
+      - /srv/appdata/nova:/data
+    networks:
+      - default
+      - nova-internal
+
+networks:
+  nova-internal:
+    external: true

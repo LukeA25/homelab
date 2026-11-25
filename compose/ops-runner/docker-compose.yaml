@@ -1,0 +1,24 @@
+# The only container with the Docker socket. Internal network only, no published port.
+# Manual-only: apply changes from the host (AGENTS.md).
+services:
+  ops-runner:
+    build: ../../apps/ops-runner
+    container_name: ops-runner
+    restart: unless-stopped
+    env_file:
+      - .env
+    environment:
+      TZ: ${DISPLAY_TZ:-America/Chicago}
+      REPO_PATH: /home/landerson/homelab
+      OPS_DATA: /data
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      # Same path as the host so compose files resolve relative and absolute paths identically.
+      - /home/landerson/homelab:/home/landerson/homelab:ro
+      - /srv/appdata/ops-runner:/data
+    networks:
+      - nova-internal
+
+networks:
+  nova-internal:
+    external: true

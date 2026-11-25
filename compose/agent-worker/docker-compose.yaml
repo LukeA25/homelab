@@ -1,0 +1,24 @@
+# Cursor coding agent. No Docker socket: container operations go through ops-runner.
+# Manual-only: do not rebuild it from inside itself (AGENTS.md).
+services:
+  agent-worker:
+    build: ../../apps/agent-worker
+    container_name: agent-worker
+    restart: unless-stopped
+    env_file:
+      - .env
+    environment:
+      TZ: ${DISPLAY_TZ:-America/Chicago}
+      WORKER_DATA: /data
+      REPO_PATH: /home/landerson/homelab
+      OPS_URL: http://ops-runner:8000
+    volumes:
+      - /home/landerson/homelab:/home/landerson/homelab
+      - /srv/appdata/agent-worker:/data
+    networks:
+      - default
+      - nova-internal
+
+networks:
+  nova-internal:
+    external: true

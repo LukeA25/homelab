@@ -7,53 +7,45 @@ import time
 import uuid
 from typing import Any
 
-from . import memory, openai_client, persona
-from .tools import TOOLS, parse_tool_args, run_tool
+from . import approvals, context_files, dispatch, memory, openai_client, registry
+from .devices import Device
+from .tools import CallContext, parse_tool_args
 
-SYSTEM_PROMPT_BASE = """You are a concise homelab voice assistant on a nightstand panel.
+SYSTEM_PROMPT_BASE = """You are Nova, the user's homelab voice assistant.
 Prefer short spoken replies (1-2 sentences). Always use tools for facts — do not guess.
-You receive prior turns in this conversation — use them. Short replies like "yes", "do it",
-"confirm", or "that one" refer to your previous question or suggestion.
+You receive prior turns in this conversation — use them.
 
 Important:
 - Real words from the user are always a valid request. Answer them normally.
 - Never reply with "I didn't catch that" (or similar) when the user said something intelligible.
   Empty/noise audio is already filtered before you see it.
 - If you lack a tool for something, say you can't do that — do not pretend you didn't hear them.
-- Prefer statements over questions unless you truly need a choice. Never end a "didn't hear"
-  style reply with a question mark.
-- Never say a light, scene, or device change is done unless you called the matching tool
-  in this turn. Persona notes only change wording after tools succeed — they never replace tools.
-
-Persona:
-- Follow the persona notes below. They are lasting preferences the user (or you) wrote.
-- When the user tells you how you should speak, react, answer, or behave going forward,
-  call update_persona with that instruction (append by default). Then briefly confirm.
-
-Capabilities (use the matching tool):
-- Lights: get_rooms, set_room_lights, apply_scene (sleep / wake / study).
-  Rooms: bedroom, living_room. Warm=3200K, Neutral=4500K.
-  sleep also blanks the bedroom TV dashboard; wake clears the blank and dims bedroom lights.
-- TV apps: set_tv_app to put guitar, finance, homework, or theology on the bedroom TV,
-  or dashboard to return to the TV home screen. Use this when they say pull up / show /
-  put something on the TV. Do not claim it switched unless the tool ran.
-- Weather: get_weather — current conditions plus today.periods / today.will_rain for rain-today questions.
-- Homework: list_homework, add_homework.
-- Finance (read-only): get_finance_summary — spent vs budget, Day to Day / Charity, cash.
-- Persona: update_persona to change your lasting behavior notes.
-- Cursor: cursor_status to check access; propose_cursor_edit to queue a homelab code change
-  (does NOT run until the user taps Confirm under the mic). Never claim you already edited files.
-  If the user asks to send something to Cursor, edit the homelab, or test Cursor, you MUST
-  call propose_cursor_edit in that turn. Never say "tap Confirm" unless that tool just queued
-  a pending proposal. Voice cannot press Confirm.
+- Never say an action is done unless the matching tool returned ok in this turn. If a tool fails
+  or returns uncertain results, say so plainly.
+- Some actions need the user's yes. When a tool returns approval_required, read back its
+  read_back text in one sentence and ask for a yes. You cannot approve anything yourself;
+  the system handles their answer. Never say it is done until the system reports it ran.
+- Persona and profile come from files the user controls. Update them only when the user
+  explicitly asks (update_persona for how you behave, update_profile for facts about them),
+  by rewriting the whole file with the change merged in. Briefly confirm after it succeeds.
+- Code and infrastructure questions go to ask_worker; change requests go to propose_cursor_edit.
+  Never claim you inspected or edited code yourself.
 
 If a tool errors, say what failed briefly.
 """
 
 
-def _system_prompt() -> str:
-    notes = persona.read_persona()
-    return f"{SYSTEM_PROMPT_BASE}\n## Persona notes\n{notes}\n"
+def system_prompt(device: Device, approval_note: str | None = None) -> str:
+    caps = registry.for_device(device)
+    parts = [
+        SYSTEM_PROMPT_BASE,
+        "## What you can do from this device\n" + (registry.summary(caps) or "- Nothing beyond conversation."),
+        "## Persona\n" + (context_files.read("persona") or "(empty)"),
+        "## User profile\n" + (context_files.read("profile") or "(empty)"),
+    ]
+    if approval_note:
+        parts.append("## System update (from the gateway, not the user)\n" + approval_note)
+    return "\n\n".join(parts) + "\n"
 
 
 _LIGHT_TOOLS = {"set_room_lights", "apply_scene"}
@@ -65,25 +57,56 @@ _LIGHT_INTENT = re.compile(
     r"\b(wake\s*(up|scene|mode)?|good\s*morning)\b",
     re.I,
 )
+_CLAIMS_DONE = re.compile(r"\b(done|okay|ok|yep|turned|switched|set|dimmed|brightened)\b", re.I)
 _LIGHT_NUDGE = (
     "You confirmed without calling a tool. Call set_room_lights or apply_scene now "
     "to actually change the lights. Do not reply until the tool has run."
 )
 _CURSOR_TOOLS = {"propose_cursor_edit"}
 _CURSOR_INTENT = re.compile(
-    r"\bcursor\b|\bsend (that|this|it|a message) to (cursor|the agent)\b|"
+    r"\bsend (that|this|it|a message) to (cursor|the agent)\b|"
     r"\b(edit|change|update|fix).{0,40}\b(code|repo|homelab)\b",
     re.I,
 )
 _CURSOR_NUDGE = (
-    "You told the user to confirm without calling propose_cursor_edit. "
-    "Call propose_cursor_edit now with the user's request. Do not reply until it has run."
+    "You answered without calling propose_cursor_edit. Call it now with the user's request. "
+    "Do not reply until it has run."
 )
+
+
+async def settle_pending_approval(text: str, device: Device, session_id: str | None, request_id: str) -> str | None:
+    """The user's turn right after a read-back decides the pending approval; anything else cancels it."""
+    pending = approvals.pending_for(device.id, session_id)
+    if not pending:
+        return None
+    decision = approvals.classify(text)
+    ctx = CallContext(device=device, session_id=session_id, request_id=request_id, user_text=text)
+    outcome = await dispatch.resolve_and_run(pending["id"], decision, "voice", ctx)
+    what = pending["read_back"]
+    if decision == "yes":
+        detail = json.dumps(outcome.get("result") if outcome.get("ok") else outcome.get("error"), default=str)[:1500]
+        state = "It ran successfully." if outcome.get("ok") else "It was approved but failed."
+        return f"The user approved: {what}\n{state} Result: {detail}\nTell the user the outcome."
+    if decision == "no":
+        return f"The user declined: {what}\nIt was not run. Acknowledge briefly."
+    return (
+        f"A pending request was cancelled because the user's reply was not a clear yes: {what}\n"
+        "It was not run. Answer what the user just said; mention the request was cancelled only if relevant."
+    )
+
+
+def _proposal_from(name: str, args: dict[str, Any], out: dict[str, Any]) -> dict[str, Any] | None:
+    if name == "propose_cursor_edit" and out.get("status") == "approval_required":
+        return {"id": out["approval_id"], "prompt": args.get("prompt"), "status": "pending"}
+    return None
 
 
 async def _tool_loop(
     user_text: str,
     *,
+    device: Device,
+    session_id: str | None,
+    request_id: str,
     history: list[dict[str, Any]] | None = None,
     on_status: Any = None,
 ) -> tuple[str, list[dict[str, Any]], dict[str, Any] | None]:
@@ -91,7 +114,11 @@ async def _tool_loop(
         if on_status:
             await on_status({"type": "status", "phase": phase, **extra})
 
-    instructions = _system_prompt()
+    approval_note = await settle_pending_approval(user_text, device, session_id, request_id)
+    instructions = system_prompt(device, approval_note)
+    tools = registry.model_tools(registry.for_device(device))
+    ctx = CallContext(device=device, session_id=session_id, request_id=request_id, user_text=user_text)
+
     input_list: list[Any] = []
     for msg in history or []:
         role = msg.get("role")
@@ -104,47 +131,31 @@ async def _tool_loop(
     cursor_proposal = None
     reply = "Done."
     nudged_lights = False
-    nudged_cursor = False
+    nudged_cursor = approval_note is not None
+    available = {t["name"] for t in tools}
 
-    response = await openai_client.respond(
-        instructions=instructions,
-        input_list=input_list,
-        tools=TOOLS,
-    )
+    async def respond() -> Any:
+        return await openai_client.respond(instructions=instructions, input_list=input_list, tools=tools)
 
+    response = await respond()
     for _ in range(4):
         calls = openai_client.function_calls(response)
         if not calls:
             reply = openai_client.output_text(response) or "Done."
-            used_lights = any(a["tool"] in _LIGHT_TOOLS for a in actions)
-            used_cursor = any(a["tool"] in _CURSOR_TOOLS for a in actions)
+            used = {a["tool"] for a in actions}
+            # Only when the model claims a change without calling any tool; a status read is not a claim.
             if (
-                not used_lights
-                and not nudged_lights
-                and _LIGHT_INTENT.search(user_text or "")
+                not nudged_lights and not actions and _LIGHT_TOOLS & available
+                and _LIGHT_INTENT.search(user_text) and _CLAIMS_DONE.search(reply)
             ):
                 nudged_lights = True
-                input_list.append({"role": "assistant", "content": reply})
-                input_list.append({"role": "user", "content": _LIGHT_NUDGE})
-                response = await openai_client.respond(
-                    instructions=instructions,
-                    input_list=input_list,
-                    tools=TOOLS,
-                )
+                input_list += [{"role": "assistant", "content": reply}, {"role": "user", "content": _LIGHT_NUDGE}]
+                response = await respond()
                 continue
-            if (
-                not used_cursor
-                and not nudged_cursor
-                and _CURSOR_INTENT.search(user_text or "")
-            ):
+            if not nudged_cursor and not used & _CURSOR_TOOLS and _CURSOR_TOOLS & available and _CURSOR_INTENT.search(user_text):
                 nudged_cursor = True
-                input_list.append({"role": "assistant", "content": reply})
-                input_list.append({"role": "user", "content": _CURSOR_NUDGE})
-                response = await openai_client.respond(
-                    instructions=instructions,
-                    input_list=input_list,
-                    tools=TOOLS,
-                )
+                input_list += [{"role": "assistant", "content": reply}, {"role": "user", "content": _CURSOR_NUDGE}]
+                response = await respond()
                 continue
             break
 
@@ -152,50 +163,54 @@ async def _tool_loop(
         for item in calls:
             name = item.name
             args = parse_tool_args(item.arguments)
-            await status("tool", tool=name, args=args)
-            try:
-                result = await run_tool(name, args)
-                actions.append({"tool": name, "args": args, "result": result, "ok": True})
-                if name == "propose_cursor_edit" and isinstance(result, dict):
-                    cursor_proposal = result
-            except Exception as exc:
-                result = {"error": str(exc)}
-                actions.append({"tool": name, "args": args, "result": result, "ok": False})
+            await status("tool", tool=name)
+            out = await dispatch.call(name, args, ctx)
+            actions.append({"tool": name, "ok": bool(out.get("ok")), "status": out.get("status")})
+            cursor_proposal = _proposal_from(name, args, out) or cursor_proposal
             input_list.append(
-                {
-                    "type": "function_call_output",
-                    "call_id": item.call_id,
-                    "output": json.dumps(result, default=str),
-                }
+                {"type": "function_call_output", "call_id": item.call_id, "output": json.dumps(out, default=str)}
             )
-        response = await openai_client.respond(
-            instructions=instructions,
-            input_list=input_list,
-            tools=TOOLS,
-        )
+        response = await respond()
     else:
         reply = openai_client.output_text(response) or "I ran into a loop handling that. Try again."
 
-    # Guard against the model falsely claiming it didn't hear clear speech
-    # (often when it lacks a tool — e.g. weather before get_weather existed).
     low = reply.lower()
-    if (
-        user_text.strip()
-        and len(user_text.strip()) >= 2
-        and ("didn't catch" in low or "did not catch" in low or "couldn't hear" in low)
-    ):
+    if len(user_text.strip()) >= 2 and ("didn't catch" in low or "did not catch" in low or "couldn't hear" in low):
         reply = "Sorry — I understood you, but couldn't complete that request."
-        low = reply.lower()
-
-    queued_cursor = any(a["tool"] == "propose_cursor_edit" and a.get("ok") for a in actions)
-    if not queued_cursor and "tap confirm" in low:
-        reply = "I didn't queue that in Cursor. Ask me again."
 
     return reply, actions, cursor_proposal
 
 
+async def _turn(
+    text: str, *, device: Device, session_id: str | None, request_id: str, on_status: Any = None
+) -> tuple[str, list[dict[str, Any]], dict[str, Any] | None]:
+    history = memory.get_history(session_id)
+    reply, actions, proposal = await _tool_loop(
+        text, device=device, session_id=session_id, request_id=request_id, history=history, on_status=on_status
+    )
+    memory.append_turn(session_id, text, reply)
+    return reply, actions, proposal
+
+
+def _result(started: float, transcript: str, reply: str, actions: list, proposal: Any, session_id: str | None, audio: bytes) -> dict[str, Any]:
+    return {
+        "id": str(uuid.uuid4()),
+        "transcript": transcript,
+        "reply": reply,
+        "actions": actions,
+        "audio_base64": base64.b64encode(audio).decode("ascii"),
+        "audio_mime": "audio/mpeg",
+        "elapsed_ms": int((time.monotonic() - started) * 1000),
+        "cursor_proposal": proposal,
+        "session_id": session_id,
+    }
+
+
 async def run_turn(
     audio: bytes,
+    *,
+    device: Device,
+    request_id: str,
     filename: str = "audio.webm",
     on_status: Any = None,
     session_id: str | None = None,
@@ -207,64 +222,23 @@ async def run_turn(
             await on_status({"type": "status", "phase": phase, **extra})
 
     await status("transcribing")
-    transcript = await openai_client.transcribe(audio, filename=filename)
+    transcript = (await openai_client.transcribe(audio, filename=filename) or "").strip()
     await status("heard", transcript=transcript)
 
-    cleaned = (transcript or "").strip()
-    if len(cleaned) < 2:
+    if len(transcript) < 2:
         # Statement only — never a question, so the UI won't auto-open the mic.
         reply = "I didn't catch that."
-        audio_out = await openai_client.synthesize(reply)
-        return {
-            "id": str(uuid.uuid4()),
-            "transcript": "",
-            "reply": reply,
-            "actions": [],
-            "audio_base64": base64.b64encode(audio_out).decode("ascii"),
-            "audio_mime": "audio/mpeg",
-            "elapsed_ms": int((time.monotonic() - started) * 1000),
-            "cursor_proposal": None,
-            "session_id": session_id,
-        }
-    transcript = cleaned
+        return _result(started, "", reply, [], None, session_id, await openai_client.synthesize(reply))
 
     await status("thinking")
-    history = memory.get_history(session_id)
-    reply, actions, cursor_proposal = await _tool_loop(
-        transcript, history=history, on_status=on_status
+    reply, actions, proposal = await _turn(
+        transcript, device=device, session_id=session_id, request_id=request_id, on_status=on_status
     )
-    memory.append_turn(session_id, transcript, reply)
-
     await status("speaking", reply=reply)
-    audio_out = await openai_client.synthesize(reply)
-    return {
-        "id": str(uuid.uuid4()),
-        "transcript": transcript,
-        "reply": reply,
-        "actions": actions,
-        "audio_base64": base64.b64encode(audio_out).decode("ascii"),
-        "audio_mime": "audio/mpeg",
-        "elapsed_ms": int((time.monotonic() - started) * 1000),
-        "cursor_proposal": cursor_proposal,
-        "session_id": session_id,
-    }
+    return _result(started, transcript, reply, actions, proposal, session_id, await openai_client.synthesize(reply))
 
 
-async def run_text_turn(text: str, session_id: str | None = None) -> dict[str, Any]:
+async def run_text_turn(text: str, *, device: Device, request_id: str, session_id: str | None = None) -> dict[str, Any]:
     started = time.monotonic()
-    history = memory.get_history(session_id)
-    reply, actions, cursor_proposal = await _tool_loop(text, history=history)
-    memory.append_turn(session_id, text, reply)
-    audio_out = await openai_client.synthesize(reply)
-    return {
-        "id": str(uuid.uuid4()),
-        "transcript": text,
-        "reply": reply,
-        "actions": actions,
-        "audio_base64": base64.b64encode(audio_out).decode("ascii"),
-        "audio_mime": "audio/mpeg",
-        "elapsed_ms": int((time.monotonic() - started) * 1000),
-        "cursor_proposal": cursor_proposal,
-        "session_id": session_id,
-        "bytes_in": len(text.encode("utf-8")),
-    }
+    reply, actions, proposal = await _turn(text, device=device, session_id=session_id, request_id=request_id)
+    return _result(started, text, reply, actions, proposal, session_id, await openai_client.synthesize(reply))

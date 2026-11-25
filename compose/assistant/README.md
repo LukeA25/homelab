@@ -1,57 +1,68 @@
-# Voice assistant
+# Nova gateway (assistant)
 
-Homelab voice brain for the nightstand Pi (and desktop testing). The Pi never runs the LLM — it only captures audio and plays replies.
+Nova's gateway and the current voice turn API for the nightstand Pi, the browser push-to-talk page and the kiosk. The Pi never runs the LLM — it only captures audio and plays replies.
 
-**URL:** http://assistant.home.arpa (port 8006)
+**URL:** https://assistant.home.arpa (port 8006). Nova-critical: read `AGENTS.md` before restarting or rebuilding.
 
-## Quick start
+## Pieces
 
-1. Copy env and fill secrets:
+| Container | Role |
+|---|---|
+| `assistant` (this stack) | Device auth, capability registry, approvals, audit log, voice turns |
+| `agent-worker` (`compose/agent-worker`) | Cursor coding agent; no Docker socket |
+| `ops-runner` (`compose/ops-runner`) | Only container with the Docker socket; runs approved operations |
 
-   ```bash
-   cd compose/assistant
-   cp .env.example .env
-   # Set OPENAI_API_KEY, HA_TOKEN (same as dashboard), ASSISTANT_DEVICE_TOKEN
-   docker compose up -d --build
-   ```
+They talk over the internal Docker network `nova-internal`. Live state is in `/srv/appdata/nova`:
 
-2. Open http://assistant.home.arpa — hold **Hold to talk**, or use the text box.
+```
+context/persona.md, context/profile.md    seeded from apps/assistant/seed on first start
+devices.db                                 enrolled devices (hashed credentials, scopes)
+nova.db                                    approvals
+history/context-versions/                  every previous persona/profile version
+logs/operations.jsonl                      gateway actions, auth decisions, approvals
+logs/state-changes.jsonl                   persona/profile changes with diffs and evidence
+```
 
-3. Pi kiosk + mic client: see [`apps/assistant/pi/README.md`](../apps/assistant/pi/README.md).
+## Devices
 
-## Mic / HTTPS
+Every client needs its own credential, sent as `X-Assistant-Token: …` or `Authorization: Bearer …`. Query-string tokens are not accepted; WebSockets use a 60-second single-use ticket from `POST /api/ws-ticket` (`/ws/voice?ticket=…`).
 
-Chrome only allows `getUserMedia` on **HTTPS** or **localhost**.
+```bash
+docker exec assistant python -m app.devices enroll iphone --scopes '*'
+docker exec assistant python -m app.devices enroll ipad --scopes 'nova.voice,theology.*'
+docker exec assistant python -m app.devices list
+docker exec assistant python -m app.devices set-scopes ipad --scopes 'nova.voice'
+docker exec assistant python -m app.devices revoke ipad
+```
 
-- **Permanent (LAN):** open **https://assistant.home.arpa**  
-  (Caddy TLS on :443 with an internal CA — accept the cert warning once.)  
-  **https://assistant.home.arpa:8443** still works as an alias.
-- **Quick test from your laptop:** run this **on the laptop** (not the homelab):
+Scopes: `nova.voice` (talk to Nova), `home.lights`, `home.scenes`, `home.tv`, `weather.read`, `homework.read`, `homework.write`, `finance.read`, `nova.persona`, `nova.profile`, `worker.status`, `worker.query`, `worker.change`, `ops.approve`. `*` and prefixes like `home.*` work.
 
-  ```bash
-  ssh -L 8006:127.0.0.1:8006 landerson@100.101.135.109
-  ```
+The old shared `ASSISTANT_DEVICE_TOKEN` is imported once as device `legacy-shared` with full access so existing clients keep working. `/api/health` warns while it is active. The public default value is refused unless `ALLOW_DEFAULT_LEGACY_TOKEN=true`.
 
-  Then open **http://localhost:8006** — mic works without HTTPS.
+## Approvals
 
-All `/api/*` routes (and `/ws/voice`) require `ASSISTANT_DEVICE_TOKEN` via:
-
-- Header `X-Assistant-Token: …`, or
-- `Authorization: Bearer …`, or
-- Query `?token=…` (WebSocket)
+Capabilities with `policy: approval` (Cursor change requests, protected-stack operations) never run straight from the model. The gateway records a single-use approval bound to the exact arguments, device and session, and Nova reads it back. The user's very next utterance decides it: a short clear yes runs it, anything else declines or cancels it. A tap on Confirm in the UI (`POST /api/approvals/{id}` or the Cursor proposal buttons) works too, from a device that holds the capability's scope.
 
 ## Tools
 
-- Room lights (bedroom / living_room) via Home Assistant
-- Scenes: sleep, wake (1% warm), study
-- List / add homework
-- Read-only finance summary (via dashboard `/api/finance/summary`)
-- `cursor_status` / `propose_cursor_edit` — Cursor jobs are **confirm-gated** on the web UI
-- Cursor agents can run `docker compose` on this host (Docker socket mounted into the assistant container — treat that like root)
-- Nightstand control panel: **https://assistant.home.arpa/control** (same cert as the voice UI)
+Declared in `apps/assistant/app/capabilities.yaml` (see `AGENTS.md`). Currently: lights, scenes, TV app, weather, homework list/add, read-only finance summary, persona and profile rewrites, coding-agent status/questions/change requests, and protected-operation approvals.
 
 ## Protocol
 
 - `POST /api/turn` multipart `audio` → `{ transcript, reply, actions, audio_base64, cursor_proposal }`
 - `POST /api/turn/text` JSON `{ text }` — same response (no mic)
-- `WS /ws/voice?token=…` — `start` → binary chunks → `end` → status events + `result`
+- `WS /ws/voice?ticket=…` — `start` → binary chunks → `end` → status events + `result`
+- `GET /api/devices/me`, `GET /api/approvals`, `POST /api/approvals/{id}` `{decision: yes|no}`
+- `GET /api/last-turn` is still unauthenticated for the kiosk display (known gap; see the plan)
+
+## Mic / HTTPS
+
+Chrome only allows `getUserMedia` on HTTPS or localhost. Use https://assistant.home.arpa (Caddy internal CA), or tunnel: `ssh -L 8006:127.0.0.1:8006 landerson@100.101.135.109` and open http://localhost:8006.
+
+Pi kiosk and wake client: [`apps/assistant/pi/README.md`](../../apps/assistant/pi/README.md). Put the Pi's own device credential in `ASSISTANT_DEVICE_TOKEN` in its `wake.env`.
+
+## Tests
+
+```bash
+cd apps/assistant && pip install -r requirements.txt pytest && pytest
+```

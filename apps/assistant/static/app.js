@@ -34,7 +34,7 @@ function sessionId() {
 }
 
 function token() {
-  return tokenInput.value.trim() || "dev-token-change-me";
+  return tokenInput.value.trim();
 }
 
 function setPhase(name) {

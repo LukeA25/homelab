@@ -1,6 +1,9 @@
 #!/usr/bin/env bash
 # Deploy changed Docker Compose stacks after a git push.
 # Usage: deploy.sh <before-sha> <after-sha>
+#
+# Nova-critical stacks (MANUAL) are detected but never deployed here; the run
+# lists them so they can be applied by hand after approval (see AGENTS.md).
 
 set -euo pipefail
 
@@ -10,91 +13,53 @@ AFTER="${2:?after sha required}"
 
 cd "$REPO_ROOT"
 
-declare -A STACKS=(
-  [caddy]=compose/caddy
-  [dashboard]=compose/dashboard
-  [pihole]=compose/pihole
-  [jellyfin]=compose/jellyfin
-  [portainer]=compose/portainer
-  [uptime-kuma]=compose/uptime-kuma
-  [finance-app]=compose/finance-app
-  [guitar-app]=compose/guitar-app
-  [theology-app]=compose/theology-app
-  [learning-app]=compose/learning-app
-  [homework-app]=compose/homework-app
-  [homeassistant]=compose/homeassistant
-  [notify]=compose/notify
+# stack -> path prefixes that trigger it (space-separated)
+declare -A TRIGGERS=(
+  [caddy]="compose/caddy/"
+  [dashboard]="compose/dashboard/ apps/dashboard/"
+  [pihole]="compose/pihole/"
+  [jellyfin]="compose/jellyfin/"
+  [portainer]="compose/portainer/"
+  [uptime-kuma]="compose/uptime-kuma/"
+  [finance-app]="compose/finance-app/ apps/finance-app/"
+  [guitar-app]="compose/guitar-app/ apps/guitar-app/"
+  [theology-app]="compose/theology-app/ apps/theology-app/"
+  [learning-app]="compose/learning-app/ apps/learning-app/"
+  [homework-app]="compose/homework-app/ apps/homework-app/"
+  [homeassistant]="compose/homeassistant/"
+  [notify]="compose/notify/ apps/notify/"
+  [agent-worker]="compose/agent-worker/ apps/agent-worker/"
+  [assistant]="compose/assistant/ apps/assistant/"
+  [ops-runner]="compose/ops-runner/ apps/ops-runner/"
 )
 
-declare -A PATH_PREFIXES=(
-  [caddy]=compose/caddy/
-  [dashboard]=compose/dashboard/
-  [pihole]=compose/pihole/
-  [jellyfin]=compose/jellyfin/
-  [portainer]=compose/portainer/
-  [uptime-kuma]=compose/uptime-kuma/
-  [finance-app]=compose/finance-app/
-  [guitar-app]=compose/guitar-app/
-  [theology-app]=compose/theology-app/
-  [learning-app]=compose/learning-app/
-  [homework-app]=compose/homework-app/
-  [homeassistant]=compose/homeassistant/
-  [notify]=compose/notify/
-)
+# Never auto-deployed: they carry Nova's voice/control path or its approval channel.
+MANUAL=(caddy dashboard pihole assistant ops-runner)
 
-DASHBOARD_PREFIX=apps/dashboard/
-FINANCE_APP_PREFIX=apps/finance-app/
-GUITAR_APP_PREFIX=apps/guitar-app/
-THEOLOGY_APP_PREFIX=apps/theology-app/
-HOMEWORK_APP_PREFIX=apps/homework-app/
-LEARNING_APP_PREFIX=apps/learning-app/
-NOTIFY_PREFIX=apps/notify/
+# Built from source rather than pulled.
+BUILT=(dashboard finance-app guitar-app theology-app homework-app learning-app notify agent-worker)
+
+contains() {
+  local needle="$1"; shift
+  local item
+  for item in "$@"; do [[ "$item" == "$needle" ]] && return 0; done
+  return 1
+}
 
 matches_stack() {
-  local stack="$1"
-  local file="$2"
-  local prefix="${PATH_PREFIXES[$stack]}"
-
-  if [[ "$file" == "$prefix"* ]]; then
-    return 0
-  fi
-
-  if [[ "$stack" == "dashboard" && "$file" == "$DASHBOARD_PREFIX"* ]]; then
-    return 0
-  fi
-
-  if [[ "$stack" == "finance-app" && "$file" == "$FINANCE_APP_PREFIX"* ]]; then
-    return 0
-  fi
-
-  if [[ "$stack" == "guitar-app" && "$file" == "$GUITAR_APP_PREFIX"* ]]; then
-    return 0
-  fi
-
-  if [[ "$stack" == "theology-app" && "$file" == "$THEOLOGY_APP_PREFIX"* ]]; then
-    return 0
-  fi
-
-  if [[ "$stack" == "homework-app" && "$file" == "$HOMEWORK_APP_PREFIX"* ]]; then
-    return 0
-  fi
-
-  if [[ "$stack" == "learning-app" && "$file" == "$LEARNING_APP_PREFIX"* ]]; then
-    return 0
-  fi
-
-  if [[ "$stack" == "notify" && "$file" == "$NOTIFY_PREFIX"* ]]; then
-    return 0
-  fi
-
+  local stack="$1" file="$2" prefix
+  for prefix in ${TRIGGERS[$stack]}; do
+    [[ "$file" == "$prefix"* ]] && return 0
+  done
   return 1
 }
 
 declare -a TO_DEPLOY=()
+declare -a SKIPPED=()
 
 if [[ "$BEFORE" == "0000000000000000000000000000000000000000" ]]; then
-  echo "Initial push or unknown base commit — deploying all stacks."
-  TO_DEPLOY=(caddy dashboard pihole jellyfin portainer uptime-kuma finance-app guitar-app theology-app homework-app learning-app homeassistant notify)
+  echo "Initial push or unknown base commit — deploying all automatic stacks."
+  CANDIDATES=("${!TRIGGERS[@]}")
 else
   mapfile -t CHANGED < <(git diff --name-only "$BEFORE" "$AFTER")
 
@@ -103,42 +68,52 @@ else
     exit 0
   fi
 
-  for stack in "${!PATH_PREFIXES[@]}"; do
+  CANDIDATES=()
+  for stack in "${!TRIGGERS[@]}"; do
     for file in "${CHANGED[@]}"; do
       if matches_stack "$stack" "$file"; then
-        TO_DEPLOY+=("$stack")
+        CANDIDATES+=("$stack")
         break
       fi
     done
   done
-
-  if ((${#TO_DEPLOY[@]} == 0)); then
-    echo "No compose stacks matched changed files:"
-    printf '  %s\n' "${CHANGED[@]}"
-    exit 0
-  fi
 fi
+
+for stack in "${CANDIDATES[@]}"; do
+  if contains "$stack" "${MANUAL[@]}"; then
+    SKIPPED+=("$stack")
+  else
+    TO_DEPLOY+=("$stack")
+  fi
+done
 
 deploy_stack() {
   local stack="$1"
-  local dir="${STACKS[$stack]}"
+  local dir="compose/$stack"
 
   echo "==> Deploying $stack ($dir)"
   cd "$REPO_ROOT/$dir"
 
-  case "$stack" in
-    dashboard|finance-app|guitar-app|theology-app|homework-app|learning-app|notify)
-      docker compose up -d --build --remove-orphans
-      ;;
-    *)
-      docker compose pull --quiet 2>/dev/null || true
-      docker compose up -d --remove-orphans
-      ;;
-    esac
+  if contains "$stack" "${BUILT[@]}"; then
+    docker compose up -d --build --remove-orphans
+  else
+    docker compose pull --quiet 2>/dev/null || true
+    docker compose up -d --remove-orphans
+  fi
 }
 
 for stack in "${TO_DEPLOY[@]}"; do
   deploy_stack "$stack"
 done
+
+if ((${#SKIPPED[@]} > 0)); then
+  echo
+  echo "Nova-critical stacks changed but were NOT deployed (manual, approval required):"
+  printf '  %s\n' "${SKIPPED[@]}"
+fi
+
+if ((${#TO_DEPLOY[@]} == 0 && ${#SKIPPED[@]} == 0)); then
+  echo "No compose stacks matched changed files."
+fi
 
 echo "Deploy complete."
