@@ -2,7 +2,11 @@
 
 Meaningful code, API, infrastructure, container and architectural changes. See `AGENTS.md` for what belongs here. Git history holds the full detail.
 
-## 2026-11-25 — Nova Phase 2: live voice and memory (built, not yet applied)
+## Nova Phase 3 (in progress)
+
+- nova-engine schedules local evening homework checks in `/srv/appdata/nova/events.db`, retries unknown results until the next slot, and cancels later checks after confirming zero open assignments due at 11:59 PM. The engine reaches homework-app on the existing edge network. Delivery is pending Phase 4.
+
+## 2026-11-25 — Nova Phase 2: live voice and memory (applied the same evening)
 
 - **Live voice**: GPT Live conversations from Nova's web page (`POST /api/live/start`, `/api/live/{id}/end`, `GET /api/live/{id}`). The gateway holds the OpenAI key and a server-side sideband per session; all tool calls run through the gateway's dispatcher with scopes, approvals and audit. Push-to-talk is unchanged.
 - **Budget**: per-session usage and cost in `conversations.db`; warning at $25/month, new live sessions refused above $40 (`VOICE_BUDGET_WARN_USD`, `VOICE_BUDGET_LIMIT_USD`); `GET /api/usage`. Sessions end after 2 minutes of silence or 30 minutes (`LIVE_IDLE_END_SECONDS`, `LIVE_MAX_MINUTES`).

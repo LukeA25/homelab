@@ -147,7 +147,7 @@ Home Assistant firewall (user, with sudo; optional, not persistent across reboot
 
 Rollback: `git checkout 45f4e16 -- compose apps/dashboard apps/assistant scripts/deploy.sh`, move the registry back (`docker exec assistant mv /data/auth/devices.db /data/devices.db`), then `docker compose up -d --build` in `assistant`, the app stacks, `dashboard`, `pihole` and `caddy`, and `docker compose down` in `nova-auth`.
 
-### Phase 2 — Voice and context (built 2026-11-25; not yet applied)
+### Phase 2 — Voice and context (applied 2026-11-25 evening; see `STATUS.md`)
 
 Decisions: GPT Live (`gpt-live-1`, $0.05/min active, $0.02/min standby) with `gpt-6-luna` as the tool backend; warn at $25/month and refuse new live sessions above $40 (push-to-talk keeps working); a live conversation ends after 2 minutes of silence or at 30 minutes; the client is Nova's web page, installable as a home-screen app.
 
@@ -170,6 +170,8 @@ Apply runbook:
 Rollback: `docker compose down` in `nova-engine`; check out the previous `apps/assistant` and rebuild `assistant`. The new data files (`conversations.db`, `history/observations.jsonl`, `context/user-model.md`, `nova-config.yaml`) are ignored by the old gateway.
 
 ### Phase 3 — Event engine and planner
+
+In progress in the checkout. The first implementation schedules the four local homework checks in `events.db`, claims them in the engine, and records results. Each slot expires when the next starts (midnight for the final slot). An interrupted check can be reclaimed after 90 seconds. Live verification, general event intake, voice scheduling, persisted automations and context-dependent planning are pending.
 
 SQLite event store with atomic state transitions and idempotency keys; due-event polling; authenticated system-event intake; daily planner; `automations.md`; validated `nova-config.yaml`; reconciliation; homework 6:15 / 8 / 10 / 11 PM check as the first deterministic event.
 

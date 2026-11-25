@@ -14,9 +14,16 @@ services:
       TZ: ${DISPLAY_TZ:-America/Chicago}
       DISPLAY_TZ: ${DISPLAY_TZ:-America/Chicago}
       NOVA_DATA_DIR: /data
+      HOMEWORK_BASE_URL: http://homework-app:8000
     read_only: true
     tmpfs:
       - /tmp
     volumes:
       # Writes conversations.db, history/observations.jsonl and context/user-model.md.
       - /srv/appdata/nova:/data
+    networks:
+      - edge
+
+networks:
+  edge:
+    external: true
