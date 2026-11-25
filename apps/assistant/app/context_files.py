@@ -1,7 +1,9 @@
-"""Persona and profile: user-directed context files under the Nova data dir.
+"""Persona, profile and user model: context files under the Nova data dir.
 
 Updates are full consolidated rewrites, never appends. Every prior version is
-kept under history/context-versions/ and every change is audited.
+kept under history/context-versions/ and every change is audited. Persona and
+profile change only on the user's explicit instruction; the user model is the
+working summary the memory pass maintains (its evidence lives in history/).
 """
 
 from __future__ import annotations
@@ -19,6 +21,7 @@ SEED_DIR = Path(__file__).resolve().parent.parent / "seed"
 FILES = {
     "persona": {"path": "context/persona.md", "max_chars": 4000},
     "profile": {"path": "context/profile.md", "max_chars": 6000},
+    "user_model": {"path": "context/user-model.md", "max_chars": 12000},
 }
 
 
@@ -46,7 +49,7 @@ def _sha(text: str) -> str:
     return hashlib.sha256(text.encode("utf-8")).hexdigest()[:16]
 
 
-def rewrite(kind: str, content: str, *, reason: str, evidence: str | None) -> dict[str, Any]:
+def rewrite(kind: str, content: str, *, reason: str, evidence: str | None, explicit: bool = True) -> dict[str, Any]:
     content = (content or "").strip()
     limit = FILES[kind]["max_chars"]
     if not content:
@@ -70,7 +73,7 @@ def rewrite(kind: str, content: str, *, reason: str, evidence: str | None) -> di
     audit.state_change(
         store_name=kind,
         reason=reason,
-        explicit=True,
+        explicit=explicit,
         evidence=evidence,
         old_sha=_sha(old),
         new_sha=_sha(content),

@@ -36,7 +36,7 @@ def _csv(name: str, default: str) -> set[str]:
 # Stacks the agent may operate without asking. Everything else is protected by default.
 ROUTINE = _csv(
     "ROUTINE_STACKS",
-    "finance-app,guitar-app,theology-app,homework-app,learning-app,jellyfin,uptime-kuma,notify",
+    "finance-app,guitar-app,theology-app,homework-app,learning-app,jellyfin,uptime-kuma,notify,nova-engine",
 )
 MANUAL_ONLY = _csv("MANUAL_ONLY_STACKS", "ops-runner,agent-worker")
 COMMANDS = {

@@ -1,0 +1,22 @@
+# Nova background engine: post-session memory pass and idle-conversation cleanup.
+# Not on the voice path (if it stops, voice keeps working and memory passes queue
+# up until it returns). Built from the gateway source with a different entrypoint.
+services:
+  nova-engine:
+    build: ../../apps/assistant
+    image: nova-engine
+    container_name: nova-engine
+    restart: unless-stopped
+    command: ["python", "-m", "app.engine"]
+    env_file:
+      - .env
+    environment:
+      TZ: ${DISPLAY_TZ:-America/Chicago}
+      DISPLAY_TZ: ${DISPLAY_TZ:-America/Chicago}
+      NOVA_DATA_DIR: /data
+    read_only: true
+    tmpfs:
+      - /tmp
+    volumes:
+      # Writes conversations.db, history/observations.jsonl and context/user-model.md.
+      - /srv/appdata/nova:/data

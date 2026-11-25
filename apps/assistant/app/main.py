@@ -14,7 +14,7 @@ from fastapi.responses import FileResponse, Response
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field
 
-from . import approvals, audit, context_files, devices, dispatch, ha, last_turn, memory, pipeline, registry, reqctx, worker_client
+from . import approvals, audit, context_files, devices, dispatch, ha, last_turn, live, memory, pipeline, registry, reqctx, sessions, worker_client
 from .auth import issue_ws_ticket, require, require_ws
 from .config import DEFAULT_LEGACY_TOKEN, settings
 from .devices import Device
@@ -35,16 +35,28 @@ class Decision(BaseModel):
     decision: Literal["yes", "no"]
 
 
+class LiveOffer(BaseModel):
+    sdp: str = Field(min_length=10, max_length=20000)
+
+
 @app.on_event("startup")
 def _startup() -> None:
     registry.load()
     context_files.ensure_seeded()
+    closed = sessions.recover_open_live()
+    if closed:
+        log.warning("Closed %d live session(s) left open by a previous gateway process", closed)
     cfg = settings()
     token = cfg["legacy_token"]
     if token == DEFAULT_LEGACY_TOKEN and not cfg["allow_default_legacy_token"]:
         log.warning("ASSISTANT_DEVICE_TOKEN is the public default and was not imported; enroll devices instead")
     elif token and devices.import_legacy(token, ["*"]):
         log.warning("Imported ASSISTANT_DEVICE_TOKEN as device %s; revoke it after enrolling devices", devices.LEGACY_ID)
+
+
+@app.on_event("shutdown")
+async def _shutdown() -> None:
+    await live.shutdown()
 
 
 @app.middleware("http")
@@ -173,6 +185,32 @@ async def turn_text(
         raise HTTPException(status_code=502, detail=str(exc)) from exc
     last_turn.set_result(result)
     return result
+
+
+@app.post("/api/live/start")
+async def live_start(body: LiveOffer, device: Device = Depends(require("nova.voice"))):
+    try:
+        return await live.start(device, body.sdp)
+    except live.LiveError as exc:
+        raise HTTPException(status_code=exc.status, detail=str(exc)) from exc
+
+
+@app.post("/api/live/{conversation_id}/end")
+async def live_end(conversation_id: str, device: Device = Depends(require("nova.voice"))):
+    return {"ok": await live.end(conversation_id, device)}
+
+
+@app.get("/api/live/{conversation_id}")
+async def live_status(conversation_id: str, device: Device = Depends(require("nova.voice"))):
+    info = live.status(conversation_id)
+    if info is None or info["device_id"] != device.id:
+        raise HTTPException(status_code=404, detail="Conversation not found")
+    return info
+
+
+@app.get("/api/usage")
+async def usage(_: Device = Depends(require("nova.voice"))):
+    return {"budget": sessions.budget()}
 
 
 @app.get("/api/last-turn")

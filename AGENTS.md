@@ -24,7 +24,7 @@ The protection is about **runtime impact**, not about which files you touch. You
 
 | Component | Defined in | Interrupted by | Edits with immediate live effect |
 |---|---|---|---|
-| `assistant` (Nova gateway: voice turns, device auth, tools, approvals) | `compose/assistant/`, `apps/assistant/` | stop, restart, rebuild, recreate, `compose/assistant/restart.sh`, `docker compose up` in that stack, `.env` change plus recreate | files under `/srv/appdata/nova/context/` (read on every turn); `/srv/appdata/nova/auth/devices.db` (device registry). Source code is baked into the image. |
+| `assistant` (Nova gateway: live and push-to-talk voice, device auth, tools, approvals, live-session sideband) | `compose/assistant/`, `apps/assistant/` | stop, restart, rebuild, recreate, `compose/assistant/restart.sh`, `docker compose up` in that stack, `.env` change plus recreate. A restart also ends every live conversation in progress. | files under `/srv/appdata/nova/context/` (read on every turn); `/srv/appdata/nova/nova-config.yaml` (read at each live session start); `/srv/appdata/nova/auth/devices.db` (device registry). Source code is baked into the image. |
 | `nova-auth` (per-device sign-in for every gated `*.home.arpa` app and the kiosk routes; Caddy `forward_auth`) | `compose/nova-auth/`, `apps/assistant/app/authsvc.py` | stop, restart, rebuild, recreate; `AUTH_SECRET` change signs every browser out. If it is down, gated hosts fail closed. | `/srv/appdata/nova/auth/devices.db` (read-only mount) |
 | `ops-runner` (only holder of the Docker socket; executes approved operations) | `compose/ops-runner/`, `apps/ops-runner/` | any restart or rebuild. **Manual-only**: apply from the host, never through itself or the worker. | — |
 | `caddy` (TLS and routing for `assistant.home.arpa` and every `*.home.arpa` host) | `compose/caddy/Caddyfile`, `compose/caddy/private/*.caddy` | restart, reload, recreate | none until reloaded |
@@ -34,6 +34,8 @@ The protection is about **runtime impact**, not about which files you touch. You
 | Docker network `edge` (Caddy, `nova-auth`, gateway and dashboard ↔ apps; app ports are host-only) | created by hand (runbook) | removal or recreation | — |
 | Host networking | host | `tailscaled` restart or config change, Tailscale serve/funnel changes, Docker daemon restart, firewall changes | — |
 `agent-worker` (the Cursor coding agent) is not on the voice path, but it is the remote repair channel: it is **manual-only** and must never be rebuilt or restarted from inside itself. If it is down, use the host recovery path below.
+
+`nova-engine` (post-session memory pass, idle-conversation cleanup) is not on the voice path: if it stops, voice keeps working and finished conversations queue until it returns. It is a routine stack built from `apps/assistant/` and auto-deployed. It writes `/srv/appdata/nova/context/user-model.md` (explicit=false in the audit log) but never persona, profile, settings or devices.
 
 Services Nova calls as tools (Home Assistant, `homework-app`, `finance-app`, `notify`) are not on the voice path: if they stop, a tool fails but voice keeps working. `notify` becomes Nova-critical once Nova notifications ship (Phase 4); update this table then.
 
@@ -46,7 +48,7 @@ Services Nova calls as tools (Home Assistant, `homework-app`, `finance-app`, `no
 
 When asking, state: what you will do, the anticipated impact (what goes down and for how long), the recovery path, how you will verify success, and how to roll back. Approval covers that one operation only.
 
-**Routine stacks** may be started, restarted or rebuilt when a task needs it: `finance-app`, `guitar-app`, `theology-app`, `homework-app`, `learning-app`, `jellyfin`, `uptime-kuma`, `notify` (until Phase 4). This list matches `ROUTINE_STACKS` in `apps/ops-runner`; change both together.
+**Routine stacks** may be started, restarted or rebuilt when a task needs it: `finance-app`, `guitar-app`, `theology-app`, `homework-app`, `learning-app`, `jellyfin`, `uptime-kuma`, `notify` (until Phase 4), `nova-engine`. This list matches `ROUTINE_STACKS` in `apps/ops-runner`; change both together.
 
 ### How the worker operates containers
 

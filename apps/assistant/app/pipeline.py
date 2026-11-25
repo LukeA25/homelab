@@ -2,50 +2,17 @@ from __future__ import annotations
 
 import base64
 import json
+import logging
 import re
 import time
 import uuid
 from typing import Any
 
-from . import approvals, context_files, dispatch, memory, openai_client, registry
+from . import approvals, bootstrap, dispatch, memory, openai_client, registry, sessions
 from .devices import Device
 from .tools import CallContext, parse_tool_args
 
-SYSTEM_PROMPT_BASE = """You are Nova, the user's homelab voice assistant.
-Prefer short spoken replies (1-2 sentences). Always use tools for facts — do not guess.
-You receive prior turns in this conversation — use them.
-
-Important:
-- Real words from the user are always a valid request. Answer them normally.
-- Never reply with "I didn't catch that" (or similar) when the user said something intelligible.
-  Empty/noise audio is already filtered before you see it.
-- If you lack a tool for something, say you can't do that — do not pretend you didn't hear them.
-- Never say an action is done unless the matching tool returned ok in this turn. If a tool fails
-  or returns uncertain results, say so plainly.
-- Some actions need the user's yes. When a tool returns approval_required, read back its
-  read_back text in one sentence and ask for a yes. You cannot approve anything yourself;
-  the system handles their answer. Never say it is done until the system reports it ran.
-- Persona and profile come from files the user controls. Update them only when the user
-  explicitly asks (update_persona for how you behave, update_profile for facts about them),
-  by rewriting the whole file with the change merged in. Briefly confirm after it succeeds.
-- Code and infrastructure questions go to ask_worker; change requests go to propose_cursor_edit.
-  Never claim you inspected or edited code yourself.
-
-If a tool errors, say what failed briefly.
-"""
-
-
-def system_prompt(device: Device, approval_note: str | None = None) -> str:
-    caps = registry.for_device(device)
-    parts = [
-        SYSTEM_PROMPT_BASE,
-        "## What you can do from this device\n" + (registry.summary(caps) or "- Nothing beyond conversation."),
-        "## Persona\n" + (context_files.read("persona") or "(empty)"),
-        "## User profile\n" + (context_files.read("profile") or "(empty)"),
-    ]
-    if approval_note:
-        parts.append("## System update (from the gateway, not the user)\n" + approval_note)
-    return "\n\n".join(parts) + "\n"
+log = logging.getLogger("nova")
 
 
 _LIGHT_TOOLS = {"set_room_lights", "apply_scene"}
@@ -115,7 +82,7 @@ async def _tool_loop(
             await on_status({"type": "status", "phase": phase, **extra})
 
     approval_note = await settle_pending_approval(user_text, device, session_id, request_id)
-    instructions = system_prompt(device, approval_note)
+    instructions = bootstrap.classic_instructions(device, approval_note)
     tools = registry.model_tools(registry.for_device(device))
     ctx = CallContext(device=device, session_id=session_id, request_id=request_id, user_text=user_text)
 
@@ -189,7 +156,20 @@ async def _turn(
         text, device=device, session_id=session_id, request_id=request_id, history=history, on_status=on_status
     )
     memory.append_turn(session_id, text, reply)
+    _record(device, session_id, text, reply, actions)
     return reply, actions, proposal
+
+
+def _record(device: Device, session_id: str | None, text: str, reply: str, actions: list[dict[str, Any]]) -> None:
+    """Keep classic turns in the conversation history; a storage error must not break the reply."""
+    try:
+        conv = sessions.classic_session(device.id, session_id)
+        sessions.add_turn(conv, "user", text)
+        for a in actions:
+            sessions.add_turn(conv, "tool", a.get("status") or ("ok" if a["ok"] else "failed"), tool=a["tool"], ok=a["ok"])
+        sessions.add_turn(conv, "assistant", reply)
+    except Exception:
+        log.exception("could not record classic turn")
 
 
 def _result(started: float, transcript: str, reply: str, actions: list, proposal: Any, session_id: str | None, audio: bytes) -> dict[str, Any]:

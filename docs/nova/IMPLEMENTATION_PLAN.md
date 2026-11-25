@@ -147,9 +147,27 @@ Home Assistant firewall (user, with sudo; optional, not persistent across reboot
 
 Rollback: `git checkout 45f4e16 -- compose apps/dashboard apps/assistant scripts/deploy.sh`, move the registry back (`docker exec assistant mv /data/auth/devices.db /data/devices.db`), then `docker compose up -d --build` in `assistant`, the app stacks, `dashboard`, `pihole` and `caddy`, and `docker compose down` in `nova-auth`.
 
-### Phase 2 — Voice and context
+### Phase 2 — Voice and context (built 2026-11-25; not yet applied)
 
-Realtime voice endpoint and phone client with press-to-speak and audio buffering during connect; tool calls relayed to the gateway with session–device binding; usage and cost instrumentation; bootstrap assembler (persona, profile, capability summary, live state); retrieval tools; audited persona, profile, config and automation edits; durable transcripts; post-session memory pass in `nova-engine`.
+Decisions: GPT Live (`gpt-live-1`, $0.05/min active, $0.02/min standby) with `gpt-6-luna` as the tool backend; warn at $25/month and refuse new live sessions above $40 (push-to-talk keeps working); a live conversation ends after 2 minutes of silence or at 30 minutes; the client is Nova's web page, installable as a home-screen app.
+
+- **Live sessions** (`app/live.py`): the browser posts its WebRTC offer to `POST /api/live/start`; the gateway creates the session with the server's key and attaches to its sideband WebSocket. Every tool call runs in the gateway through `dispatch` (scopes, approvals and audit unchanged); the browser carries only audio and captions. Spoken approvals are settled from the transcript with the same rule as push-to-talk, and the outcome is reported to the voice through `session.commentary.append`. The gateway closes sessions on silence, at the limit, when the user ends them, and on shutdown; sessions left open by a crash are closed at startup.
+- **Bootstrap** (`app/bootstrap.py`): one briefing for both engines: rules, the device's capability summary, persona, profile, the user-model summary, current time and the last three conversation summaries.
+- **Conversations** (`conversations.db`): sessions, turns, usage, cost and a full-text index over turns, observations and summaries. Push-to-talk turns are grouped into conversations split by 10 minutes of inactivity.
+- **Memory**: `history/observations.jsonl` (append-only, labelled statement / outcome / inference / pattern, with source) and `context/user-model.md` (rewritten by the memory pass, versioned, audited with `explicit_instruction: false`).
+- **Settings** (`nova-config.yaml`): planner time, planning window, weekly review, voice. Validated; changed only through `update_setting` and audited. Budget, models and limits are `.env` settings Nova cannot change.
+- **New capabilities**: `search_memory`, `read_user_model`, `recent_conversations`, `note_observation` (scope `nova.memory`); `get_settings`, `update_setting` (scope `nova.config`).
+- **`nova-engine`** (`compose/nova-engine`, same image, `python -m app.engine`): closes idle push-to-talk conversations and runs one structured memory pass per finished conversation, with retries and backoff. Routine stack, auto-deployed.
+
+Not done from the original Phase 2 scope: a microphone buffer that captures speech during connect (the page says "Connecting…" until the line is open instead), and the speech wake policy (its request shape is unverified; the gateway's own silence timer ends sessions).
+
+Apply runbook:
+
+1. Create `compose/nova-engine/.env` from `.env.example` with the OpenAI key (copy it from `compose/assistant/.env` without printing it). This must exist before the push, or the CI deploy of `nova-engine` fails.
+2. With approval: `cd compose/assistant && docker compose up -d --build` (about 10 seconds of voice downtime). Verify `/api/health`, `/api/usage`, a push-to-talk turn, then a live conversation from a phone.
+3. `cd compose/nova-engine && docker compose up -d --build`; check `docker logs nova-engine` for "nova-engine started", and after a conversation, for a "memory pass" line.
+
+Rollback: `docker compose down` in `nova-engine`; check out the previous `apps/assistant` and rebuild `assistant`. The new data files (`conversations.db`, `history/observations.jsonl`, `context/user-model.md`, `nova-config.yaml`) are ignored by the old gateway.
 
 ### Phase 3 — Event engine and planner
 
@@ -169,4 +187,4 @@ Approval continuation for worker operations, Uptime Kuma webhook events with deb
 
 ## Open items
 
-Calendar provider; gym data source; public HTTPS ingress design; realtime model, transport and budget; backup and retention policy; self-healing scope.
+Calendar provider; gym data source; public HTTPS ingress design; backup and retention policy (now including `conversations.db` and `history/`); self-healing scope.

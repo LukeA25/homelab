@@ -2,6 +2,17 @@
 
 Meaningful code, API, infrastructure, container and architectural changes. See `AGENTS.md` for what belongs here. Git history holds the full detail.
 
+## 2026-11-25 — Nova Phase 2: live voice and memory (built, not yet applied)
+
+- **Live voice**: GPT Live conversations from Nova's web page (`POST /api/live/start`, `/api/live/{id}/end`, `GET /api/live/{id}`). The gateway holds the OpenAI key and a server-side sideband per session; all tool calls run through the gateway's dispatcher with scopes, approvals and audit. Push-to-talk is unchanged.
+- **Budget**: per-session usage and cost in `conversations.db`; warning at $25/month, new live sessions refused above $40 (`VOICE_BUDGET_WARN_USD`, `VOICE_BUDGET_LIMIT_USD`); `GET /api/usage`. Sessions end after 2 minutes of silence or 30 minutes (`LIVE_IDLE_END_SECONDS`, `LIVE_MAX_MINUTES`).
+- **Shared bootstrap** for live and push-to-talk: rules, capability summary, persona, profile, user-model summary, time, recent conversation summaries.
+- **Durable conversations** with full-text search; **observations** (`history/observations.jsonl`, append-only, labelled by evidence type); **user model** (`context/user-model.md`, versioned).
+- **`nova-config.yaml`**: validated settings Nova may change on request (planner time, planning window, weekly review, voice). Budget and models stay in `.env`.
+- New capabilities: `search_memory`, `read_user_model`, `recent_conversations`, `note_observation`, `get_settings`, `update_setting`.
+- **New `nova-engine` stack** (routine, auto-deployed): post-session memory pass and idle-conversation cleanup. Added to `ROUTINE_STACKS` in ops-runner (effective at its next manual rebuild).
+- Web page renamed Nova, installable as a home-screen app (manifest and icons).
+
 ## 2026-11-25 — Nova Phase 1b: app lockdown (applied)
 
 - Pi-hole left unchanged: the running container differs from `compose/pihole` (LAN DNS binding, missing `.env`). Its admin UI stays on port 8080 with its own password.

@@ -41,4 +41,20 @@ def settings() -> dict:
         "approval_ttl_seconds": int(os.getenv("APPROVAL_TTL_SECONDS", "120")),
         "quiet_hours_start": int(os.getenv("QUIET_HOURS_START", "23")),
         "quiet_hours_end": int(os.getenv("QUIET_HOURS_END", "7")),
+        # Live voice. Models, prices, budget and limits are trusted configuration:
+        # Nova cannot change them (see nova_config for what she can change).
+        "live_model": os.getenv("LIVE_MODEL", "gpt-live-1"),
+        "live_backend_model": os.getenv("LIVE_BACKEND_MODEL", "gpt-6-luna"),
+        "live_active_per_min": float(os.getenv("LIVE_ACTIVE_USD_PER_MIN", "0.05")),
+        "live_paused_per_min": float(os.getenv("LIVE_PAUSED_USD_PER_MIN", "0.02")),
+        "backend_in_per_m": float(os.getenv("BACKEND_INPUT_USD_PER_M", "0.10")),
+        "backend_cached_per_m": float(os.getenv("BACKEND_CACHED_USD_PER_M", "0.01")),
+        "backend_out_per_m": float(os.getenv("BACKEND_OUTPUT_USD_PER_M", "0.50")),
+        "budget_warn_usd": float(os.getenv("VOICE_BUDGET_WARN_USD", "25")),
+        "budget_limit_usd": float(os.getenv("VOICE_BUDGET_LIMIT_USD", "40")),
+        "live_idle_end_s": int(os.getenv("LIVE_IDLE_END_SECONDS", "120")),
+        "live_max_minutes": int(os.getenv("LIVE_MAX_MINUTES", "30")),
+        "live_api_base": os.getenv("LIVE_API_BASE", "https://api.openai.com/v1").rstrip("/"),
+        # Background reasoning (post-session memory pass in nova-engine).
+        "background_model": os.getenv("NOVA_BACKGROUND_MODEL", "gpt-6-luna"),
     }

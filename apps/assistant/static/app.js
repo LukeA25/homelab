@@ -441,3 +441,196 @@ async function refreshHealth() {
 }
 refreshHealth();
 setInterval(refreshHealth, 15000);
+
+// --- Live conversation (GPT Live over WebRTC) ---
+// The gateway creates the session and runs every tool through its own sideband;
+// this page only carries audio and shows captions.
+
+const liveBtn = document.getElementById("live");
+const liveLabel = document.getElementById("live-label");
+const liveSub = document.getElementById("live-sub");
+const liveMeta = document.getElementById("live-meta");
+const liveAudio = document.getElementById("live-audio");
+let live = null;
+
+function money(n) {
+  return `$${Number(n || 0).toFixed(2)}`;
+}
+
+function showBudget(b, extra) {
+  if (!b) return;
+  const bits = [`Voice this month: ${money(b.month_usd)} of ${money(b.limit_usd)}`];
+  if (extra) bits.unshift(extra);
+  liveMeta.textContent = bits.join(" · ");
+  liveMeta.className = "meta live-meta" + (b.blocked ? " blocked" : b.warning ? " warning" : "");
+  if (b.blocked && !live) {
+    liveSub.textContent = "paused for this month; push-to-talk still works";
+    liveBtn.disabled = true;
+  } else if (!live) {
+    liveBtn.disabled = false;
+  }
+}
+
+async function refreshUsage() {
+  if (!token() || live) return;
+  try {
+    const res = await fetch("/api/usage", { headers: authHeaders() });
+    if (res.ok) showBudget((await res.json()).budget);
+  } catch {
+    /* ignore */
+  }
+}
+
+function setLiveUi(state) {
+  liveBtn.classList.toggle("connecting", state === "connecting");
+  liveBtn.classList.toggle("active", state === "active");
+  if (state === "connecting") {
+    liveLabel.textContent = "Connecting…";
+    liveSub.textContent = "wait for “go ahead”";
+  } else if (state === "active") {
+    liveLabel.textContent = "End conversation";
+    liveSub.textContent = "go ahead, Nova is listening";
+  } else {
+    liveLabel.textContent = "Talk to Nova";
+    liveSub.textContent = "a conversation; ends after 2 minutes of quiet";
+  }
+}
+
+function caption(role, delta) {
+  if (!live || !delta) return;
+  if (role !== live.role) {
+    live.role = role;
+    if (role === "user") {
+      heardEl.textContent = "";
+      replyEl.textContent = "";
+    }
+  }
+  const el = role === "user" ? heardEl : replyEl;
+  el.textContent = (el.textContent + delta).slice(-600);
+}
+
+function onLiveEvent(raw) {
+  let ev;
+  try {
+    ev = JSON.parse(raw);
+  } catch {
+    return;
+  }
+  if (ev.type === "session.input_transcript.delta") caption("user", ev.delta);
+  else if (ev.type === "session.output_transcript.delta") caption("assistant", ev.delta);
+  else if (ev.type === "session.delegation.created") setPhase("Thinking");
+  else if (ev.type === "session.closed") stopLive("Conversation ended.");
+}
+
+async function startLive() {
+  if (live) return;
+  if (!token()) {
+    replyEl.textContent = "Save this device's credential below first.";
+    return;
+  }
+  if (!navigator.mediaDevices?.getUserMedia || !window.RTCPeerConnection) {
+    replyEl.textContent = "This browser can't do live voice. Use push-to-talk.";
+    return;
+  }
+  const session = { role: null, id: null, started: Date.now(), timer: null, pc: null, dc: null, stream: null };
+  live = session;
+  setLiveUi("connecting");
+  setPhase("Connecting");
+  heardEl.textContent = "";
+  replyEl.textContent = "";
+  metaEl.textContent = "";
+  // iOS only lets audio start inside the tap; unlock the element now.
+  liveAudio.play().catch(() => {});
+  try {
+    session.stream = await navigator.mediaDevices.getUserMedia({
+      audio: { echoCancellation: true, noiseSuppression: true, autoGainControl: true },
+    });
+    const pc = new RTCPeerConnection();
+    session.pc = pc;
+    pc.ontrack = (e) => {
+      liveAudio.srcObject = e.streams[0];
+      liveAudio.play().catch(() => {});
+    };
+    session.stream.getTracks().forEach((t) => pc.addTrack(t, session.stream));
+    session.dc = pc.createDataChannel("oai-events");
+    session.dc.onmessage = (e) => onLiveEvent(e.data);
+    pc.onconnectionstatechange = () => {
+      if (live !== session) return;
+      if (pc.connectionState === "connected") {
+        setLiveUi("active");
+        setPhase("Live");
+        heardEl.textContent = "Go ahead.";
+      } else if (["failed", "closed"].includes(pc.connectionState)) {
+        stopLive("The voice connection dropped.");
+      }
+    };
+    const offer = await pc.createOffer();
+    await pc.setLocalDescription(offer);
+    const res = await fetch("/api/live/start", {
+      method: "POST",
+      headers: { ...authHeaders(), "Content-Type": "application/json" },
+      body: JSON.stringify({ sdp: offer.sdp }),
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.detail || res.statusText);
+    if (live !== session) return;
+    session.id = data.conversation_id;
+    await pc.setRemoteDescription({ type: "answer", sdp: data.sdp });
+    showBudget(data.budget, data.budget?.warning ? "Over the monthly warning" : null);
+    session.timer = setInterval(() => pollLive(session), 5000);
+  } catch (err) {
+    stopLive(String(err.message || err), true);
+  }
+}
+
+async function pollLive(session) {
+  if (live !== session || !session.id) return;
+  try {
+    const res = await fetch(`/api/live/${session.id}`, { headers: authHeaders() });
+    if (!res.ok) return;
+    const info = await res.json();
+    const mins = Math.floor((Date.now() - session.started) / 60000);
+    showBudget(info.budget, `This conversation: ${mins} min, ${money(info.cost_usd)}`);
+    if (!info.active) {
+      const why = { idle: "Ended after 2 minutes of quiet.", max_duration: "Reached the 30-minute limit." };
+      stopLive(why[info.ended_reason] || "Conversation ended.");
+    }
+  } catch {
+    /* ignore */
+  }
+}
+
+function stopLive(message, isError = false) {
+  const session = live;
+  if (!session) return;
+  live = null;
+  clearInterval(session.timer);
+  try {
+    if (session.dc?.readyState === "open") session.dc.send(JSON.stringify({ type: "session.close" }));
+  } catch {
+    /* ignore */
+  }
+  if (session.id) {
+    fetch(`/api/live/${session.id}/end`, { method: "POST", headers: authHeaders(), keepalive: true }).catch(() => {});
+  }
+  session.pc?.close();
+  session.stream?.getTracks().forEach((t) => t.stop());
+  liveAudio.srcObject = null;
+  setLiveUi("idle");
+  setPhase(isError ? "Error" : "Idle");
+  if (message) (isError ? replyEl : metaEl).textContent = message;
+  setTimeout(refreshUsage, 1500);
+}
+
+liveBtn.addEventListener("click", (e) => {
+  e.preventDefault();
+  if (live) stopLive("Conversation ended.");
+  else startLive();
+});
+
+window.addEventListener("pagehide", () => {
+  if (live) stopLive();
+});
+
+refreshUsage();
+setInterval(refreshUsage, 60000);

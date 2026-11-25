@@ -226,3 +226,92 @@ capabilities:
       required: [request_id, stack, operation]
       additionalProperties: false
     read_back: "Run {operation} on {stack} (request {request_id}). This can interrupt service while it runs."
+
+  - name: search_memory
+    app: nova
+    scope: nova.memory
+    policy: automatic
+    effect: read
+    summary: Search past conversations, observations and conversation summaries.
+    description: >-
+      Full-text search over what the user has said in past conversations, your recorded
+      observations about them, and conversation summaries. Use when the user refers to
+      something earlier ("what did I say about...", "last time we talked...").
+    parameters:
+      type: object
+      properties:
+        query: {type: string, minLength: 1, maxLength: 300}
+      required: [query]
+      additionalProperties: false
+
+  - name: read_user_model
+    app: nova
+    scope: nova.memory
+    policy: automatic
+    effect: read
+    summary: Read your full working understanding of the user and the latest observations behind it.
+    description: >-
+      Return the full user-model document and the most recent observations (each labelled as a
+      statement, outcome, inference or pattern) that support it.
+    parameters: {type: object, properties: {}, additionalProperties: false}
+
+  - name: recent_conversations
+    app: nova
+    scope: nova.memory
+    policy: automatic
+    effect: read
+    summary: List recent conversations with their summaries.
+    description: List the most recent finished conversations with when they happened and a short summary.
+    parameters:
+      type: object
+      properties:
+        limit: {type: integer, minimum: 1, maximum: 10}
+      additionalProperties: false
+
+  - name: note_observation
+    app: nova
+    scope: nova.memory
+    policy: automatic
+    effect: write
+    summary: Record one thing worth remembering about the user (their statement, an outcome, or a tentative inference).
+    description: >-
+      Append one observation to the user's history. kind is statement (the user said it),
+      outcome (something that happened, e.g. a plan was or wasn't followed) or inference (your
+      tentative reading; never present it as fact). Keep it to one sentence. The user model is
+      updated from these after the conversation; do not rewrite it yourself.
+    parameters:
+      type: object
+      properties:
+        text: {type: string, minLength: 1, maxLength: 500}
+        kind: {type: string, enum: [statement, outcome, inference]}
+        topics: {type: array, items: {type: string, maxLength: 40}, maxItems: 8}
+      required: [text, kind]
+      additionalProperties: false
+
+  - name: get_settings
+    app: nova
+    scope: nova.config
+    policy: automatic
+    effect: read
+    summary: Show your adjustable settings (planner time, planning window, weekly review, voice).
+    description: List the settings you may change when the user asks, with their current values and allowed values.
+    parameters: {type: object, properties: {}, additionalProperties: false}
+
+  - name: update_setting
+    app: nova
+    scope: nova.config
+    policy: automatic
+    effect: write
+    summary: Change one of your settings when the user explicitly asks.
+    description: >-
+      Change one setting from get_settings when the user explicitly asks (for example "plan my
+      day at 7:30" or "use a different voice"). Times are HH:MM, 24-hour. A new voice applies
+      from the next live conversation. Budget, models and limits are not settings you can change.
+    parameters:
+      type: object
+      properties:
+        key: {type: string, enum: [daily_planner_time, planning_window_start, weekly_review_day, weekly_review_time, voice]}
+        value: {type: string, minLength: 1, maxLength: 20}
+        reason: {type: string, maxLength: 300, description: The user's instruction, briefly.}
+      required: [key, value, reason]
+      additionalProperties: false

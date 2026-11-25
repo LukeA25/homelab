@@ -3,15 +3,22 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-    <title>Homelab Assistant</title>
-    <link rel="stylesheet" href="/assets/style.css?v=2" />
+    <title>Nova</title>
+    <meta name="theme-color" content="#0f1115" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-title" content="Nova" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <link rel="manifest" href="/manifest.webmanifest" />
+    <link rel="apple-touch-icon" href="/assets/icon-180.png" />
+    <link rel="stylesheet" href="/assets/style.css?v=3" />
   </head>
   <body>
     <main class="shell">
       <header class="top">
         <div>
           <p class="eyebrow">Homelab voice</p>
-          <h1>Assistant</h1>
+          <h1>Nova</h1>
         </div>
         <div class="phase" id="phase">Idle</div>
       </header>
@@ -22,9 +29,16 @@
         <p id="meta" class="meta"></p>
       </section>
 
-      <button id="ptt" class="ptt" type="button">
+      <button id="live" class="ptt live" type="button">
+        <span class="ptt-label" id="live-label">Talk to Nova</span>
+        <span class="ptt-sub" id="live-sub">a conversation; ends after 2 minutes of quiet</span>
+      </button>
+      <p class="meta live-meta" id="live-meta"></p>
+      <audio id="live-audio" autoplay playsinline></audio>
+
+      <button id="ptt" class="ptt secondary" type="button">
         <span class="ptt-label">Press to talk</span>
-        <span class="ptt-sub">tap again to send</span>
+        <span class="ptt-sub">one question; tap again to send</span>
       </button>
 
       <section class="card">
@@ -73,6 +87,6 @@
       </section>
     </div>
 
-    <script src="/assets/app.js?v=2"></script>
+    <script src="/assets/app.js?v=3"></script>
   </body>
 </html>

@@ -31,6 +31,7 @@ declare -A TRIGGERS=(
   [agent-worker]="compose/agent-worker/ apps/agent-worker/"
   [assistant]="compose/assistant/ apps/assistant/"
   [nova-auth]="compose/nova-auth/ apps/assistant/"
+  [nova-engine]="compose/nova-engine/ apps/assistant/"
   [ops-runner]="compose/ops-runner/ apps/ops-runner/"
 )
 
@@ -38,7 +39,7 @@ declare -A TRIGGERS=(
 MANUAL=(caddy dashboard pihole assistant nova-auth ops-runner)
 
 # Built from source rather than pulled.
-BUILT=(dashboard finance-app guitar-app theology-app homework-app learning-app notify agent-worker)
+BUILT=(dashboard finance-app guitar-app theology-app homework-app learning-app notify agent-worker nova-engine)
 
 contains() {
   local needle="$1"; shift

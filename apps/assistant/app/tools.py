@@ -6,7 +6,7 @@ import json
 from dataclasses import dataclass
 from typing import Any, Awaitable, Callable
 
-from . import approvals, context_files, finance, ha, homework, ops_client, worker_client
+from . import approvals, context_files, finance, ha, homework, nova_config, observations, ops_client, sessions, worker_client
 from .devices import Device
 
 
@@ -93,6 +93,43 @@ async def _approve_ops_request(args: dict[str, Any], ctx: CallContext) -> Any:
     return await ops_client.execute(args["request_id"], ctx.approval_id)
 
 
+async def _search_memory(args: dict[str, Any], ctx: CallContext) -> Any:
+    hits = sessions.search(args["query"], limit=8)
+    return {"results": hits, "note": "Snippets mark matches with [brackets]."} if hits else {"results": [], "note": "Nothing found."}
+
+
+async def _read_user_model(args: dict[str, Any], ctx: CallContext) -> Any:
+    return {
+        "user_model": context_files.read("user_model"),
+        "recent_observations": [
+            {"ts": o["ts"], "kind": o["kind"], "text": o["text"]} for o in observations.recent(20)
+        ],
+    }
+
+
+async def _recent_conversations(args: dict[str, Any], ctx: CallContext) -> Any:
+    return {"conversations": [
+        {"id": s["id"], "mode": s["mode"], "started_at": s["started_at"], "summary": s["summary"] or "(not summarized yet)"}
+        for s in sessions.recent(limit=args.get("limit", 5))
+    ]}
+
+
+async def _note_observation(args: dict[str, Any], ctx: CallContext) -> Any:
+    record = observations.add(
+        args["text"], kind=args["kind"], topics=args.get("topics"),
+        source={"type": "conversation", "session": ctx.session_id, "device": ctx.device.id, "evidence": ctx.user_text},
+    )
+    return {"ok": True, "id": record["id"]}
+
+
+async def _get_settings(args: dict[str, Any], ctx: CallContext) -> Any:
+    return {"settings": nova_config.describe()}
+
+
+async def _update_setting(args: dict[str, Any], ctx: CallContext) -> Any:
+    return nova_config.update(args["key"], args["value"], reason=args["reason"], evidence=ctx.user_text)
+
+
 def _noargs(fn: Callable[[], Awaitable[Any]]) -> Handler:
     async def handler(args: dict[str, Any], ctx: CallContext) -> Any:
         return await fn()
@@ -116,6 +153,12 @@ HANDLERS: dict[str, Handler] = {
     "propose_cursor_edit": _propose_cursor_edit,
     "list_ops_requests": _list_ops_requests,
     "approve_ops_request": _approve_ops_request,
+    "search_memory": _search_memory,
+    "read_user_model": _read_user_model,
+    "recent_conversations": _recent_conversations,
+    "note_observation": _note_observation,
+    "get_settings": _get_settings,
+    "update_setting": _update_setting,
 }
 
 
