@@ -22,6 +22,7 @@ services:
       # Writes conversations.db, history/observations.jsonl and context/user-model.md.
       - /srv/appdata/nova:/data
     networks:
+      - default  # Outbound iCloud and OpenAI HTTPS.
       - edge
 
 networks:

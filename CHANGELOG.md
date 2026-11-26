@@ -2,7 +2,13 @@
 
 Meaningful code, API, infrastructure, container and architectural changes. See `AGENTS.md` for what belongs here. Git history holds the full detail.
 
+## Nova calendar search and event creation
+
+- Added live title search across iCloud calendars beyond the rolling snapshot, named calendar discovery, and approved event creation in an explicitly named calendar. CalDAV credentials stay with nova-engine.
+
 ## Nova Phases 4 and 5 — homework delivery and planning inputs
+
+- Nova-engine refreshes a week of appointments across all approved iCloud calendars. The gateway exposes a scoped, read-only lookup by local date with snapshot freshness.
 
 - Added a local iCloud CalDAV discovery check using credentials in the private engine environment.
 

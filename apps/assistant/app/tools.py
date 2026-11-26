@@ -7,7 +7,7 @@ from dataclasses import dataclass
 import re
 from typing import Any, Awaitable, Callable
 
-from . import approvals, context_files, finance, ha, homework, monitoring, planning, nova_config, observations, ops_client, sessions, worker_client
+from . import approvals, calendar_events, calendar_service, context_files, finance, ha, homework, monitoring, planning, nova_config, observations, ops_client, sessions, worker_client
 from .devices import Device
 
 
@@ -175,6 +175,10 @@ HANDLERS: dict[str, Handler] = {
     "ask_worker": _ask_worker,
     "propose_cursor_edit": _propose_cursor_edit,
     "monitor_status": _monitor_status,
+    "calendar_day": calendar_events.read_day,
+    "calendar_search": calendar_service.search_events,
+    "calendar_list": calendar_service.list_calendars,
+    "calendar_create": calendar_service.create_event,
     "learning_goals": planning.learning_goals,
     "recent_place_events": planning.recent_places,
     "worker_job": _worker_job,

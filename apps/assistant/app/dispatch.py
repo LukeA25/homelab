@@ -67,8 +67,9 @@ async def _run(name: str, args: dict[str, Any], ctx: CallContext) -> dict[str, A
         )
         return {"ok": False, "error": str(exc)}
     ok = not (isinstance(result, dict) and result.get("ok") is False)
+    audit_result = {"status": result["status"]} if name.startswith("calendar_") else result
     audit.operation(
-        "tool_call", tool=name, args=args, ok=ok, result=result,
+        "tool_call", tool=name, args=args, ok=ok, result=audit_result,
         approval_id=ctx.approval_id, duration_ms=int((time.monotonic() - started) * 1000),
     )
     return {"ok": ok, "result": result}

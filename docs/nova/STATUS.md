@@ -75,7 +75,7 @@ These are leftovers. None of them block using Nova.
 
 ### Phase 3 — events and the daily planner
 
-In the checkout, nova-engine now polls a durable schedule for the four homework checks and records their outcomes. Deployment and phone delivery remain pending. The general planner, system-event intake, voice scheduling and natural-language automations are still open.
+In the checkout, nova-engine now polls a durable schedule for the four homework checks and records their outcomes. The scheduler is deployed. A real phone delivery test remains pending. The general planner, system-event intake, voice scheduling and natural-language automations are still open.
 
 Nova starts acting on a schedule. An event store, a daily plan at the planner time, and automations you write. The first automation is the homework check at 6:15, 8, 10 and 11 PM. Offers she makes in conversation ("I'll remind you Friday night") do nothing until this exists. `nova-config.yaml` from Phase 2 is the settings file this phase will schedule against.
 
@@ -85,7 +85,7 @@ Implemented in the checkout for evening homework. The engine writes a reminder i
 
 **Setup and phone acceptance test**
 
-On 2026-11-26, Notify, assistant, homework-app and nova-engine were rebuilt from the checkout. Local health checks passed, the DND and Kuma routes were present, and the engine started without errors. The iPhone subscription, Focus automation and real push still need a device test. The ops-runner and agent-worker builds remain pending manual host deployment.
+On 2026-11-26, Notify, assistant, homework-app and nova-engine were rebuilt from the checkout. Local health checks passed, the DND and Kuma routes were present, and the engine started without errors. The user confirmed the Focus Shortcut works. A real Homework push still needs a phone test. The ops-runner and agent-worker builds remain pending manual host deployment.
 
 1. Schedule approved rebuilds of assistant, notify and ops-runner. Apply notify first for TTL support. Use the existing host recovery procedure and prior images for rollback. Configure the engine's private environment with the existing notify token, then apply the routine homework-app and nova-engine builds. Keep credentials outside the checkout. Check gateway, notify and homework health before testing. Rolling back the engine stops the new delivery path. Preserve events.db.
 2. Open the HTTPS Homework app from its iPhone Home Screen icon and tap **Enable homework reminders**. Each device opts in on that hostname. Test the real subscription, push and tap back to Homework.
@@ -104,15 +104,15 @@ Nova's `learning_goals` tool (scope `learning.goals`) reads actual path goals an
 
 1. Fill in `ICLOUD_CALDAV_USERNAME` with your Apple Account email and `ICLOUD_CALDAV_APP_PASSWORD` with your app-specific password in the private, gitignored `compose/nova-engine/.env`. Keep its permissions at 600.
 2. From the repo root run `uv run --script scripts/check-nova-caldav.py`. It checks discovery over HTTPS and prints only the number of iCloud calendars found by default. Add `--show-names` to identify calendars locally. The command does not require a running container or a restart.
-3. The user approved reading all iCloud calendars discovered by this account. Discovery succeeded for six calendars. Reading their events in the planner remains pending.
+3. The user approved reading all iCloud calendars discovered by this account. Discovery succeeded for six calendars. Nova-engine refreshes a read-only snapshot of the current local day and next six days every 30 minutes. `calendar_day` (scope `calendar.read`) gives Nova those appointments for planning. The gateway was rebuilt on 2026-11-26 and verified against all six calendars. Voice search and the first approved event creation remain to be tested. Live title search uses `calendar_search` with `calendar.read`. It searches all calendars over 90 days by default, or a supplied window of up to 366 days. To add an event, `calendar_create` requires `calendar.write`, a unique named calendar, and user confirmation of the title, calendar, start and end. Nova infers the calendar when the event clearly fits one and asks when the destination is ambiguous. The engine holds the CalDAV credential and serves live requests over a local socket on the shared runtime mount. The generalized planner and calendar-driven automatic scheduling remain pending.
 
 **Memory seeding:** Optional local import using `python -m app.memory_seed conversations.json reviewed.json` from the assistant package. Keep both files private outside the checkout. The review file is a JSON array of objects containing `conversation_id`, `message_id` and an exact `excerpt` of up to 1,000 characters from a user message. Only include excerpts you want Nova to retain. The importer verifies every selection before appending observations with source references. Re-importing the same selection skips duplicates. No personal export has been imported.
 
-**Decisions and testing:** Choose which source records gym visits, and which places you want the phone to report. Test arrival/departure on the actual phone and check Learning Grove goals on a scoped device. Calendar integration, adaptive gym planning, weekly recalibration, and notification outcome analysis are pending engineering work. Reviewed memory seeding is optional.
+**Decisions and testing:** Choose which source records gym visits, and which places you want the phone to report. Test arrival/departure on the actual phone and check Learning Grove goals on a scoped device. Adaptive gym planning, weekly recalibration, and notification outcome analysis are pending engineering work. Reviewed memory seeding is optional.
 
 ### Phase 6 — worker and resilience
 
-Implemented in the checkout. Kuma heartbeats feed debounced monitor diagnostics. Worker jobs can return protected-operation request IDs that Nova can follow through approval and execution. The gateway and engine are deployed. On 2026-11-26, an unauthenticated request from inside Kuma reached Nova and returned HTTP 401. Kuma had no active Nova webhook and Nova had received zero monitor states. Configure a notification and verify a real heartbeat. The worker and ops-runner deployments and live worker verification remain pending. Automatic repairs triggered by monitor events await a policy decision.
+Implemented in the checkout. Kuma heartbeats feed debounced monitor diagnostics. Worker jobs can return protected-operation request IDs that Nova can follow through approval and execution. The gateway and engine are deployed. On 2026-11-26, an unauthenticated request from inside Kuma reached Nova and returned HTTP 401. A subsequent authenticated Kuma Test returned HTTP 200. Nova has recorded zero confirmed transitions, so a real heartbeat from an attached monitor remains to be verified. The worker and ops-runner deployments and live worker verification remain pending. Automatic repairs triggered by monitor events await a policy decision.
 
 ## Decisions still open
 

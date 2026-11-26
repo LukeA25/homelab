@@ -20,7 +20,7 @@ from zoneinfo import ZoneInfo
 
 from openai import AsyncOpenAI
 
-from . import context_files, event_engine, monitoring, notifications, observations, sessions
+from . import calendar_events, calendar_service, context_files, event_engine, monitoring, notifications, observations, sessions
 from .config import settings
 
 log = logging.getLogger("nova.engine")
@@ -166,23 +166,29 @@ async def main() -> None:
     for sig in (signal.SIGTERM, signal.SIGINT):
         loop.add_signal_handler(sig, stop.set)
     log.info("nova-engine started (model %s)", settings()["background_model"])
-    while not stop.is_set():
-        try:
-            monitoring.settle()
-            await event_engine.tick()
-            await notifications.release(event_engine.homework_count, ZoneInfo(settings()["display_tz"]))
-        except Exception:
-            log.exception("event poll failed")
-        try:
-            busy = await run_once()
-        except Exception:
-            log.exception("engine loop error")
-            busy = False
-        if not busy:
-            try:
-                await asyncio.wait_for(stop.wait(), POLL_S)
-            except asyncio.TimeoutError:
-                pass
+    calendar_task = asyncio.create_task(calendar_events.refresh_loop(stop))
+    try:
+        async with calendar_service.serve():
+            while not stop.is_set():
+                try:
+                    monitoring.settle()
+                    await event_engine.tick()
+                    await notifications.release(event_engine.homework_count, ZoneInfo(settings()["display_tz"]))
+                except Exception:
+                    log.exception("event poll failed")
+                try:
+                    busy = await run_once()
+                except Exception:
+                    log.exception("engine loop error")
+                    busy = False
+                if not busy:
+                    try:
+                        await asyncio.wait_for(stop.wait(), POLL_S)
+                    except asyncio.TimeoutError:
+                        pass
+    finally:
+        calendar_task.cancel()
+        await asyncio.gather(calendar_task, return_exceptions=True)
 
 
 if __name__ == "__main__":
