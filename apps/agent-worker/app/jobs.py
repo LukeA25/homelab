@@ -8,6 +8,7 @@ from __future__ import annotations
 
 import json
 import os
+import re
 import tempfile
 import threading
 import time
@@ -37,7 +38,7 @@ Rules:
 - You have no direct Docker access. Use the `homelab-ops` command: `homelab-ops stacks`,
   `homelab-ops ps <stack>`, `homelab-ops logs <stack>`, `homelab-ops up|rebuild|restart <stack> --reason "..."`.
 - Protected stacks return approval_required with a request id. Do not work around it. Stop and
-  report the request id, what it does and why it is needed; the user approves it through Nova.
+  end your response with a separate line "OPS_REQUEST_ID=<12-character request id>". Also report what it does and why it is needed; the user approves it through Nova.
 - Update CHANGELOG.md and the Nova capability index when AGENTS.md says to.
 - Finish with a short summary of what changed, what you verified, and any pending approval requests."""
 
@@ -164,7 +165,13 @@ def _run(job_id: str) -> None:
             _change_lock.acquire()
             held = True
         _update(job_id, status="running", note="Starting Cursor…")
-        _update(job_id, status="done", result=_agent(job_id, job["prompt"], job["kind"]), finished_at=time.time(), note="Finished.")
+        result = _agent(job_id, job["prompt"], job["kind"])
+        match = re.search(r"(?m)^OPS_REQUEST_ID=([0-9a-f]{12})$", result.strip()) if job["kind"] == "change" else None
+        if match:
+            _update(job_id, status="approval_required", request_id=match[1], result=result,
+                    finished_at=time.time(), note="Awaiting protected operation approval.")
+        else:
+            _update(job_id, status="done", result=result, finished_at=time.time(), note="Finished.")
     except Exception as exc:
         _update(job_id, status="error", error=str(exc), finished_at=time.time(), note="Failed.")
     finally:

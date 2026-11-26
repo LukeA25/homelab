@@ -15,6 +15,9 @@ from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field
 
 from . import approvals, audit, context_files, devices, dispatch, ha, last_turn, live, memory, pipeline, registry, reqctx, sessions, worker_client
+from .monitoring import router as monitoring_router
+from .notifications import router as notification_router
+from .planning import router as planning_router
 from .auth import issue_ws_ticket, require, require_ws
 from .config import DEFAULT_LEGACY_TOKEN, settings
 from .devices import Device
@@ -24,6 +27,9 @@ log = logging.getLogger("nova")
 STATIC_DIR = Path(__file__).resolve().parent.parent / "static"
 
 app = FastAPI(title="Nova gateway")
+app.include_router(monitoring_router)
+app.include_router(notification_router)
+app.include_router(planning_router)
 
 
 class TextTurn(BaseModel):

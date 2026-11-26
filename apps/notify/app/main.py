@@ -47,6 +47,7 @@ class EndpointIn(BaseModel):
 
 
 class SendIn(BaseModel):
+    ttl: int = Field(default=86400, ge=0, le=86400)
     app: str
     title: str = Field(min_length=1, max_length=120)
     body: str = Field(default="", max_length=400)
@@ -115,7 +116,7 @@ def send(body: SendIn, request: Request) -> dict[str, int]:
     _require_token(request)
     name = _check_app(body.app)
     url = _clean_url(body.url, name)
-    return push.send(name, body.title.strip(), body.body.strip(), url, body.tag.strip())
+    return push.send(name, body.title.strip(), body.body.strip(), url, body.tag.strip(), ttl=body.ttl)
 
 
 @app.get("/__notify/vapid")

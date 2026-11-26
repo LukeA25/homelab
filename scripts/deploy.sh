@@ -36,7 +36,7 @@ declare -A TRIGGERS=(
 )
 
 # Never auto-deployed: they carry Nova's voice/control path or its approval channel.
-MANUAL=(caddy dashboard pihole assistant nova-auth ops-runner)
+MANUAL=(caddy dashboard pihole assistant nova-auth ops-runner notify)
 
 # Built from source rather than pulled.
 BUILT=(dashboard finance-app guitar-app theology-app homework-app learning-app notify agent-worker nova-engine)

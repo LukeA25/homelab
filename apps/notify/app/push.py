@@ -66,7 +66,7 @@ def public_key() -> str:
     return _PUBLIC_B64
 
 
-def send(app: str, title: str, body: str, url: str, tag: str) -> dict[str, int]:
+def send(app: str, title: str, body: str, url: str, tag: str, *, ttl: int = 86400) -> dict[str, int]:
     _load()
     payload = json.dumps({"title": title, "body": body, "url": url, "tag": tag})
     delivered = 0
@@ -82,7 +82,7 @@ def send(app: str, title: str, body: str, url: str, tag: str) -> dict[str, int]:
                 data=payload,
                 vapid_private_key=_PRIVATE_PEM,
                 vapid_claims={"sub": _SUBJECT},
-                ttl=60 * 60 * 24,
+                ttl=ttl,
             )
             delivered += 1
         except WebPushException as exc:

@@ -81,16 +81,39 @@ Nova starts acting on a schedule. An event store, a daily plan at the planner ti
 
 ### Phase 4 — notifications and Do Not Disturb
 
-Nova can reach you first. Notifications that follow an iPhone Shortcut's Do Not Disturb signal, wait while you are busy, drop when they go stale, and open the right app. `notify` becomes Nova-critical when this ships.
+Implemented in the checkout for evening homework. The engine writes a reminder in the same transaction as the homework check, holds it while Focus is on or unknown, and checks the homework app again before release. Newer checks replace queued reminders. Each slot expires at the next check or midnight. The existing notify service sends to subscriptions on the homework hostname. History distinguishes push-service acceptance, zero subscriptions, cancellation, expiry, and uncertain sends. The send has zero offline TTL to avoid a late reminder. A DND change after handoff cannot recall an in-flight push.
+
+**Setup and phone acceptance test**
+
+On 2026-11-26, Notify, assistant, homework-app and nova-engine were rebuilt from the checkout. Local health checks passed, the DND and Kuma routes were present, and the engine started without errors. The iPhone subscription, Focus automation and real push still need a device test. The ops-runner and agent-worker builds remain pending manual host deployment.
+
+1. Schedule approved rebuilds of assistant, notify and ops-runner. Apply notify first for TTL support. Use the existing host recovery procedure and prior images for rollback. Configure the engine's private environment with the existing notify token, then apply the routine homework-app and nova-engine builds. Keep credentials outside the checkout. Check gateway, notify and homework health before testing. Rolling back the engine stops the new delivery path. Preserve events.db.
+2. Open the HTTPS Homework app from its iPhone Home Screen icon and tap **Enable homework reminders**. Each device opts in on that hostname. Test the real subscription, push and tap back to Homework.
+3. Authorize a phone credential for `notifications.dnd`. For Focus on/off Shortcut automations send `PUT https://assistant.home.arpa/api/dnd` with a bearer credential and JSON containing `enabled` (boolean) and `observed_at` (ISO timestamp with offset). Send an initial current-state report and refresh at least daily. GET the same endpoint to verify on/off/unknown. The default is to hold after 24 hours without a fresh report.
+4. With homework due at 11:59 PM, turn Focus on before a check. Verify silence, turn it off, and verify one still-relevant reminder. Repeat after marking the work complete and verify silence. Inspect `GET /api/notifications` with `notifications.read`. A send accepted by Web Push does not establish that a phone displayed or opened it.
+
+For the SSH-based Shortcut, store the dedicated `notifications.dnd` credential in `~/.config/nova/focus-token` under the same SSH user as the assignment Shortcut, with mode `600`. In each Do Not Disturb automation, reuse its SSH connection settings and run `python3 /home/landerson/homelab/scripts/nova-focus.py on` or `python3 /home/landerson/homelab/scripts/nova-focus.py off`. The same script accepts `status` for a read-only check. Set both automations to Run Immediately and toggle Focus once to verify both reports.
+
+**Still to implement:** conversation invitations with voice context, generic routing and priorities, per-device delivery preferences and engagement telemetry. The current DND gate covers Nova's homework path. Other applications that call notify directly keep their own delivery behavior.
 
 ### Phase 5 — goals, calendar, location, memory seeding
 
-Goals and a calendar (provider not chosen), arrive/leave events, periodic cleanup of the user model, and an import of a ChatGPT export after you review it.
+Nova's `learning_goals` tool (scope `learning.goals`) reads actual path goals and statuses from Learning Grove. Phone geofence automations can POST to `/api/events/location` with `events.location`, a short place slug, `transition` of `arrive` or `leave`, and a timezone-aware `observed_at`. Duplicate and out-of-order transitions are filtered per device/place. Reports over an hour old are rejected. `recent_place_events` (scope `location.read`) returns historical transitions. The phone supplies region detection. Real-world accuracy and dwell filtering are pending.
+
+**iCloud CalDAV setup**
+
+1. Fill in `ICLOUD_CALDAV_USERNAME` with your Apple Account email and `ICLOUD_CALDAV_APP_PASSWORD` with your app-specific password in the private, gitignored `compose/nova-engine/.env`. Keep its permissions at 600.
+2. From the repo root run `uv run --script scripts/check-nova-caldav.py`. It checks discovery over HTTPS and prints only the number of iCloud calendars found by default. Add `--show-names` to identify calendars locally. The command does not require a running container or a restart.
+3. The user approved reading all iCloud calendars discovered by this account. Discovery succeeded for six calendars. Reading their events in the planner remains pending.
+
+**Memory seeding:** Optional local import using `python -m app.memory_seed conversations.json reviewed.json` from the assistant package. Keep both files private outside the checkout. The review file is a JSON array of objects containing `conversation_id`, `message_id` and an exact `excerpt` of up to 1,000 characters from a user message. Only include excerpts you want Nova to retain. The importer verifies every selection before appending observations with source references. Re-importing the same selection skips duplicates. No personal export has been imported.
+
+**Decisions and testing:** Choose which source records gym visits, and which places you want the phone to report. Test arrival/departure on the actual phone and check Learning Grove goals on a scoped device. Calendar integration, adaptive gym planning, weekly recalibration, and notification outcome analysis are pending engineering work. Reviewed memory seeding is optional.
 
 ### Phase 6 — worker and resilience
 
-Uptime Kuma alerts, diagnostics, smoother follow-up on coding-agent jobs, and only the automatic repairs the operations policy allows.
+Implemented in the checkout. Kuma heartbeats feed debounced monitor diagnostics. Worker jobs can return protected-operation request IDs that Nova can follow through approval and execution. The gateway and engine are deployed. On 2026-11-26, an unauthenticated request from inside Kuma reached Nova and returned HTTP 401. Kuma had no active Nova webhook and Nova had received zero monitor states. Configure a notification and verify a real heartbeat. The worker and ops-runner deployments and live worker verification remain pending. Automatic repairs triggered by monitor events await a policy decision.
 
 ## Decisions still open
 
-Calendar provider. Gym data source. Whether anything is reachable from outside Tailscale. How long to keep conversations and observations, and where the backup lives. How much Nova may repair on her own.
+Gym data source. Whether anything is reachable from outside Tailscale. How long to keep conversations and observations, and where the backup lives. How much Nova may repair on her own.

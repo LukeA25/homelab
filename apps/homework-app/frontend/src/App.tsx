@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { BookOpen, Loader2, Plus } from "lucide-react";
 import { AssignmentRow } from "@/components/AssignmentRow";
@@ -6,6 +6,16 @@ import { AssignmentSheet } from "@/components/AssignmentSheet";
 import { api } from "@/lib/api";
 import type { Assignment, AssignmentInput } from "@/lib/types";
 import { BUCKET_LABELS, cn, groupByBucket } from "@/lib/utils";
+
+declare global {
+  interface Window {
+    HomelabNotify?: {
+      subscribed(): Promise<boolean>;
+      enable(): Promise<{ ok: boolean; reason?: string }>;
+      disable(): Promise<{ ok: boolean }>;
+    };
+  }
+}
 
 type Filter = "open" | "done" | "all";
 
@@ -23,6 +33,33 @@ export default function App() {
   const [editing, setEditing] = useState<Assignment | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
+
+  const [subscribed, setSubscribed] = useState(false);
+  const [changingSubscription, setChangingSubscription] = useState(false);
+  useEffect(() => {
+    const refresh = () => { void window.HomelabNotify?.subscribed().then(setSubscribed).catch(() => {}); };
+    refresh();
+    window.addEventListener("load", refresh);
+    return () => window.removeEventListener("load", refresh);
+  }, []);
+
+  async function toggleNotifications() {
+    const notify = window.HomelabNotify;
+    if (!notify) { setError("Notification service unavailable."); return; }
+    setChangingSubscription(true);
+    try {
+      if (subscribed) await notify.disable();
+      else {
+        const result = await notify.enable();
+        if (!result.ok) throw new Error(result.reason || "Could not subscribe.");
+      }
+      setSubscribed(await notify.subscribed());
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Could not change reminders.");
+    } finally {
+      setChangingSubscription(false);
+    }
+  }
 
   const coursesQ = useQuery({ queryKey: ["courses"], queryFn: api.courses, staleTime: Infinity });
   const assignmentsQ = useQuery({
@@ -140,6 +177,8 @@ export default function App() {
             Add
           </button>
         </header>
+        <button type="button" className="self-start text-xs underline" onClick={toggleNotifications}
+          disabled={changingSubscription}>{subscribed ? "Disable homework reminders" : "Enable homework reminders"}</button>
 
         {notice ? (
           <p className="rounded-xl border border-gain/30 bg-gain/10 px-3 py-2 text-xs text-gain">

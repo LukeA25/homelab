@@ -66,3 +66,12 @@ def test_restart_marks_interrupted_jobs_as_errors(worker):
         jobs._save_locked()
     jobs.load()
     assert jobs.get("x")["status"] == "error" and "unknown" in jobs.get("x")["error"]
+
+
+def test_change_returns_protected_operation_continuation(worker, monkeypatch):
+    jobs, client, _, _ = worker
+    monkeypatch.setattr(jobs, "_agent", lambda *_: "Waiting for approval.\nOPS_REQUEST_ID=012345abcdef")
+    client.post("/jobs", json={"id": "pending", "prompt": "deploy", "kind": "change"}, headers=AUTH)
+    job = jobs.wait("pending", 5)
+    assert job["status"] == "approval_required"
+    assert job["request_id"] == "012345abcdef"

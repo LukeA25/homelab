@@ -36,8 +36,9 @@ def _csv(name: str, default: str) -> set[str]:
 # Stacks the agent may operate without asking. Everything else is protected by default.
 ROUTINE = _csv(
     "ROUTINE_STACKS",
-    "finance-app,guitar-app,theology-app,homework-app,learning-app,jellyfin,uptime-kuma,notify,nova-engine",
+    "finance-app,guitar-app,theology-app,homework-app,learning-app,jellyfin,uptime-kuma,nova-engine",
 )
+ROUTINE.discard("notify")  # Older host overrides may still list this now-protected stack.
 MANUAL_ONLY = _csv("MANUAL_ONLY_STACKS", "ops-runner,agent-worker")
 COMMANDS = {
     "up": ["docker", "compose", "up", "-d", "--remove-orphans"],
@@ -233,14 +234,32 @@ def get_request(request_id: str, role: str = Depends(any_role)) -> dict[str, Any
     return reqs[request_id]
 
 
+@app.on_event("startup")
+def recover_interrupted_requests() -> None:
+    with _lock:
+        reqs = _load_requests()
+        running = [r for r in reqs.values() if r["status"] == "running"]
+        for req in running:
+            req["status"] = "unknown"
+        if running:
+            _save_requests(reqs)
+    for req in running:
+        _audit("op_interrupted", request_id=req["id"], stack=req["stack"])
+
+
 def _execute_in_background(req: dict[str, Any]) -> None:
     try:
         result = _operate(req["stack"], req["operation"], request_id=req["id"], approval_id=req["approval_id"])
     except HTTPException as exc:
         result = {"ok": False, "output": exc.detail}
+    except Exception:
+        result = {"ok": False, "exit_code": None, "output": "Operation outcome unknown; inspect stack state"}
+    status = "done" if result["ok"] else "failed"
+    if "exit_code" in result and result["exit_code"] is None:
+        status = "unknown"
     with _lock:
         reqs = _load_requests()
-        reqs[req["id"]]["status"] = "done" if result["ok"] else "failed"
+        reqs[req["id"]]["status"] = status
         reqs[req["id"]]["result"] = result
         _save_requests(reqs)
 

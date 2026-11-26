@@ -4,9 +4,10 @@ from __future__ import annotations
 
 import json
 from dataclasses import dataclass
+import re
 from typing import Any, Awaitable, Callable
 
-from . import approvals, context_files, finance, ha, homework, nova_config, observations, ops_client, sessions, worker_client
+from . import approvals, context_files, finance, ha, homework, monitoring, planning, nova_config, observations, ops_client, sessions, worker_client
 from .devices import Device
 
 
@@ -75,6 +76,28 @@ async def _propose_cursor_edit(args: dict[str, Any], ctx: CallContext) -> Any:
     if not ctx.approval_id:
         raise RuntimeError("change requests require an approval")
     return await worker_client.submit_change(ctx.approval_id, args["prompt"])
+
+
+async def _monitor_status(args, ctx):
+    return monitoring.diagnostics()
+
+
+async def _ops_status(args, ctx):
+    request_id = args["request_id"]
+    if not re.fullmatch(r"[0-9a-f]{12}", request_id):
+        raise ValueError("Invalid operations request ID")
+    req = await ops_client.get_request(request_id)
+    return {key: req.get(key) for key in ("id", "stack", "operation", "status", "expires_at")}
+
+
+async def _worker_job(args, ctx):
+    job_id = args["job_id"]
+    if not re.fullmatch(r"[a-zA-Z0-9_-]{1,64}", job_id):
+        raise ValueError("Invalid worker job ID")
+    job = await worker_client.get_job(job_id)
+    if job is None:
+        return {"status": "unknown"}
+    return {key: job.get(key) for key in ("id", "status", "result", "error", "request_id")}
 
 
 async def _list_ops_requests(args: dict[str, Any], ctx: CallContext) -> Any:
@@ -151,6 +174,11 @@ HANDLERS: dict[str, Handler] = {
     "cursor_status": _cursor_status,
     "ask_worker": _ask_worker,
     "propose_cursor_edit": _propose_cursor_edit,
+    "monitor_status": _monitor_status,
+    "learning_goals": planning.learning_goals,
+    "recent_place_events": planning.recent_places,
+    "worker_job": _worker_job,
+    "ops_request_status": _ops_status,
     "list_ops_requests": _list_ops_requests,
     "approve_ops_request": _approve_ops_request,
     "search_memory": _search_memory,

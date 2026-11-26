@@ -7,7 +7,7 @@ from zoneinfo import ZoneInfo
 
 import httpx
 
-from . import nova_config, store
+from . import nova_config, notifications, store
 from .config import settings
 
 SLOTS = (time(18, 15), time(20), time(22), time(23))
@@ -58,7 +58,30 @@ def finish(job, count: int | None, now: datetime):
         if updated.rowcount and status == "completed" and count == 0:
             db.execute("""UPDATE events SET status='cancelled' WHERE kind='homework'
                 AND local_day=? AND due>? AND status='scheduled'""", (job["local_day"], job["due"]))
+        if updated.rowcount and status == "completed":
+            notifications.record_homework(db, job, count, stamp)
         db.commit()
+
+
+async def homework_count(day: str, zone: ZoneInfo) -> int:
+    async with httpx.AsyncClient(timeout=8) as client:
+        response = await client.get(settings()["homework_base_url"] + "/api/assignments")
+        response.raise_for_status()
+        rows = response.json()["assignments"]
+        if not isinstance(rows, list):
+            raise ValueError("invalid assignments")
+        count = 0
+        for item in rows:
+            if not isinstance(item["done"], bool):
+                raise ValueError("invalid assignment completion state")
+            if item["done"] or not item["due"]:
+                continue
+            due = datetime.fromisoformat(item["due"])
+            if due.tzinfo:
+                due = due.astimezone(zone)
+            if due.date().isoformat() == day and (due.hour, due.minute) == (23, 59):
+                count += 1
+    return count
 
 
 async def tick():
@@ -68,23 +91,7 @@ async def tick():
         return
     count = None
     try:
-        async with httpx.AsyncClient(timeout=8) as client:
-            response = await client.get(settings()["homework_base_url"] + "/api/assignments")
-            response.raise_for_status()
-            rows = response.json()["assignments"]
-            if not isinstance(rows, list):
-                raise ValueError("invalid assignments")
-            count = 0
-            for item in rows:
-                if not isinstance(item["done"], bool):
-                    raise ValueError("invalid assignment completion state")
-                if item["done"] or not item["due"]:
-                    continue
-                due = datetime.fromisoformat(item["due"])
-                if due.tzinfo:
-                    due = due.astimezone(zone)
-                if due.date().isoformat() == job["local_day"] and (due.hour, due.minute) == (23, 59):
-                    count += 1
+        count = await homework_count(job["local_day"], zone)
     except (httpx.HTTPError, ValueError, TypeError, KeyError) as exc:
         LOG.warning("Homework check %s unavailable (%s)", job["id"], type(exc).__name__)
         count = None

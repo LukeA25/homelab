@@ -315,3 +315,58 @@ capabilities:
         reason: {type: string, maxLength: 300, description: The user's instruction, briefly.}
       required: [key, value, reason]
       additionalProperties: false
+
+  - name: monitor_status
+    app: ops
+    scope: worker.status
+    policy: automatic
+    effect: read
+    summary: Read observed and confirmed monitor states and recent health transitions.
+    description: Read observed and confirmed monitor states and recent health transitions.
+    parameters: {type: object, properties: {}, additionalProperties: false}
+
+  - name: worker_job
+    app: worker
+    scope: worker.status
+    policy: automatic
+    effect: read
+    summary: Read the outcome of a worker job. For approval_required use the returned operations request ID.
+    description: Read the outcome of a worker job. For approval_required use the returned operations request ID.
+    parameters:
+      type: object
+      properties:
+        job_id: {type: string, minLength: 1, maxLength: 64}
+      required: [job_id]
+      additionalProperties: false
+
+  - name: ops_request_status
+    app: ops
+    scope: ops.approve
+    policy: automatic
+    effect: read
+    summary: Follow an existing protected operation through approval and execution. Check this after reconnecting before considering another operation.
+    description: Follow an existing protected operation through approval and execution. Check this after reconnecting before considering another operation.
+    parameters:
+      type: object
+      properties:
+        request_id: {type: string, minLength: 1, maxLength: 64}
+      required: [request_id]
+      additionalProperties: false
+
+  - name: learning_goals
+    app: learning
+    scope: learning.goals
+    policy: automatic
+    effect: read
+    summary: Read goals and path status from Learning Grove.
+    description: Read goals and path status from Learning Grove.
+    parameters: {type: object, properties: {}, additionalProperties: false}
+
+  - name: recent_place_events
+    app: nova
+    scope: location.read
+    policy: automatic
+    effect: read
+    summary: Read recent named place transitions and their times. Historical reports do not establish current location.
+    description: Read recent named place transitions and their times. Historical reports do not establish current location.
+    parameters: {type: object, properties: {}, additionalProperties: false}

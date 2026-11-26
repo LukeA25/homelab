@@ -2,6 +2,18 @@
 
 Meaningful code, API, infrastructure, container and architectural changes. See `AGENTS.md` for what belongs here. Git history holds the full detail.
 
+## Nova Phases 4 and 5 — homework delivery and planning inputs
+
+- Added a local iCloud CalDAV discovery check using credentials in the private engine environment.
+
+- Added a durable homework notification queue, global phone-reported Focus state, release-time relevance checks, push submission history and a Homework device opt-in. Notify is now a protected stack in deployment and ops policy. Engine delivery requires the existing notify token.
+- Added scoped Learning Grove goal reads, authenticated named place events, and a local reviewed-excerpt importer for ChatGPT conversations. See docs/nova/STATUS.md for rollout and pending decisions.
+
+## Nova Phase 6 — worker follow-up and monitoring
+
+- Added scoped Kuma webhook intake, durable debounced health transitions, and read-only monitor diagnostics. The engine records confirmed changes in the Nova events database.
+- Added worker job and protected request lookups. Worker change jobs can hand back an approval request ID. Ops-runner records interrupted and timed-out protected operations as unknown so their outcomes can be investigated before any further action.
+
 ## Nova Phase 3 (in progress)
 
 - nova-engine schedules local evening homework checks in `/srv/appdata/nova/events.db`, retries unknown results until the next slot, and cancels later checks after confirming zero open assignments due at 11:59 PM. The engine reaches homework-app on the existing edge network. Delivery is pending Phase 4.

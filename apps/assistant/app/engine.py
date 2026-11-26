@@ -20,7 +20,7 @@ from zoneinfo import ZoneInfo
 
 from openai import AsyncOpenAI
 
-from . import context_files, event_engine, observations, sessions
+from . import context_files, event_engine, monitoring, notifications, observations, sessions
 from .config import settings
 
 log = logging.getLogger("nova.engine")
@@ -168,7 +168,9 @@ async def main() -> None:
     log.info("nova-engine started (model %s)", settings()["background_model"])
     while not stop.is_set():
         try:
+            monitoring.settle()
             await event_engine.tick()
+            await notifications.release(event_engine.homework_count, ZoneInfo(settings()["display_tz"]))
         except Exception:
             log.exception("event poll failed")
         try:

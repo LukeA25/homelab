@@ -102,3 +102,15 @@ def test_expired_request_cannot_execute(ops, monkeypatch):
     rid = client.post("/stacks/caddy/up", json={"reason": "x"}, headers=WORKER).json()["request_id"]
     assert client.post(f"/requests/{rid}/execute", json={"approval_id": "a"}, headers=GATEWAY).status_code == 409
     assert ran == []
+
+
+def test_interrupted_request_is_unknown_and_cannot_replay(ops):
+    main, client, ran = ops
+    rid = client.post("/stacks/caddy/up", json={"reason": "deploy"}, headers=WORKER).json()["request_id"]
+    requests = main._load_requests()
+    requests[rid]["status"] = "running"
+    main._save_requests(requests)
+    main.recover_interrupted_requests()
+    assert client.get(f"/requests/{rid}", headers=WORKER).json()["status"] == "unknown"
+    assert client.post(f"/requests/{rid}/execute", json={"approval_id": "a"}, headers=GATEWAY).status_code == 409
+    assert ran == []

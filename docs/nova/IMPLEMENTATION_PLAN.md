@@ -177,16 +177,27 @@ SQLite event store with atomic state transitions and idempotency keys; due-event
 
 ### Phase 4 — Notifications and DND
 
+Homework delivery and phone DND reporting implemented in the checkout. See [migration status](STATUS.md) for the rollout, phone tests, defaults and remaining delivery modes.
+
 Notification records, DND state from an iOS Shortcut with stale-state handling, durable queue, relevance and expiry, collapse on release, app and deep-link routing validated against the registry, conversation invitations carrying event context. Update `AGENTS.md` to mark `notify` Nova-critical.
 
 ### Phase 5 — Goals, calendar, location, memory seeding
 
-Common goals interface via adapters, calendar provider (open), geofence events, user-model consolidation with preserved evidence, ChatGPT export import with user review.
+Learning Grove goal reads, named place reports and reviewed local memory seeding implemented in the checkout. Provider and device decisions are listed in [migration status](STATUS.md).
+
+Common goals interface via adapters, iCloud CalDAV (all discovered calendars approved for reads), geofence events, user-model consolidation with preserved evidence, ChatGPT export import with user review.
 
 ### Phase 6 — Worker and resilience
 
 Approval continuation for worker operations, Uptime Kuma webhook events with debounce, diagnostics, and any automatic repairs the operations policy authorizes.
 
+Implemented in the checkout, awaiting deployment and a real Kuma notification:
+
+- A change job can return an ops-runner request ID. Use `worker_job` to read the handoff, `list_ops_requests` to verify the pending operation, the existing `approve_ops_request` flow for consent, and `ops_request_status` to check the outcome after reconnecting. An interrupted or timed-out protected operation has an unknown outcome. Inspect stack state before considering further action. The worker does not replay the original coding job.
+- Enroll a dedicated Kuma credential with only `events.kuma` through the gateway's device CLI. Configure Kuma's webhook notification for JSON POST to `http://assistant:8000/api/events/kuma` on the existing edge network, with the credential in the Authorization bearer header. Use Kuma's heartbeat payload with numeric monitorID, numeric status and UTC time. A test notification without a heartbeat checks connectivity only.
+- `nova-engine` confirms observed states after a 60-second quiet period. `monitor_status` shows monitor IDs, latest observed and confirmed states, timestamps, and the last 20 confirmed changes. Data lives in `events.db`. Webhooks do not authorize a repair. Selection of automatic repairs, escalation timing and user-facing notification delivery remain open.
+- Apply gateway, worker and ops-runner updates separately with the approvals required in AGENTS.md. Apply the routine engine update and verify with a test monitor changing state, then query monitor_status after the quiet period and one engine poll. Verify the worker handoff against an actual pending request before approving an operation. To roll back, disable the webhook and restore the previous service images under the same deployment rules. Preserve the events database and existing operations requests.
+
 ## Open items
 
-Calendar provider; gym data source; public HTTPS ingress design; backup and retention policy (now including `conversations.db` and `history/`); self-healing scope.
+gym data source; public HTTPS ingress design; backup and retention policy (now including `conversations.db` and `history/`); self-healing scope.
