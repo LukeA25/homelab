@@ -10,7 +10,7 @@ export function Page({ children, denseBottom = false, className = "" }: PageProp
   return (
     <div
       className={[
-        "mx-auto w-full min-w-0 max-w-7xl px-4 pt-[max(1.25rem,env(safe-area-inset-top))] md:px-6 md:pt-6 lg:px-8",
+        "mx-auto w-full min-w-0 max-w-7xl px-4 pt-[max(1.25rem,var(--guitar-page-safe-top,env(safe-area-inset-top,0px)))] md:px-6 md:pt-6 lg:px-8",
         denseBottom ? "pb-40 md:pb-10" : "pb-28 md:pb-10",
         className,
       ].join(" ")}

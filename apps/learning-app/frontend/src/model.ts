@@ -6,8 +6,10 @@ export type Session={id:string;tree_id:string;concept_id:string;created_at:strin
 export type Idea={id:string;text:string;created_at:string;title?:string;idea?:string;why?:string;direction?:string;starting_point?:string;source?:string;suggestion?:string};
 export type IdeaDraft={title:string;idea:string;why:string;direction:string;starting_point:string;source:string;suggestion:string};
 export type Workspace={trees:Tree[];ideas:Idea[];sessions:Session[];knowledge?:Knowledge[];drafts?:{id:string;idea_id?:string|null;title:string;category:string;goal:string;depth:string;excludes:string;outcomes:string[];concepts:string[]}[];preferences?:{id:string;text:string;created_at:string}[]};
+export const appBase = window.location.hostname === "nova.home.arpa" ? "/learning" : "";
+
 function explain(detail:unknown){if(typeof detail==='string')return detail;if(Array.isArray(detail))return detail.map(item=>item&&typeof item==='object'&&'msg' in item?String(item.msg):String(item)).join(' ');return 'Check the fields and JSON structure, then try again.';}
-export async function api(path:string,method='GET',body?:unknown){const r=await fetch('/api'+path,{method,headers:{'Content-Type':'application/json'},body:body===undefined?undefined:JSON.stringify(body)});const d=await r.json();if(!r.ok)throw Error(explain(d.detail));return d;}
+export async function api(path:string,method='GET',body?:unknown){const r=await fetch(appBase+'/api'+path,{method,headers:{'Content-Type':'application/json'},body:body===undefined?undefined:JSON.stringify(body)});const d=await r.json();if(!r.ok)throw Error(explain(d.detail));return d;}
 export function nextConcept(t:Tree){return t.concepts.find(c=>c.state==='needs-review')||t.concepts.find(c=>c.state!=='understood'&&c.requires.every(id=>t.concepts.find(p=>p.id===id)?.state==='understood'))||t.concepts.find(c=>c.state!=='understood')||t.concepts[0];}
 function nice(value:string){return value.replace(/\w\S*/g,word=>word[0].toUpperCase()+word.slice(1).toLowerCase());}
 export function place(category:string){

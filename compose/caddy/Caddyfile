@@ -74,6 +74,21 @@
 	}
 }
 
+# Keep section authorization on the original URL so sign-in can return there.
+(nova_section) {
+	redir /{args[0]} /{args[0]}/?{query} 308
+	handle /{args[0]}/* {
+		route {
+			forward_auth nova-auth:8000 {
+				uri /verify?app={args[0]}
+				copy_headers X-Nova-Device
+			}
+			uri strip_prefix /{args[0]}
+			reverse_proxy {args[1]}
+		}
+	}
+}
+
 # Dashboard (+ control/tv) behind assistant.home.arpa — reuses the cert
 # that already works in browsers where homepage.home.arpa HTTPS hangs.
 # Nova's own routes are not gated here: the gateway checks device credentials itself.
@@ -125,16 +140,59 @@ http://homelab.tail47f19f.ts.net,
 http://100.101.135.109 {
 	import local_ca
 	handle {
-		redir https://homepage.home.arpa{uri}
+		redir https://nova.home.arpa{uri}
 	}
 }
 
 https://homepage.home.arpa {
 	import local_https
-	import gate home
-	import notify
-	handle {
+	redir https://nova.home.arpa{uri}
+}
+
+http://nova.home.arpa {
+	import to_https
+}
+
+https://nova.home.arpa {
+	import local_https
+
+	handle /__auth/* {
+		reverse_proxy nova-auth:8000
+	}
+
+	@nova_identity path /manifest.webmanifest /brand/nova-icon-180.png /brand/nova-icon-192.png /brand/nova-icon-512.png
+	handle @nova_identity {
 		reverse_proxy dashboard:8000
+	}
+
+	@notify_scripts path /__notify/client.js /__notify/sw.js
+	handle @notify_scripts {
+		reverse_proxy notify:8000
+	}
+
+	handle /__notify/* {
+		route {
+			forward_auth nova-auth:8000 {
+				uri /verify?app=homework
+			}
+			reverse_proxy notify:8000
+		}
+	}
+
+	import nova_section homework homework-app:8000
+	import nova_section learning learning-app:8000
+	import nova_section theology theology-app:8000
+	import nova_section guitar guitar-app:8000
+	import nova_section finance finance-app:8000
+
+	handle {
+		route {
+			forward_auth nova-auth:8000 {
+				uri /verify?app=home
+				copy_headers X-Nova-Device
+			}
+			reverse_proxy dashboard:8000
+		}
 	}
 }
 

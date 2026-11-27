@@ -2,6 +2,23 @@
 
 Meaningful code, API, infrastructure, container and architectural changes. See `AGENTS.md` for what belongs here. Git history holds the full detail.
 
+## NOVA iPhone navigation
+
+- Added a top-right Home icon styled to each NOVA app. The app headers account for the phone’s top safe area, and the Finance menu sits at the bottom of the dynamic viewport.
+- Aligned Guitar’s NOVA shortcut with its Home heading and added extra top clearance in Finance, Theology and Learning Grove.
+
+## NOVA app sections
+
+- Added same-origin Learning Grove, Theology, Guitar, and Finance sections to NOVA. Existing standalone hosts, scoped access, Guitar and Finance deep links, cast paths, and Learning Grove voice endpoints are preserved.
+
+## NOVA Home Screen pilot
+
+- Added the NOVA install identity, icon, and dashboard at `nova.home.arpa`. The routed Homework subsection keeps its own authorization scope and can use one NOVA push subscription after phone acceptance. The existing Homework hostname and default push target remain available for migration.
+
+## Homework Web Push signing
+
+- Fixed Notify signing with its existing persisted VAPID key. The key and current subscriptions can be reused. Provider failures log the error class or response status without subscription URLs.
+
 ## Nova calendar search and event creation
 
 - Added live title search across iCloud calendars beyond the rolling snapshot, named calendar discovery, and approved event creation in an explicitly named calendar. CalDAV credentials stay with nova-engine.

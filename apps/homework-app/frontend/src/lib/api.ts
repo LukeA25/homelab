@@ -1,6 +1,7 @@
 import type { Assignment, AssignmentInput, AssignmentsResponse, Course } from "./types";
 
-const BASE = "/api";
+export const inNova = window.location.hostname === "nova.home.arpa";
+const BASE = inNova ? "/homework/api" : "/api";
 
 async function request<T>(path: string, opts: RequestInit = {}): Promise<T> {
   const res = await fetch(`${BASE}${path}`, opts);

@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
+import { House } from "lucide-react";
 import { AskScreen } from "./components/AskScreen";
 import { BibleScreen } from "./components/BibleScreen";
 import { BibleYearMiniPlayer, BibleYearScreen } from "./components/BibleYearScreen";
@@ -10,6 +11,7 @@ import { ReaderScreen } from "./components/ReaderScreen";
 import { TabBar, newTabId } from "./components/TabBar";
 import {
   BIBLE_ID,
+  inNova,
   DEFAULT_BIBLE_SECTION,
   createBookmark,
   createHighlight,
@@ -1088,9 +1090,21 @@ export default function App() {
             (tab.id === layout.leftId || tab.id === layout.rightId) && tab.kind === "bible-year",
         ));
 
+  const novaLink = inNova ? (
+    <a href="/" aria-label="Back to NOVA" title="Back to NOVA"
+      className="grid size-11 shrink-0 place-items-center rounded-md border border-border bg-surface text-accent hover:bg-bg focus-visible:ring-2 focus-visible:ring-accent">
+      <House className="size-5" aria-hidden="true" />
+    </a>
+  ) : null;
+
   if (tabs.length === 0 || !layout) {
     return (
       <div className="app-shell bg-bg text-text">
+        {novaLink && (
+          <header className="flex shrink-0 justify-end px-3 pt-[calc(env(safe-area-inset-top,0px)+1.125rem)]">
+            {novaLink}
+          </header>
+        )}
         <div className="min-h-0 flex-1">
           <LaunchScreen onOpen={(kind) => addTab(kind)} />
         </div>
@@ -1106,6 +1120,7 @@ export default function App() {
   return (
     <div className="app-shell bg-bg text-text">
       <TabBar
+        rightAction={novaLink}
         tabs={tabs}
         split={layout.mode === "split"}
         leftIds={layout.mode === "split" ? leftIds : tabs.map((t) => t.id)}

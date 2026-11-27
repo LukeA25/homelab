@@ -20,7 +20,7 @@ export type CastSnapshot = {
 const API = "/__cast/api";
 
 const APP_HOSTS: Record<CastApp, string> = {
-  home: "homepage.home.arpa",
+  home: "nova.home.arpa",
   finance: "finance.home.arpa",
   guitar: "guitar.home.arpa",
   theology: "theology.home.arpa",

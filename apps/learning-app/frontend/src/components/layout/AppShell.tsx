@@ -6,6 +6,7 @@ import {PathsPage} from '@/pages/PathsPage';
 import {TreePage} from '@/pages/TreePage';
 import {ExplorePage} from '@/pages/ExplorePage';
 import {SettingsPage} from '@/pages/SettingsPage';
+import {appBase} from '@/model';
 import {useGrove} from '@/app/useGrove';
 
 const nav = [
@@ -22,7 +23,7 @@ export function AppShell() {
       <div className="fixed inset-0 z-30 flex bg-[#f8f9f5]">
         <Button variant="outline" size="icon" className="absolute right-3 top-[max(0.75rem,env(safe-area-inset-top))] z-10 rounded-full bg-card" aria-label="Close" onClick={leaveVoice}><X size={16} /></Button>
         {error && <p role="alert" className="absolute left-4 right-16 top-[max(0.75rem,env(safe-area-inset-top))] z-10 rounded-md bg-[#f7e7df] p-3 text-sm text-[#a34731]">{error}</p>}
-        <iframe ref={voiceFrame} className="h-full w-full border-0 bg-[#f8f9f5]" title="Grove voice" src={`/voice/?${voiceQuery}`} allow="microphone; autoplay" />
+        <iframe ref={voiceFrame} className="h-full w-full border-0 bg-[#f8f9f5]" title="Grove voice" src={`${appBase}/voice/?${voiceQuery}`} allow="microphone; autoplay" />
       </div>
     );
   }
@@ -38,7 +39,15 @@ export function AppShell() {
         <button type="button" className="mt-auto hidden w-full items-center gap-3 border-t border-border pt-5 text-left text-sm font-semibold md:flex" onClick={() => setPage('Settings')}><span className="grid h-9 w-9 place-items-center rounded-full bg-[#dedfcf] text-xs">LA</span>Luke Anderson</button>
       </aside>
       <div className="pb-20 md:pb-0">
-        <header className="flex h-16 items-center justify-end border-b border-border px-5 md:px-10"><Button variant="outline" size="sm" onClick={() => openVoice('plan')}><MessageCircle size={14} /> Plan a path</Button></header>
+        <header className={`flex items-center justify-end gap-2 border-b border-border px-5 md:px-10 ${appBase ? "min-h-16 pb-2 pt-[calc(1.25rem+env(safe-area-inset-top,0px))]" : "h-16"}`}>
+          <Button variant="outline" size="sm" onClick={() => openVoice('plan')}><MessageCircle size={14} /> Plan a path</Button>
+          {appBase && (
+            <a href="/" aria-label="Back to NOVA" title="Back to NOVA"
+              className="grid size-11 shrink-0 place-items-center rounded-lg border border-border bg-card text-primary hover:bg-accent focus-visible:ring-2 focus-visible:ring-primary">
+              <Home size={19} aria-hidden="true" />
+            </a>
+          )}
+        </header>
         {error && <div className="flex items-center justify-between gap-3 bg-[#fbe7df] px-5 py-3 text-sm text-[#9b4030]" role="alert">{error}<button type="button" aria-label="Dismiss error" onClick={clearError}><X size={16} /></button></div>}
         {notice && <div className="flex items-center justify-between gap-3 bg-[#e6efdc] px-5 py-3 text-sm text-[#49653a]" role="status">{notice}<button type="button" aria-label="Dismiss notification" onClick={() => setNotice('')}><X size={16} /></button></div>}
         <main className="mx-auto max-w-[1470px] px-5 py-8 md:px-10">

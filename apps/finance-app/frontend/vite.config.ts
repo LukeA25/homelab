@@ -6,6 +6,7 @@ import { fileURLToPath, URL } from "node:url";
 // API calls to the running uvicorn server so the frontend and backend share an
 // origin from the browser's perspective.
 export default defineConfig({
+  base: "./",
   plugins: [react()],
   resolve: {
     alias: {

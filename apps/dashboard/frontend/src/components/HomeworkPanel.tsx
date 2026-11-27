@@ -63,7 +63,7 @@ export function HomeworkPanel({
             </span>
           ) : null}
           <a
-            href={data?.href || "http://homework.home.arpa"}
+            href={window.location.hostname === "nova.home.arpa" ? "/homework/" : data?.href || "http://homework.home.arpa"}
             className="inline-flex items-center gap-1 rounded-full border border-hairline bg-panel px-3 py-1.5 text-sm text-ink-muted transition-colors hover:text-ink"
           >
             Open

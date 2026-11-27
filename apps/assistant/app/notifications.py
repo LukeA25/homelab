@@ -76,6 +76,10 @@ def history(device=Depends(require("notifications.read"))):
 
 async def release(check_homework, zone):
     token = os.getenv("NOTIFY_TOKEN")
+    destination = os.getenv("NOVA_HOMEWORK_PUSH_APP", "homework").strip()
+    if destination not in ("homework", "nova"):
+        raise ValueError("NOVA_HOMEWORK_PUSH_APP must be homework or nova")
+    target = "/homework/" if destination == "nova" else "/"
     now = time.time()
     with closing(store.connect("events.db")) as db:
         schema(db)
@@ -100,8 +104,8 @@ async def release(check_homework, zone):
         async with httpx.AsyncClient(timeout=12) as client:
             result = await client.post("http://notify:8000/api/send",
                 headers={"Authorization": f"Bearer {token}"},
-                json={"app": "homework", "title": "Homework", "body": "You have homework due tonight.",
-                      "url": "/", "tag": "homework-" + row["day"], "ttl": 0})
+                json={"app": destination, "title": "Homework due tonight", "body": "Open Homework to see what’s due.",
+                      "url": target, "tag": "homework-" + row["day"], "ttl": 0})
             result.raise_for_status()
             counts = result.json()
         accepted, failed = counts["delivered"], counts["failed"]

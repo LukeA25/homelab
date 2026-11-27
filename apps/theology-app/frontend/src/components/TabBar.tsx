@@ -21,6 +21,7 @@ const ADD_MENU = [
 ] as const;
 
 type TabBarProps = {
+  rightAction?: ReactNode;
   tabs: WorkspaceTab[];
   split: boolean;
   leftIds: string[];
@@ -34,6 +35,7 @@ type TabBarProps = {
 };
 
 export function TabBar({
+  rightAction,
   tabs,
   split,
   leftIds,
@@ -142,7 +144,9 @@ export function TabBar({
   );
 
   return (
-    <div className="safe-top relative z-30 flex shrink-0 items-stretch gap-0 border-b border-border bg-bg-elevated px-1.5 pt-1">
+    <div className={`relative z-30 flex shrink-0 items-stretch gap-0 border-b border-border bg-bg-elevated px-1.5 ${rightAction
+      ? "pt-[calc(env(safe-area-inset-top,0px)+1.125rem)]"
+      : "safe-top pt-1"}`}>
       {split ? (
         <>
           {dropZone(
@@ -166,6 +170,7 @@ export function TabBar({
           {addButton}
         </>
       )}
+      {rightAction && <div className="mb-1.5 ml-1 flex shrink-0 items-center">{rightAction}</div>}
     </div>
   );
 }

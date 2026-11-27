@@ -4,6 +4,7 @@ import ControlDashboard from "@/components/ControlDashboard";
 import { FinancePanel } from "@/components/FinancePanel";
 import { Header } from "@/components/Header";
 import { HomeworkPanel } from "@/components/HomeworkPanel";
+import { NovaNotifications } from "@/components/NovaNotifications";
 import { LightsPanel } from "@/components/LightsPanel";
 import { ServicesGrid } from "@/components/ServicesGrid";
 import TvDashboard from "@/components/TvDashboard";
@@ -53,11 +54,13 @@ function HomeDashboard() {
   const homework = homeworkQ.data;
   const groups = servicesQ.data?.groups;
   const tz = configQ.data?.tz;
+  const notifications = window.location.hostname === "nova.home.arpa" && <NovaNotifications />;
 
   return (
     <div className="h-full dash:overflow-hidden">
       <div className="mx-auto flex max-w-lg flex-col gap-5 px-4 pt-[calc(1.25rem+env(safe-area-inset-top))] pb-[calc(1.25rem+env(safe-area-inset-bottom))] dash:hidden">
         <Header weather={weather ?? null} tz={tz} />
+        {notifications}
         <ServicesGrid groups={groups} compact fill={false} />
         <HomeworkPanel data={homework} />
         <LightsPanel rooms={rooms} />
@@ -66,6 +69,7 @@ function HomeDashboard() {
       <div className="hidden h-full overflow-hidden dash:block">
         <div className="mx-auto flex h-full max-w-[1280px] flex-col gap-3 overflow-hidden px-5 pt-[calc(0.75rem+env(safe-area-inset-top))] pb-3 lg:px-6">
           <Header weather={weather ?? null} tz={tz} />
+          {notifications}
           <div className="grid min-h-0 flex-1 grid-cols-12 gap-4 overflow-hidden">
             <div className="col-span-8 grid min-h-0 grid-rows-[auto_1fr] gap-3 overflow-hidden">
               <LightsPanel rooms={rooms} />

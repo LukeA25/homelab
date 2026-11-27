@@ -20,7 +20,7 @@ log = logging.getLogger("notify")
 _KEY_PATH = Path(os.getenv("NOTIFY_VAPID", "/data/vapid.json"))
 _SUBJECT = os.getenv("NOTIFY_SUBJECT", "mailto:notify@home.arpa")
 _LOCK = threading.Lock()
-_PRIVATE_PEM: str | None = None
+_VAPID: Vapid | None = None
 _PUBLIC_B64: str | None = None
 
 
@@ -29,11 +29,11 @@ def _b64url(raw: bytes) -> str:
 
 
 def _load() -> None:
-    global _PRIVATE_PEM, _PUBLIC_B64
-    if _PRIVATE_PEM is not None:
+    global _VAPID, _PUBLIC_B64
+    if _VAPID is not None:
         return
     with _LOCK:
-        if _PRIVATE_PEM is not None:
+        if _VAPID is not None:
             return
         _KEY_PATH.parent.mkdir(parents=True, exist_ok=True)
         if _KEY_PATH.exists():
@@ -56,8 +56,8 @@ def _load() -> None:
             serialization.Encoding.X962,
             serialization.PublicFormat.UncompressedPoint,
         )
-        _PRIVATE_PEM = pem
         _PUBLIC_B64 = _b64url(raw)
+        _VAPID = Vapid.from_pem(pem.encode())
 
 
 def public_key() -> str:
@@ -80,7 +80,7 @@ def send(app: str, title: str, body: str, url: str, tag: str, *, ttl: int = 8640
                     "keys": {"p256dh": row["p256dh"], "auth": row["auth"]},
                 },
                 data=payload,
-                vapid_private_key=_PRIVATE_PEM,
+                vapid_private_key=_VAPID,
                 vapid_claims={"sub": _SUBJECT},
                 ttl=ttl,
             )
@@ -92,8 +92,8 @@ def send(app: str, title: str, body: str, url: str, tag: str, *, ttl: int = 8640
                 removed += 1
             else:
                 failed += 1
-                log.warning("push to %s failed: %s", app, status or exc)
-        except Exception:
+                log.warning("push to %s failed: %s", app, status or type(exc).__name__)
+        except Exception as exc:
             failed += 1
-            log.exception("push to %s failed", app)
+            log.warning("push to %s failed: %s", app, type(exc).__name__)
     return {"delivered": delivered, "removed": removed, "failed": failed}

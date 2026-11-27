@@ -18,10 +18,7 @@ ASSETS = {'app.js', 'orb.js', 'network.js', 'board.js', 'model.mjs', 'visuals.mj
 
 @router.get('/voice/')
 def voice_page():
-    html = (ROOT / 'index.html').read_text()
-    for asset in ('style.css', 'vendor/katex.min.js', 'app.js'):
-        html = html.replace(f'"/{asset}"', f'"/voice/{asset}"')
-    return HTMLResponse(html, headers={'Cache-Control': 'no-store'})
+    return HTMLResponse((ROOT / 'index.html').read_text(), headers={'Cache-Control': 'no-store'})
 
 @router.get('/voice/{asset:path}')
 def voice_asset(asset: str):

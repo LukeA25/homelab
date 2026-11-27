@@ -3,6 +3,7 @@ import {appendCaption, finishCaption} from './captions.mjs';
 import {createOrb, voiceFrameRate} from './orb.js';
 import {createNetwork} from './network.js';
 import {createBoard} from './board.js';
+const apiBase = location.hostname === "nova.home.arpa" ? "/learning/api" : "/api";
 const params = new URLSearchParams(location.search);
 const mode = params.get('mode') || (params.get('session') ? 'lesson' : '');
 const lessonId = params.get('session');
@@ -318,7 +319,7 @@ $('start').onclick=async()=>{
     channel.onclose=()=>finish(call, call.engine==='live'?'Connection closed. Final session usage unconfirmed.':'Connection closed.', !call.closing);
     const offer=await peer.createOffer();await peer.setLocalDescription(offer);
     status('Connecting…');
-    const response=await fetch('/api/voice/start',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({sdp:offer.sdp,mode,session_id:lessonId,seed:seed||undefined,resume:heldTranscript||undefined}),signal:call.abort.signal});
+    const response=await fetch(apiBase + '/voice/start',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({sdp:offer.sdp,mode,session_id:lessonId,seed:seed||undefined,resume:heldTranscript||undefined}),signal:call.abort.signal});
     if (!response.ok) {const body=await response.json();throw Error(body.detail || body.error || 'Connection failed');}
     call.engine=response.headers.get('x-grove-engine')||'live';
     const answer=call.engine==='live'?(await response.json()).transport?.sdp:await response.text();
@@ -353,7 +354,7 @@ const demos={
   diagram:{kind:'diagram',title:'A learning loop',nodes:[{id:'data',label:'Examples'},{id:'model',label:'Model'},{id:'loss',label:'Error'},{id:'update',label:'Update weights'}],edges:[{from:'data',to:'model'},{from:'model',to:'loss'},{from:'loss',to:'update'}],highlight:['loss']},
   neural:{kind:'neural',title:'A small network',layers:[{label:'Inputs',nodes:[{id:'a',label:'Input',value:1},{id:'b',label:'Input',value:0}]},{label:'Hidden',activation:'relu',nodes:[{id:'h',label:'Hidden'}]},{label:'Output',nodes:[{id:'y',label:'Output'}]}],connections:[{from:'a',to:'h',weight:1},{from:'b',to:'h',weight:-.4},{from:'h',to:'y',weight:.8}]},
 };
-if (!performanceMode) fetch('/api/voice/status').then(response=>response.json()).then(data=>{
+if (!performanceMode) fetch(apiBase + '/voice/status').then(response=>response.json()).then(data=>{
   if (!data.hasKey) {$('start').disabled=true;status('Voice is not configured on this server.');}
 }).catch(()=>status('Local server unavailable.'));
 

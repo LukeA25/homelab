@@ -1,4 +1,5 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState, type CSSProperties } from "react";
+import { House } from "lucide-react";
 import { AddScreen } from "./components/AddScreen";
 import { DesktopSidebar, MobileBottomNav } from "./components/AppNav";
 import { HomeScreen } from "./components/HomeScreen";
@@ -7,7 +8,7 @@ import { PlaylistsScreen } from "./components/PlaylistsScreen";
 import { SettingsScreen } from "./components/SettingsScreen";
 import { SheetScreen } from "./components/SheetScreen";
 import { TracksScreen } from "./components/TracksScreen";
-import { api } from "./lib/api";
+import { api, appBase } from "./lib/api";
 import { guitarRemoteControls, isCastScreen } from "./lib/cast";
 import type { Playlist, Screen, Song, Status, ThemeId } from "./lib/types";
 
@@ -23,6 +24,7 @@ const SCREEN_PATHS: Record<Exclude<Screen, "sheet">, string> = {
 };
 
 function routeFromPath(pathname: string): { screen: Screen; songId: string | null } {
+  if (appBase && pathname.startsWith(appBase + "/")) pathname = pathname.slice(appBase.length);
   const song = pathname.match(/^\/song\/([^/]+)\/?$/);
   if (song) return { screen: "sheet", songId: decodeURIComponent(song[1]!) };
   const clean = pathname.replace(/(.)\/+$/, "$1");
@@ -98,7 +100,7 @@ export default function App() {
   }, [loading, screen, activeSong]);
 
   useEffect(() => {
-    const path = pathFor(screen, activeSongId);
+    const path = appBase + pathFor(screen, activeSongId);
     if (window.location.pathname !== path) {
       window.history.pushState(null, "", path + window.location.search);
     }
@@ -219,13 +221,28 @@ export default function App() {
     setPlaylists((prev) => prev.filter((p) => p.id !== id));
   }
 
+  const showNovaLink = Boolean(appBase) && !isCastScreen;
+  const novaLinkInHome = showNovaLink && screen === "library" && !loading && !error;
+  const novaLinkAboveScreen = showNovaLink && !novaLinkInHome;
+  const novaLink = showNovaLink ? (
+    <a href="/" aria-label="Back to NOVA" title="Back to NOVA"
+      className="panel grid size-11 shrink-0 place-items-center rounded-pill text-accent hover:text-text focus-visible:ring-2 focus-visible:ring-accent">
+      <House className="size-5" aria-hidden="true" />
+    </a>
+  ) : null;
   const navScreen = screen === "sheet" ? sheetReturnTo : screen;
 
   return (
     <div className="min-h-dvh font-body text-text md:flex md:items-start">
       <DesktopSidebar screen={navScreen} onNavigate={navigate} />
 
-      <main className="min-w-0 flex-1 md:min-h-dvh md:overflow-y-auto">
+      <main className="min-w-0 flex-1 md:min-h-dvh md:overflow-y-auto"
+        style={novaLinkAboveScreen ? { "--guitar-page-safe-top": "0px" } as CSSProperties : undefined}>
+        {novaLinkAboveScreen && (
+          <header className="flex justify-end px-4 pt-[max(0.5rem,calc(env(safe-area-inset-top,0px)+0.375rem))] md:px-6 lg:px-8">
+            {novaLink}
+          </header>
+        )}
         {loading && (
           <div className="flex min-h-dvh items-center justify-center text-sm text-muted">
             Loading library…
@@ -257,6 +274,7 @@ export default function App() {
             {screen === "library" && (
               <HomeScreen
                 songs={songs}
+                headerAction={novaLink}
                 onOpenSong={openSong}
                 onImportAppleTrack={async (track) => {
                   let chordPro: string | undefined;

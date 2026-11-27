@@ -1,9 +1,9 @@
 import { useEffect, useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { BookOpen, Loader2, Plus } from "lucide-react";
+import { BookOpen, House, Loader2, Plus } from "lucide-react";
 import { AssignmentRow } from "@/components/AssignmentRow";
 import { AssignmentSheet } from "@/components/AssignmentSheet";
-import { api } from "@/lib/api";
+import { api, inNova } from "@/lib/api";
 import type { Assignment, AssignmentInput } from "@/lib/types";
 import { BUCKET_LABELS, cn, groupByBucket } from "@/lib/utils";
 
@@ -172,13 +172,23 @@ export default function App() {
                   : "—"}
             </p>
           </div>
-          <button type="button" className="btn-accent" onClick={openNew}>
-            <Plus className="h-4 w-4" />
-            Add
-          </button>
+          <div className="flex shrink-0 items-center gap-2">
+            <button type="button" className="btn-accent" onClick={openNew}>
+              <Plus className="h-4 w-4" />
+              Add
+            </button>
+            {inNova && (
+              <a href="/" aria-label="Back to NOVA" title="Back to NOVA"
+                className="grid size-11 shrink-0 place-items-center rounded-xl border border-hairline bg-panel text-accent hover:border-accent/50 focus-visible:ring-2 focus-visible:ring-accent">
+                <House className="size-5" aria-hidden="true" />
+              </a>
+            )}
+          </div>
         </header>
-        <button type="button" className="self-start text-xs underline" onClick={toggleNotifications}
-          disabled={changingSubscription}>{subscribed ? "Disable homework reminders" : "Enable homework reminders"}</button>
+        {!inNova && (
+          <button type="button" className="self-start text-xs underline" onClick={toggleNotifications}
+            disabled={changingSubscription}>{subscribed ? "Disable homework reminders" : "Enable homework reminders"}</button>
+        )}
 
         {notice ? (
           <p className="rounded-xl border border-gain/30 bg-gain/10 px-3 py-2 text-xs text-gain">

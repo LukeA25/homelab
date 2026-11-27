@@ -32,14 +32,17 @@
   if (inFrame) return viewer();
   if (/^\/(tv|control|guest)(\/|$)/.test(location.pathname)) return;
 
-  var APP = appFromHost(location.hostname, location.port);
+  var novaSection = location.hostname === "nova.home.arpa"
+    && location.pathname.match(/^\/(homework|theology|guitar|finance)(\/|$)/);
+  var APP_PREFIX = novaSection ? "/" + novaSection[1] : "";
+  var APP = novaSection ? novaSection[1] : appFromHost(location.hostname, location.port);
   if (!APP) return;
 
   function appFromHost(host, port) {
     if (port && port !== "80" && port !== "443") return null;
     var first = String(host || "").toLowerCase().split(".")[0];
     if (first === "finance" || first === "guitar" || first === "theology" || first === "homework") return first;
-    if (first === "homepage" || first === "homelab" || host === "100.101.135.109") return "home";
+    if (first === "nova" || first === "homepage" || first === "homelab" || host === "100.101.135.109") return "home";
     return null;
   }
 
@@ -50,7 +53,8 @@
       .filter(function (p) {
         return p && p.indexOf("__cast=") !== 0;
       });
-    return location.pathname + (params.length ? "?" + params.join("&") : "");
+    var path = location.pathname.slice(APP_PREFIX.length) || "/";
+    return path + (params.length ? "?" + params.join("&") : "");
   }
 
   // ---------------------------------------------------------------- viewer
@@ -850,7 +854,7 @@
 
   function navigateTo(path) {
     if (!path || path === currentPath()) return;
-    history.pushState(null, "", path);
+    history.pushState(null, "", APP_PREFIX + path);
     window.dispatchEvent(new PopStateEvent("popstate", { state: null }));
   }
 

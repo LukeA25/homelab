@@ -1,5 +1,6 @@
 from contextlib import closing
 from datetime import datetime, timezone
+import json
 import time
 
 from fastapi.testclient import TestClient
@@ -49,7 +50,8 @@ def test_seed_requires_reviewed_user_excerpt_and_deduplicates():
 
 
 @pytest.mark.asyncio
-async def test_push_handoff_once(monkeypatch):
+@pytest.mark.parametrize(("destination", "path"), [(None, "/"), ("nova", "/homework/")])
+async def test_push_handoff_once(monkeypatch, destination, path):
     import httpx
 
     now = time.time()
@@ -65,6 +67,10 @@ async def test_push_handoff_once(monkeypatch):
     client_type = httpx.AsyncClient
     monkeypatch.setattr(httpx, "AsyncClient", lambda **kw: client_type(transport=httpx.MockTransport(handoff), **kw))
     monkeypatch.setenv("NOTIFY_TOKEN", "test")
+    if destination is None:
+        monkeypatch.delenv("NOVA_HOMEWORK_PUSH_APP", raising=False)
+    else:
+        monkeypatch.setenv("NOVA_HOMEWORK_PUSH_APP", destination)
 
     async def incomplete(day, zone):
         return 1
@@ -72,5 +78,7 @@ async def test_push_handoff_once(monkeypatch):
     await notifications.release(incomplete, timezone.utc)
     await notifications.release(incomplete, timezone.utc)
     assert len(calls) == 1 and calls[0].url.path == "/api/send"
+    payload = json.loads(calls[0].content)
+    assert (payload["app"], payload["url"]) == (destination or "homework", path)
     with closing(store.connect("events.db")) as db:
         assert db.execute("SELECT status,accepted FROM notifications").fetchone()[:] == ("submitted", 1)

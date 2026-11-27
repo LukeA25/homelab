@@ -2,6 +2,14 @@ import type { ServiceGroup } from "@/lib/types";
 import { iconFor } from "@/lib/icons";
 import { cn } from "@/lib/utils";
 
+const NOVA_SECTIONS: Record<string, string> = {
+  Homework: "/homework/",
+  Learning: "/learning/",
+  Theology: "/theology/",
+  Guitar: "/guitar/",
+  Finance: "/finance/",
+};
+
 function StatusDot({ status }: { status: "up" | "down" | "unknown" }) {
   return (
     <span
@@ -54,7 +62,7 @@ export function ServicesGrid({
                 return (
                   <a
                     key={svc.name}
-                    href={svc.href}
+                    href={window.location.hostname === "nova.home.arpa" ? (NOVA_SECTIONS[svc.name] ?? svc.href) : svc.href}
                     title={svc.description}
                     className={cn(
                       "card group flex items-center gap-2.5 transition-colors hover:border-accent/50 hover:bg-accent-soft/40",

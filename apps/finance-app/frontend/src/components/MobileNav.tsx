@@ -35,7 +35,7 @@ export function MobileNav() {
   );
 
   return (
-    <div className="fixed inset-x-0 bottom-0 z-50 lg:hidden">
+    <div className="relative z-50 shrink-0 lg:hidden">
       {open ? (
         <button
           type="button"
@@ -48,8 +48,8 @@ export function MobileNav() {
       <div className="relative border-t border-hairline bg-card shadow-pop">
         <div
           className={cn(
-            "overflow-hidden transition-[max-height] duration-300 ease-out",
-            open ? "max-h-[min(70vh,520px)]" : "max-h-0",
+            "absolute inset-x-0 bottom-full overflow-hidden bg-card transition-[max-height] duration-300 ease-out",
+            open ? "max-h-[min(70dvh,520px)] overflow-y-auto border-t border-hairline" : "invisible max-h-0",
           )}
         >
           <div className="border-b border-hairline px-4 pb-4 pt-3">
@@ -136,7 +136,7 @@ export function MobileNav() {
         </div>
 
         <nav
-          className="flex items-stretch bg-card/95 pb-[env(safe-area-inset-bottom)] backdrop-blur"
+          className="flex items-stretch bg-card/95 pb-[env(safe-area-inset-bottom,0px)] backdrop-blur"
           aria-label="Mobile"
         >
           {MOBILE_PRIMARY.map((item) => (

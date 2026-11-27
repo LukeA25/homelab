@@ -1,5 +1,5 @@
 import { Clock3, Play, Sparkles } from "lucide-react";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, type ReactNode } from "react";
 import { STYLE_LABELS, daysSincePracticed } from "../data/songs";
 import { api } from "../lib/api";
 import type { CatalogTrack, Song } from "../lib/types";
@@ -23,6 +23,7 @@ function pickDailySong(songs: Song[], salt = ""): Song | undefined {
 
 type HomeScreenProps = {
   songs: Song[];
+  headerAction?: ReactNode;
   onOpenSong: (song: Song) => void;
   onImportAppleTrack: (track: CatalogTrack) => Promise<void>;
 };
@@ -73,6 +74,7 @@ function HorizontalSongRail({
 
 export function HomeScreen({
   songs,
+  headerAction,
   onOpenSong,
   onImportAppleTrack,
 }: HomeScreenProps) {
@@ -168,11 +170,14 @@ export function HomeScreen({
   }, [discoverArtist, libraryKeys]);
 
   return (
-    <Page>
-      <div className="mb-6 lg:mb-8">
-        <p className="text-sm font-medium text-muted">Welcome back</p>
-        <h1 className="mt-1 text-3xl font-bold md:text-4xl">Home</h1>
-      </div>
+    <Page className={headerAction ? "[--guitar-page-safe-top:calc(env(safe-area-inset-top,0px)+0.5rem)]" : undefined}>
+      <header className="mb-6 flex items-center justify-between gap-3 lg:mb-8">
+        <div className="flex min-w-0 flex-col gap-0.5">
+          <p className="text-sm font-medium leading-tight text-muted">Welcome back</p>
+          <h1 className="text-3xl/none font-bold md:text-4xl/none">Home</h1>
+        </div>
+        {headerAction}
+      </header>
 
       <div className="mb-8 grid w-full min-w-0 gap-4 lg:grid-cols-2">
         {continueSong && (

@@ -61,4 +61,4 @@ class VoiceTests(unittest.IsolatedAsyncioTestCase):
     def test_only_public_assets_served(self):
         for path in ['../app/main.py','config.json','server.mjs']:
             with self.assertRaises(HTTPException):voice.voice_asset(path)
-        self.assertIn(b'/voice/app.js',voice.voice_page().body)
+        self.assertIn(b'src="./app.js"',voice.voice_page().body)

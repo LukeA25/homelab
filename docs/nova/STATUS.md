@@ -114,6 +114,25 @@ Nova's `learning_goals` tool (scope `learning.goals`) reads actual path goals an
 
 Implemented in the checkout. Kuma heartbeats feed debounced monitor diagnostics. Worker jobs can return protected-operation request IDs that Nova can follow through approval and execution. The gateway and engine are deployed. On 2026-11-26, an unauthenticated request from inside Kuma reached Nova and returned HTTP 401. A subsequent authenticated Kuma Test returned HTTP 200. Nova has recorded zero confirmed transitions, so a real heartbeat from an attached monitor remains to be verified. The worker and ops-runner deployments and live worker verification remain pending. Automatic repairs triggered by monitor events await a policy decision.
 
+## NOVA Home Screen pilot
+
+The checkout routes the existing dashboard to `https://nova.home.arpa` and Homework to `/homework/`. NOVA has one root manifest and uses the existing Nova mark. The old homepage redirects with the path and query intact. The standalone Homework hostname stays available for Shortcuts, cast receivers and reminder rollback. The new NOVA subscription uses the Homework device scope.
+
+Roll out in this order:
+
+The Homework and dashboard builds, Caddy routes, and Pi-hole DNS entry are deployed as of 2026-11-27. NOVA HTTPS, its manifest, the icon, auth gates and the old homepage redirect passed. Pi-hole resolves NOVA, the old homepage, and the assistant. The assistant stayed healthy and the kiosk still redirects unsigned clients to sign-in. The iPhone install and shared push test are pending.
+
+1. Verify the routine Homework build at its old URL. With separate approval, save the dashboard image and rebuild it from the host checkout. Check dashboard health, including the kiosk served via `assistant.home.arpa`.
+2. With separate approval, save Caddy's currently loaded configuration, validate the staged configuration and reload Caddy. Check the assistant gateway and its kiosk plus NOVA with a host override before DNS. Keep the previous loaded configuration for immediate reload if needed.
+3. With separate approval, append `100.101.135.109 nova.home.arpa` to Pi-hole's live `dns.hosts` list. Preserve the full previous list and the homepage hostname for redirects. Verify DNS and HTTPS from a tailnet client. If rollback is needed, restore the previous Caddy configuration, dashboard image, or live DNS list as applicable.
+4. On the iPhone, add NOVA to the Home Screen and sign in. Check the icon and open Homework. Verify navigation both ways and a create/complete round trip. Verify a Home-only device is denied on Homework page, API and NOVA notification enrollment.
+5. From the installed NOVA app, tap **Enable NOVA notifications**. With Focus off, send a labeled test to the `nova` push channel and `/homework/` tap path. Verify the phone shows **from NOVA** and opens Homework inside the app. Test Focus hold and release.
+6. After phone acceptance, set `NOVA_HOMEWORK_PUSH_APP=nova` in the private engine environment and rebuild/recreate the routine engine. Only one destination receives Homework reminders. Roll back with `NOVA_HOMEWORK_PUSH_APP=homework` and recreate the engine.
+
+The next release adds Learning Grove, Theology, Guitar and Finance under `/learning/`, `/theology/`, `/guitar/` and `/finance/`. The four routine stacks and Caddy routes are deployed. All standalone health checks passed, and the new routes require their app-specific sign-in. The rebuilt dashboard lists all four sections. Its health, manifest, kiosk shell and assistant routes passed verification. Signed-in iPhone checks are pending. On NOVA, open each section from the dashboard and return using **Back to NOVA**. Refresh a Guitar song and a nested Finance page, and start a Learning Grove voice session to verify the additional paths. Use a limited device to verify each section and its API still enforce their own app scope. The standalone hostnames remain available for fallback.
+
+Add device-bound subscriptions and per-topic scope checks before using NOVA for notifications from more apps. Infrastructure consoles keep their existing hostnames.
+
 ## Decisions still open
 
 Gym data source. Whether anything is reachable from outside Tailscale. How long to keep conversations and observations, and where the backup lives. How much Nova may repair on her own.

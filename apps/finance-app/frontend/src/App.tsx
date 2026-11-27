@@ -1,4 +1,5 @@
 import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { appBase } from "./lib/api";
 import { AppShell } from "./components/AppShell";
 import { Dashboard } from "./pages/Dashboard";
 import { Transactions } from "./pages/Transactions";
@@ -11,7 +12,7 @@ import { Settings } from "./pages/Settings";
 
 export default function App() {
   return (
-    <BrowserRouter>
+    <BrowserRouter basename={appBase || "/"}>
       <Routes>
         <Route element={<AppShell />}>
           <Route index element={<Dashboard />} />

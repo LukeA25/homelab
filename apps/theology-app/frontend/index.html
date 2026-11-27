@@ -1,6 +1,10 @@
 <!doctype html>
 <html lang="en">
   <head>
+    <base href="/" />
+    <script>
+      if (location.hostname === "nova.home.arpa") document.querySelector("base").href = "/theology/";
+    </script>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, maximum-scale=1, interactive-widget=resizes-content" />
     <meta name="theme-color" content="#0b0d10" />

@@ -131,7 +131,7 @@ export function FinancePanel({
           <RefreshCw className={cn("h-3.5 w-3.5", refresh.isPending && "animate-spin")} />
         </button>
         <a
-          href={summary?.href || "http://finance.home.arpa"}
+          href={window.location.hostname === "nova.home.arpa" ? "/finance/" : summary?.href || "http://finance.home.arpa"}
           className="inline-flex items-center gap-1 rounded-full border border-hairline bg-panel px-3 py-1.5 text-sm text-ink-muted transition-colors hover:text-ink"
         >
           Open

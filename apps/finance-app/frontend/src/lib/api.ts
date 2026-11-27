@@ -15,7 +15,8 @@ import type {
   TransactionsResponse,
 } from "./types";
 
-const BASE = "/api";
+export const appBase = window.location.hostname === "nova.home.arpa" ? "/finance" : "";
+const BASE = appBase + "/api";
 
 async function request<T>(path: string, opts: RequestInit = {}): Promise<T> {
   const res = await fetch(`${BASE}${path}`, opts);
