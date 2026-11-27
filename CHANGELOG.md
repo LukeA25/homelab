@@ -2,6 +2,11 @@
 
 Meaningful code, API, infrastructure, container and architectural changes. See `AGENTS.md` for what belongs here. Git history holds the full detail.
 
+## NOVA TV data access
+
+- NOVA TV mirrors Finance, Homework, Guitar and Theology under the shared hostname. Mirror navigation stays within each app’s path and its existing device scope.
+- The TV finance panel retries unavailable summaries sooner.
+
 ## NOVA iPhone navigation
 
 - Added a top-right Home icon styled to each NOVA app. The app headers account for the phone’s top safe area, and the Finance menu sits at the bottom of the dynamic viewport.

@@ -40,8 +40,16 @@ export function castAppForTvApp(app: string | undefined): CastApp | null {
 
 /** Private app URL for an on-network receiver, marked as a mirror view. */
 export function mirrorUrl(app: CastApp, path: string): string {
-  const sep = path.includes("?") ? "&" : "?";
-  return `${window.location.protocol}//${APP_HOSTS[app]}${path}${sep}__cast=view`;
+  const inNova = window.location.hostname === "nova.home.arpa";
+  const origin = inNova ? window.location.origin : `${window.location.protocol}//${APP_HOSTS[app]}`;
+  const prefix = inNova && app !== "home" ? `/${app}` : "";
+  const safePath = path.startsWith("/") && !path.startsWith("//") ? path : "/";
+  const target = new URL(prefix + safePath, origin);
+  const url = target.origin === origin && target.pathname.startsWith(prefix + "/")
+    ? target
+    : new URL(prefix + "/", origin);
+  url.searchParams.set("__cast", "view");
+  return url.href;
 }
 
 export type CastCommand = { type: string; [key: string]: unknown };

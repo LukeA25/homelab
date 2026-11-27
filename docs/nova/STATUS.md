@@ -116,7 +116,7 @@ Implemented in the checkout. Kuma heartbeats feed debounced monitor diagnostics.
 
 ## NOVA Home Screen pilot
 
-The checkout routes the existing dashboard to `https://nova.home.arpa` and Homework to `/homework/`. NOVA has one root manifest and uses the existing Nova mark. The old homepage redirects with the path and query intact. The standalone Homework hostname stays available for Shortcuts, cast receivers and reminder rollback. The new NOVA subscription uses the Homework device scope.
+The checkout routes the existing dashboard to `https://nova.home.arpa` and Homework to `/homework/`. NOVA has one root manifest and uses the supplied NOVA circuit artwork for the app icon. The old homepage redirects with the path and query intact. The standalone Homework hostname stays available for Shortcuts, cast receivers and reminder rollback. The new NOVA subscription uses the Homework device scope.
 
 Roll out in this order:
 

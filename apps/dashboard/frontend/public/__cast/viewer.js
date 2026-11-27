@@ -16,6 +16,10 @@
     '[role="checkbox"],[role="switch"],[data-cast-action],input:not([type="hidden"]),select,textarea,summary,' +
     '[tabindex]:not([tabindex="-1"])';
 
+  var novaSection = location.hostname === "nova.home.arpa"
+    && location.pathname.match(/^\/(homework|theology|guitar|finance)\//);
+  var appPrefix = novaSection ? "/" + novaSection[1] : "";
+
   var appState = window.__castAppState || null;
   var selecting = false;
   var focusEl = null;
@@ -62,7 +66,7 @@
       .filter(function (p) {
         return p && p.indexOf("__cast=") !== 0;
       });
-    return location.pathname + (params.length ? "?" + params.join("&") : "");
+    return location.pathname.slice(appPrefix.length) + (params.length ? "?" + params.join("&") : "");
   }
 
   function post(msg) {
@@ -376,8 +380,9 @@
     if (el.matches("input,select,textarea,[contenteditable]")) return emit({ type: "input", label: d.label });
     var a = el.closest("a[href]");
     if (a) {
-      if (a.origin === location.origin && (!a.target || a.target === "_self") && !a.hasAttribute("download")) {
-        return emit({ type: "navigate", path: a.pathname + a.search + a.hash });
+      if (a.origin === location.origin && a.pathname.startsWith(appPrefix + "/") &&
+          (!a.target || a.target === "_self") && !a.hasAttribute("download")) {
+        return emit({ type: "navigate", path: a.pathname.slice(appPrefix.length) + a.search + a.hash });
       }
       return emit({ type: "external", label: d.label });
     }
@@ -489,10 +494,12 @@
     if (d.type === "cast:command") return onCommand(d.cmd);
     if (d.type !== "cast:navigate" || typeof d.path !== "string") return;
     if (d.path.charAt(0) !== "/" || d.path.charAt(1) === "/") return;
+    var target = new URL(appPrefix + d.path, location.origin);
+    if (target.origin !== location.origin || !target.pathname.startsWith(appPrefix + "/")) return;
     if (currentPath() !== d.path) {
       applyingRemote = true;
       try {
-        history.pushState(null, "", d.path);
+        history.pushState(null, "", target.href);
       } finally {
         applyingRemote = false;
       }

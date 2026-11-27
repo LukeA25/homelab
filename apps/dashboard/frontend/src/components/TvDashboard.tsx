@@ -505,7 +505,7 @@ export default function TvDashboard() {
   const financeQ = useQuery({
     queryKey: ["finance"],
     queryFn: () => api.finance(),
-    refetchInterval: 300_000,
+    refetchInterval: (query) => query.state.data?.connected ? 300_000 : 30_000,
   });
   const homeworkQ = useQuery({
     queryKey: ["homework"],
